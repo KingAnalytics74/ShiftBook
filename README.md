@@ -1,65 +1,111 @@
+<p align="center"><img src="favicon.svg" width="96" alt="Shiftbook logo"></p>
+
 # Shiftbook
 
-A personal shift log, pay calculator and money planner for support workers and carers. Log your shifts and Shiftbook works out your pay, your timesheet, your take-home and whether you're getting enough rest.
+**Know your pay before payday.** A shift log, pay, tax and budgeting app built for UK care workers and support workers.
 
-**Use it online:** https://kinganalytics74.github.io/ShiftBook/
+Powered by **WesTech Innovation**.
 
-It's a single page (`index.html`) that works on phones and computers. There's nothing to install.
+## Features
 
-## What it does
+- **Sign in without a password:** a 6-digit code by text or email, or Google / Apple. People stay signed in on their own phone.
+- **Quick setup:** one question per screen (name, age group and sex, area, employer and community nickname, pay, pay month, usual shifts, who you support), then log a first shift and see what it pays.
+- **Log shifts in seconds:** one-tap shift types (Day 08:00–20:00, Sleep-in 20:00–08:00, Day + sleep-in), service users, breaks and notes.
+- **Pay analytics:** gross pay, an earnings build-up chart, weekly earnings, earnings by day of the week, a shift calendar and shifts by service user.
+- **Take-home estimate:** UK income tax (any tax code), employee National Insurance, workplace pension and student loan, using 2026/27 rates. It matches a real payslip to the penny.
+- **Payslip check:** compare a payslip line by line with your logged shifts.
+- **Rest check:** red when you're not resting enough (7+ days in a row, more than 48 hours in 7 days, or about 36 hours on duty around a sleep-in).
+- **Forecast:** predicts next week's shifts and pay from your usual pattern.
+- **Money plan:** spending pots, a gross-to-take-home waterfall and plan vs spent analytics.
+- **Carers' community:** talk about pay, your rights at work, rest and meet-ups under a nickname, in spaces by topic and a *Near me* feed for your area. House rules, automatic blocks on postcodes, phone numbers, emails, addresses and the names of people you support, a report button, and moderators who can hide posts (three reports hide a post automatically). Links to the CQC and Protect for real concerns.
+- **Profiles and messages:** every carer in the community has a public profile with only their nickname and area (tap a nickname to see it). Carers can send each other **private messages** that only the two of them can read, with block, report and a "stop new messages" switch, plus rate limits (30 messages an hour, 10 new conversations a day). Everyone can **message the Shiftbook team**, and the team can reply and send **announcements** to every carer.
+- **Bus fares:** add what you paid to get to each shift; Shiftbook shows what you keep after travel. Fares never go on the timesheet sent to your employer.
+- **Your data, your control:** timesheet CSV, full JSON backup, and Delete my account.
 
-- **Overview:** gross pay for the pay period, estimated take-home, earnings build-up, weekly earnings, a shift calendar, shifts by service user and earnings by day of the week.
-- **Rest check:** flags long runs of days without a day off, weeks over 48 hours, and day shifts straight after a sleep-in. It's based on UK working time rules and is a guide, not legal advice.
-- **Log shift:** date, service user(s), sleep-in, day hours and unpaid break, with the pay for that shift shown as you type.
-- **Timesheet:** the full pay period in a table, with CSV download, a summary you can copy for your manager, and backup and restore.
-- **Money:** take-home after income tax, National Insurance, pension and student loan (2026/27 rates for England, Wales and Northern Ireland), a payslip check, and a spending plan with pots and spending charts.
-- **Money borrowed & lent:** a record of money you've borrowed from or lent to people: who, how much, when it's due, repayments, what's left, what's overdue, and how much of your take-home you owe. When you're signed in, Shiftbook asks you to confirm it's you (password, Google or a text code) before any change to these records. Shiftbook keeps a record only. It doesn't lend, borrow or move money.
-- **Sign in (optional):** with a Google account, any email and password, or a mobile number with a text code. Once you're signed in, your shifts show up on every device. See [Turning on sign-in](#turning-on-sign-in).
+## Try it now (demo mode)
 
-## How pay is worked out
+With `app/src/config.js` left empty, Shiftbook runs in **demo mode**: the sign-in code is shown on screen and data stays in the browser. Nothing to set up.
 
-- Net hours = day hours − unpaid break
-- Pay for a shift = net hours × hourly rate + sleep-in rate (if it was a sleep-in)
-- A pay period runs from your chosen start day (1–28) to the day before that date the next month.
+```bash
+npx serve .
+# then open http://localhost:3000
+```
 
-Tax and deductions are estimates. Your payslip is the final word.
+## Go live with real accounts (Supabase)
 
-## Getting started
+1. **Create a project** at [supabase.com](https://supabase.com). Pick the London region for UK users.
+2. **Create the database:** open **SQL Editor → New query**, paste `supabase/schema.sql` and run it. It creates one `documents` table, locks every row to its owner with row-level security, turns on live sync between devices, and adds `delete_my_account()`.
+3. **Turn on sign-in methods** in **Authentication → Providers**:
+   - **Email:** on by default. To send a 6-digit code instead of a link, go to **Authentication → Email Templates → Magic Link** and put `{{ .Token }}` in the message, for example *"Your Shiftbook code is {{ .Token }}"*.
+   - **Phone:** turn on Phone and connect an SMS provider such as Twilio. UK texts cost a few pence each.
+   - **Google / Apple:** optional. Add the client IDs from Google Cloud or Apple Developer.
+4. **Set the site address** in **Authentication → URL Configuration**: put your GitHub Pages address in *Site URL* and *Redirect URLs*.
+5. **Connect the app:** in **Project Settings → API**, copy the *Project URL* and the *anon public* key into `app/src/config.js`. Set `google` or `apple` to `true` if you turned them on. The anon key is safe to publish; row-level security protects the data.
+6. **Moderators:** after you've signed up, find your user id in **Authentication → Users** and run `insert into public.community_moderators (user_id) values ('<your id>');` in the SQL Editor. Moderators see reported posts and can hide or unhide them. They are also **the Shiftbook team**: they read and answer messages to the team, send announcements, see reported private messages and can stop someone sending private messages. Private messages that nobody has reported stay unreadable to moderators in the app.
+7. **Limit abuse:** in **Authentication → Rate Limits**, keep the limits on codes per hour.
 
-1. Open the link above.
-2. Fill in the setup screen: your name, role, hourly rate, sleep-in rate, the day your pay period starts, and your service users.
-3. Log your shifts on the **Log shift** tab.
+### Deploy free on GitHub Pages
 
-On a phone, use **Add to Home Screen** in your browser's menu to open it like an app.
+This repository is already published at **https://kinganalytics74.github.io/ShiftBook/** from the default branch, `/ (root)`. The root `index.html` forwards to `app/`, so whatever is merged into the default branch goes live a minute or two later. To publish a copy elsewhere: **Settings → Pages → Deploy from a branch**, pick the branch and `/ (root)`.
 
-## Where your data is kept
+## Legal pages, cookies and accessibility
 
-- **On the website, signed in:** shifts are saved to your account in Firebase (Google's app database). Each person can only read and write their own data. This is enforced by [`firestore.rules`](firestore.rules).
-- **On the website, before sign-in is turned on:** shifts are saved in your browser on that device only. Nothing is sent to a server. Clearing your browser data or using private browsing will remove them, so use **Back up all data** on the Timesheet tab now and then. Use **Restore from backup** to move your shifts to another device.
-- **Inside Claude (as an artifact):** shifts are saved to your Claude account and are private to you.
+- **Privacy notice and Terms of use** are built into the app (footer links, and linked from sign-up). Sign-up says that creating an account means agreeing to both. Fill in your contact details and check the reply time in *Complaints and appeals* (5 working days) before launch, and have both checked by a solicitor.
+- **No cookie banner is needed** as built: there are no advertising, analytics or tracking cookies. The only things stored in the browser are the sign-in session, the last tab opened and, in demo mode, the user's own data. Fonts (`app/fonts/`, SIL Open Font License) and the Supabase library (`app/src/vendor/`, MIT) are served from this site, so no request goes to Google or a CDN. If you ever add analytics or third-party scripts, add consent first.
+- **No refund policy yet**, because nothing is sold. Add one, with the 14-day cancellation rules for digital content, before charging for Shiftbook Plus.
+- **Accessibility:** every screen, in light and dark mode, passes an automated WCAG 2.2 AA check (axe-core). Automated checks don't catch everything, so test with a screen reader and keyboard too.
 
-## Publishing with GitHub Pages
+## Working on Shiftbook
 
-In the repository, go to **Settings → Pages**. Set **Source** to **Deploy from a branch**, pick the branch that has `index.html`, choose the `/ (root)` folder, and click **Save**. The site appears at `https://<username>.github.io/ShiftBook/` after a minute or two.
+Engineers: read [CONTRIBUTING.md](CONTRIBUTING.md) before your first change. Starter tasks are in [docs/first-issues.md](docs/first-issues.md).
 
-## Turning on sign-in
+## Project structure
 
-Sign-in uses [Firebase Authentication](https://firebase.google.com/docs/auth). Until it's set up, the website keeps working in device-only mode.
+```
+index.html               sends visitors on to app/ (GitHub Pages serves the repo root)
+app/index.html           page markup: sign-in, setup, Overview, Log shift, Timesheet, Money, Forecast, Community, Privacy, Terms, FAQ
+app/favicon.svg          the Shiftbook logo (day & night book)
+app/fonts/               the app's font files (SIL Open Font License)
+app/src/config.js        your Supabase URL and key, and which sign-in methods to show
+app/src/auth.js          sign-in: phone or email code, Google, Apple, staying signed in, sign out, delete account
+app/src/platform.js      storage layer: Supabase when configured, this browser's storage in demo mode
+app/src/fonts.css         the app's fonts, served from app/fonts/ (no Google Fonts)
+app/src/vendor/           the Supabase library, served from this site (no CDN)
+app/src/community-store.js  the carers' community on Supabase (demo mode keeps posts in this browser)
+app/src/app.js           app logic: pay rules, tax engine, rest check, forecast, charts, money plan, setup
+app/src/styles.css       design tokens (light and dark) and all styles
+supabase/schema.sql  database tables, row-level security, delete_my_account() and the community functions
+docs/DATA_MODEL.md   documents, fields and rules
+docs/00-start-here.md, docs/decisions.md, docs/first-issues.md   team notes, decisions and starter tasks
+legacy-app/          the earlier single-user version, kept for reference
+```
 
-1. Go to [console.firebase.google.com](https://console.firebase.google.com), sign in with your Google account and click **Create a project**. Name it `Shiftbook`. You can turn Google Analytics off.
-2. Go to **Build → Authentication → Get started**. Under **Sign-in method**, turn on:
-   - **Google**: pick a support email and save.
-   - **Email/Password**: turn on the first switch only and save.
-   - **Phone**: save. Firebase may ask you to move to the pay-as-you-go **Blaze** plan for text messages, which are charged per text.
-3. Still in Authentication, go to **Settings → Authorised domains → Add domain** and add `kinganalytics74.github.io`.
-4. Go to **Build → Firestore Database → Create database**. Choose **production mode** and a nearby location (for example `europe-west2`, London). Open the **Rules** tab, replace everything with the contents of [`firestore.rules`](firestore.rules), and click **Publish**.
-5. Go to **Project settings** (the gear icon) → **Your apps** → the **Web** icon `</>`, register an app called `Shiftbook web`, and copy the `apiKey`, `authDomain`, `projectId` and `appId` values.
-6. In `index.html`, find `const FIREBASE_CONFIG` and paste those four values in. Commit, and the website shows the sign-in screen within a minute or two.
+## Sign-up and sign-in
 
-The Firebase web config is meant to be public. Your data is protected by the sign-in and the Firestore rules, not by keeping the config secret.
+The first screen has two clear choices:
 
-To move shifts you already logged in device-only mode into your new account, tap **Back up all data** on the Timesheet tab *before* you add the Firebase config. After you've signed in, tap **Restore from backup** and choose that file.
+- **Create my Shiftbook** (sign up): choose phone or email, get a 6-digit code, tap **Create my account**, then the six setup screens and the first shift.
+- **I already have an account** (sign in): the same code, then straight back to your shifts. If the number or email has no account yet, it says so and offers **Create one instead**, so nobody gets stuck.
 
----
+There's no password to forget. The code fills in automatically from the text on most phones, and **Resend code** appears after 30 seconds. People stay signed in on their own phone until they tap **Sign out**, which is at the bottom of every screen and in Timesheet → Your account.
 
-Powered by **WesTech Innovation**
+| Action | Where | What happens |
+|---|---|---|
+| **Sign out** | Footer, or Timesheet → Your account | Signed out on this device. Data kept. |
+| **Pause my account** | Timesheet → Your account | Signed out and the account is marked paused. Everything is kept. |
+| **Reactivate** | Shown when a paused account signs in | One tap and they're back where they left off. |
+| **Delete my account** | Privacy page | Account and all data removed for good. |
+
+Everything else (tax code, payslip, money plan) is asked for when it's first needed, not up front.
+
+## Roadmap
+
+- [ ] Face ID / fingerprint unlock (passkeys)
+- [ ] Multiple jobs and rates (nights, weekends, bank holidays)
+- [ ] Weekly and four-weekly pay periods, Scottish tax bands
+- [ ] Holiday tracker (in testing in the personal edition)
+- [ ] Unit tests for the pay and tax engine
+
+## Disclaimer
+
+Tax, NI, pension and rest figures are **estimates**, not financial or legal advice. Your payslip is the final word, and contracts or opt-outs can change the working time limits.
