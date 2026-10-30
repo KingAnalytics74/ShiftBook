@@ -143,7 +143,7 @@ form{display:flex;flex-direction:column;gap:18px}
 .field{display:flex;flex-direction:column;gap:8px}
 .field>label,.field>.lbl{font-weight:600;font-size:14px}
 .hint{font-size:12px;color:var(--muted);font-weight:400}
-input[type=date],input[type=number],textarea,input[type=text]{width:100%;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--surface);font-size:16px}
+input[type=date],input[type=number],textarea,input[type=text],input[type=email],input[type=tel],input[type=password]{width:100%;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--surface);font-size:16px}
 textarea{min-height:70px;resize:vertical}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
 .chip{border:1px solid var(--line);background:var(--surface);padding:8px 14px;border-radius:999px;cursor:pointer;font-weight:600;font-size:14px}
@@ -288,6 +288,25 @@ body::before{background:var(--brand)!important}
 .paytable td.okc{color:var(--good);font-weight:700} .paytable td.badc{color:var(--bad);font-weight:700}
 .card:has(#payBody){--accent:var(--good)}
 .tab{white-space:nowrap}
+/* sign-in, identity check and loans */
+.authbox{max-width:440px;width:100%;margin:8px auto 0}
+.authbox form{gap:14px}
+.gbtn{width:100%;display:flex;align-items:center;justify-content:center;gap:10px}
+.or{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:13px;margin:16px 0}
+.or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
+.linkbtn{border:0;background:transparent;color:var(--day);font-weight:600;cursor:pointer;padding:4px 0;align-self:flex-start}
+.modal{position:fixed;inset:0;z-index:40;background:rgba(13,17,28,.55);display:flex;align-items:center;justify-content:center;padding:16px}
+.modal .card{max-width:420px;width:100%;display:flex;flex-direction:column;gap:12px}
+.modal .card h2{margin:0}
+.card:has(#loanList){--accent:var(--brand)}
+.pill.borrowed{background:var(--amber-soft);color:var(--amber)} .pill.lent{background:var(--good-soft);color:var(--good)} .pill.done{background:var(--sunk);color:var(--muted)}
+.loan{border-left:4px solid var(--amber)} .loan.lent{border-left-color:var(--good)} .loan.done{opacity:.65}
+.loan .ptop b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.loan .pbar i{background:var(--good)}
+.loan .lrow{grid-column:1/-1;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.loan .lrow input{width:130px;padding:8px;font-size:14px;border-radius:9px}
+.loan .lrow .btn{padding:8px 12px;font-size:14px;flex:none;min-width:0}
+.loan .late{color:var(--bad);font-weight:700}
 </style>
 
 <div class="wrap">
@@ -311,6 +330,34 @@ body::before{background:var(--brand)!important}
       <button class="tab" role="tab" data-view="money" aria-selected="false">Money</button>
     </nav>
   </header>
+
+  <!-- SIGN IN (website with a Firebase project only) -->
+  <section class="view" id="view-auth" hidden>
+    <div class="card authbox">
+      <h2>Sign in to Shiftbook</h2>
+      <p class="hint" style="margin:0 0 16px">Your shifts are saved to your account, so they're there on every device you sign in on.</p>
+      <button class="btn secondary gbtn" type="button" id="aGoogle"><svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.8 1.1 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3 0 5.8 1.1 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>Continue with Google</button>
+      <div class="or">or</div>
+      <div class="seg" id="aMode" style="margin-bottom:16px">
+        <button type="button" data-m="email" aria-pressed="true">Email</button>
+        <button type="button" data-m="phone" aria-pressed="false">Phone number</button>
+      </div>
+      <form id="aEmailForm" novalidate>
+        <div class="field"><label for="aEmail">Email address</label><input type="email" id="aEmail" autocomplete="email" inputmode="email"></div>
+        <div class="field"><label for="aPass">Password <span class="hint">at least 8 characters</span></label><input type="password" id="aPass" autocomplete="current-password"></div>
+        <div class="actions"><button class="btn" type="submit" id="aSignIn">Sign in</button><button class="btn secondary" type="button" id="aCreate">Create account</button></div>
+        <button type="button" class="linkbtn" id="aForgot">Forgot password?</button>
+      </form>
+      <form id="aPhoneForm" novalidate hidden>
+        <div class="field"><label for="aPhone">Mobile number</label><input type="tel" id="aPhone" autocomplete="tel" placeholder="07700 900123"></div>
+        <div class="field" id="aCodeRow" hidden><label for="aCode">Code from the text message</label><input type="text" id="aCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6"></div>
+        <div class="actions"><button class="btn" type="submit" id="aPhoneBtn">Text me a code</button></div>
+      </form>
+      <div id="aRecaptcha"></div>
+      <div class="banner bad" id="aErr" style="margin-top:12px" hidden></div>
+      <div class="banner ok" id="aMsg" style="margin-top:12px" hidden></div>
+    </div>
+  </section>
 
   <!-- FIRST-TIME SETUP -->
   <section class="view" id="view-setup" hidden>
@@ -490,6 +537,7 @@ body::before{background:var(--brand)!important}
         <div class="field"><label for="sStart">Pay period starts on day</label><input type="number" id="sStart" min="1" max="28"></div>
         <div class="field"><label for="sUsers">Service users <span class="hint">comma-separated</span></label><input type="text" id="sUsers"></div>
         <div class="actions" style="grid-column:1/-1"><button class="btn" type="submit" id="setSave">Save settings</button></div>
+        <div class="actions" id="acctRow" style="grid-column:1/-1;align-items:center" hidden><span class="hint" id="acct" style="flex:1;min-width:160px"></span><button class="btn secondary" type="button" id="signOut">Sign out</button></div>
       </form>
     </div>
   </section>
@@ -582,6 +630,23 @@ body::before{background:var(--brand)!important}
         <div class="hbars" id="sTrend"></div>
       </div>
     </div>
+    <div class="card">
+      <div class="charthead"><h2>Money borrowed &amp; lent</h2><span class="hint" id="loanHint"></span></div>
+      <div class="kpis" id="loanKpis"></div>
+      <div id="loanList" class="planrows" style="margin-top:14px"></div>
+      <form id="loanForm" class="settings" novalidate hidden style="margin-top:14px">
+        <div class="field"><label for="lDir">Type</label><select id="lDir"><option value="borrowed">I borrowed money</option><option value="lent">I lent money</option></select></div>
+        <div class="field"><label for="lWho">Who from / to</label><input type="text" id="lWho" maxlength="60"></div>
+        <div class="field"><label for="lAmt">Amount (£)</label><input type="number" id="lAmt" min="0" step="0.01" inputmode="decimal"></div>
+        <div class="field"><label for="lDate">Date</label><input type="date" id="lDate"></div>
+        <div class="field"><label for="lDue">Pay back by <span class="hint">optional</span></label><input type="date" id="lDue"></div>
+        <div class="field"><label for="lNote">Note <span class="hint">optional</span></label><input type="text" id="lNote" maxlength="140"></div>
+        <div class="banner bad" id="loanErr" style="grid-column:1/-1" hidden></div>
+        <div class="actions" style="grid-column:1/-1"><button class="btn" type="submit" id="loanSave">Save</button><button class="btn secondary" type="button" id="loanCancel">Cancel</button></div>
+      </form>
+      <div class="actions" style="margin-top:12px"><button class="btn secondary" type="button" id="loanAdd">+ Add money borrowed or lent</button></div>
+      <p class="hint" style="margin:10px 0 0" id="loanNote">Shiftbook keeps a record only. It doesn't lend, borrow or move any money.</p>
+    </div>
   </section>
   <footer class="poweredby">Powered by <b>WesTech Innovation</b></footer>
 </div>
@@ -594,6 +659,17 @@ body::before{background:var(--brand)!important}
 </nav>
 <div class="toast" id="toast" hidden></div>
 <div id="tip" role="tooltip" hidden></div>
+<div class="modal" id="authModal" role="dialog" aria-modal="true" aria-labelledby="amTitle" hidden>
+  <div class="card">
+    <h2 id="amTitle">Confirm it's you</h2>
+    <p class="hint" id="amText" style="margin:0;font-size:14px"></p>
+    <div class="field" id="amPw" hidden><label for="amPass">Password</label><input type="password" id="amPass" autocomplete="current-password"></div>
+    <div class="field" id="amCode" hidden><label for="amCodeIn">Code from the text message</label><input type="text" id="amCodeIn" inputmode="numeric" autocomplete="one-time-code" maxlength="6"></div>
+    <div id="amRecaptcha"></div>
+    <div class="banner bad" id="amErr" hidden></div>
+    <div class="actions"><button class="btn" type="button" id="amGo">Continue</button><button class="btn secondary" type="button" id="amCancel">Cancel</button></div>
+  </div>
+</div>
 
 <script>
 /*
@@ -943,7 +1019,7 @@ body::before{background:var(--brand)!important}
 
   // ---------- views ----------
   function show(view) {
-    if (state.needsSetup) return;
+    if (state.needsSetup || state.needsAuth) return;
     state.view = view;
     ["overview", "log", "sheet", "money"].forEach(v => { $("#view-" + v).hidden = v !== view; });
     document.querySelectorAll("[data-view]").forEach(b => b.setAttribute("aria-selected", String(b.dataset.view === view)));
@@ -1088,7 +1164,7 @@ body::before{background:var(--brand)!important}
   $("#backupBtn").onclick = async () => {
     if (!state.downloads) { toast("Downloads aren't available in this view"); return; }
     const data = { exportedAt: new Date().toISOString(), app: "Shiftbook", schemaVersion: 1, config: state.cfg, money: state.money,
-      shifts: [...state.shifts.values()].sort((a, b) => a.date.localeCompare(b.date)), spend: Object.fromEntries(state.spend), payslips: Object.fromEntries(state.payslips) };
+      shifts: [...state.shifts.values()].sort((a, b) => a.date.localeCompare(b.date)), spend: Object.fromEntries(state.spend), payslips: Object.fromEntries(state.payslips), loans: Object.fromEntries(state.loans) };
     try { await state.downloads.save({ filename: `Shiftbook_backup_${todayStr}.json`, data: JSON.stringify(data, null, 2) }); } catch (e) { if (e?.code !== "cancelled") toast("The backup wasn't saved"); }
   };
   $("#copyBtn").onclick = async () => {
@@ -1167,7 +1243,83 @@ body::before{background:var(--brand)!important}
     if (key !== state.builtKey && !typing) { buildPlanRows(); state.builtKey = key; }
     updatePlanNumbers();
     renderPayslip(p, sm);
+    renderLoans();
   }
+
+  // ---------- money borrowed & lent ----------
+  // loan = {id, dir: "borrowed"|"lent", who, amount, date, dueDate|null, note, repayments: [{date, amount}], createdAt}
+  // Every change goes through confirmIdentity() first, so a signed-in user proves it's them before touching loans.
+  state.loans = new Map(); state.loansKey = "";
+  const repaidOf = l => (l.repayments || []).reduce((a, r) => a + (Number(r.amount) || 0), 0);
+  const leftOf = l => Math.max(0, (Number(l.amount) || 0) - repaidOf(l));
+  function renderLoans() {
+    const list = [...state.loans.values()].sort((a, b) => (leftOf(a) > 0.004 ? 0 : 1) - (leftOf(b) > 0.004 ? 0 : 1) || (a.dueDate || "9999").localeCompare(b.dueDate || "9999"));
+    const open = list.filter(l => leftOf(l) > 0.004);
+    const owe = open.filter(l => l.dir === "borrowed").reduce((a, l) => a + leftOf(l), 0);
+    const owed = open.filter(l => l.dir === "lent").reduce((a, l) => a + leftOf(l), 0);
+    const soonKey = ymd(addDays(parse(todayStr), 14));
+    const dueSoon = open.filter(l => l.dir === "borrowed" && l.dueDate && l.dueDate >= todayStr && l.dueDate <= soonKey);
+    const late = open.filter(l => l.dueDate && l.dueDate < todayStr);
+    const net = state.moneyNet || 0;
+    $("#loanHint").textContent = state.auth ? "You'll confirm it's you before any change" : "";
+    $("#loanKpis").innerHTML = [
+      ["You owe", gbp(owe), owe && net ? `${Math.round((owe / net) * 100)}% of this period's take-home` : `${open.filter(l => l.dir === "borrowed").length} open`],
+      ["Owed to you", gbp(owed), `${open.filter(l => l.dir === "lent").length} open`],
+      ["Due in 14 days", gbp(dueSoon.reduce((a, l) => a + leftOf(l), 0)), dueSoon.length ? `${dueSoon.length} to pay back` : "nothing due soon"],
+      ["Overdue", late.length, late.length ? "past the pay-back date" : "nothing overdue"]
+    ].map(([l, v, s]) => `<div class="kpi"><div class="eyebrow">${l}</div><div class="v">${v}</div><div class="s">${s}</div></div>`).join("");
+    const key = JSON.stringify(list) + todayStr;
+    const typing = document.activeElement?.tagName === "INPUT" && $("#loanList").contains(document.activeElement);
+    if (key === state.loansKey || typing) return;
+    state.loansKey = key;
+    const f = k => fmt(parse(k), { day: "numeric", month: "short", year: "numeric" });
+    $("#loanList").innerHTML = list.length ? list.map(l => {
+      const amt = Number(l.amount) || 0, rep = repaidOf(l), left = leftOf(l), done = left <= 0.004, isLate = !done && l.dueDate && l.dueDate < todayStr;
+      const due = done ? "Paid back in full" : l.dueDate ? `${isLate ? "Overdue since" : "Pay back by"} ${f(l.dueDate)}` : "No pay-back date";
+      return `<div class="pot loan ${esc(l.dir)}${done ? " done" : ""}" data-id="${esc(l.id)}">
+        <div class="ptop"><b>${esc(l.who)}</b><span class="pill ${done ? "done" : esc(l.dir)}">${l.dir === "lent" ? "I lent" : "I borrowed"}</span></div>
+        <span class="pplanned num">${done ? gbp(amt) : gbp(left) + " left"}</span>
+        <div class="pbar"><i style="width:${amt ? Math.min(100, (rep / amt) * 100) : 0}%"></i></div>
+        <div class="pfoot"><span>${gbp(rep)} repaid of ${gbp(amt)} · ${f(l.date)}${l.note ? " · " + esc(l.note) : ""}</span><span class="${isLate ? "late" : ""}">${due}</span></div>
+        <div class="lrow">${done ? "" : `<input type="number" min="0" step="0.01" inputmode="decimal" placeholder="Repayment £" aria-label="Repayment amount for ${esc(l.who)}"><button type="button" class="btn secondary" data-act="pay">Record repayment</button>`}<button type="button" class="pdel" data-act="del" aria-label="Delete the record for ${esc(l.who)}">×</button></div>
+      </div>`;
+    }).join("") : `<div class="empty">${state.loaded ? "No money borrowed or lent yet." : "Loading…"}</div>`;
+  }
+  $("#loanAdd").onclick = () => {
+    $("#loanForm").hidden = false; $("#loanAdd").hidden = true; $("#loanErr").hidden = true;
+    $("#lDir").value = "borrowed"; $("#lWho").value = ""; $("#lAmt").value = ""; $("#lDate").value = todayStr; $("#lDue").value = ""; $("#lNote").value = "";
+    $("#lWho").focus();
+  };
+  $("#loanCancel").onclick = () => { $("#loanForm").hidden = true; $("#loanAdd").hidden = false; };
+  $("#loanForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    const l = { dir: $("#lDir").value, who: $("#lWho").value.trim(), amount: Number($("#lAmt").value), date: $("#lDate").value, dueDate: $("#lDue").value || null, note: $("#lNote").value.trim() };
+    const err = !l.who ? "Add who the money is from or to." : !(l.amount > 0) ? "Add an amount above £0." : !l.date ? "Add the date." : l.dueDate && l.dueDate < l.date ? "The pay-back date is before the loan date." : "";
+    if (err) { $("#loanErr").textContent = err; $("#loanErr").hidden = false; return; }
+    if (!state.db) { $("#loanErr").textContent = "Saving isn't available in this view."; $("#loanErr").hidden = false; return; }
+    if (!(await confirmIdentity(l.dir === "borrowed" ? "record money you borrowed" : "record money you lent"))) return;
+    const id = "l" + Date.now().toString(36);
+    try {
+      await S.loans().doc(id).set({ ...l, id, repayments: [], createdAt: new Date().toISOString() });
+      $("#loanForm").hidden = true; $("#loanAdd").hidden = false; toast("Saved");
+    } catch (e2) { $("#loanErr").textContent = "That didn't save. Try again."; $("#loanErr").hidden = false; }
+  });
+  $("#loanList").addEventListener("click", async e => {
+    const b = e.target.closest("[data-act]"); if (!b) return;
+    const row = b.closest(".loan"), l = state.loans.get(row.dataset.id); if (!l) return;
+    if (b.dataset.act === "pay") {
+      const amt = Number(row.querySelector("input").value);
+      if (!(amt > 0)) { toast("Type the repayment amount first"); return; }
+      if (amt > leftOf(l) + 0.004) { toast(`Only ${gbp(leftOf(l))} is left on this`); return; }
+      if (!(await confirmIdentity("record this repayment"))) return;
+      try { await S.loans().doc(l.id).set({ ...l, repayments: [...(l.repayments || []), { date: todayStr, amount: amt }] }); toast(`Repayment of ${gbp(amt)} saved`); }
+      catch (e2) { toast("The repayment didn't save"); }
+    } else if (b.dataset.act === "del") {
+      if (!confirm(`Delete the record for ${l.who}? This can't be undone.`)) return;
+      if (!(await confirmIdentity("delete this record"))) return;
+      try { await S.loans().doc(l.id).delete(); toast("Deleted"); } catch (e2) { toast("That wasn't deleted"); }
+    }
+  });
 
   // ---------- payslip check ----------
   // A payslip is stored against the Shiftbook pay period it covers (doc id = period start date).
@@ -1459,10 +1611,139 @@ body::before{background:var(--brand)!important}
       for (const s of b.shifts || []) if (s?.date) await S.shifts().doc(s.date).set(s);
       for (const [k, v] of Object.entries(b.spend || {})) await S.spend().doc(k).set(v);
       for (const [k, v] of Object.entries(b.payslips || {})) await payCol().doc(k).set(v);
+      for (const [k, v] of Object.entries(b.loans || {})) await S.loans().doc(k).set(v);
       await S.main().set({ ...DEFAULTS, ...b.config });
       toast(`Restored ${(b.shifts || []).length} shifts`);
     } catch (e2) { toast("That file isn't a Shiftbook backup"); }
   });
+
+  // ---------- sign-in (website only) ----------
+  // Fill this in from Firebase console → Project settings → Your apps → Web app to turn on accounts.
+  // While apiKey is empty the website keeps the device-only mode above. These values are public by design;
+  // firestore.rules is what keeps each person's data private.
+  const FIREBASE_CONFIG = { apiKey: "", authDomain: "", projectId: "", appId: "" };
+  const FIREBASE_SDK = "https://cdn.jsdelivr.net/npm/firebase@10.14.1/";
+  const FRESH_MS = 5 * 60 * 1000; // how long a sign-in or identity check counts as fresh for loan changes
+  state.auth = null; state.verifiedAt = 0;
+
+  const authMsg = e => ({
+    "auth/invalid-email": "That email address doesn't look right.", "auth/missing-password": "Type your password.",
+    "auth/invalid-credential": "The email or password is wrong.", "auth/wrong-password": "That password is wrong.",
+    "auth/user-not-found": "There's no account with that email. Tap Create account.", "auth/email-already-in-use": "There's already an account with that email. Sign in instead.",
+    "auth/weak-password": "Use a password of at least 8 characters.", "auth/too-many-requests": "Too many tries. Wait a few minutes, then try again.",
+    "auth/invalid-phone-number": "Check the mobile number.", "auth/missing-phone-number": "Type your mobile number.",
+    "auth/invalid-verification-code": "That code isn't right.", "auth/code-expired": "That code has expired. Ask for a new one.",
+    "auth/network-request-failed": "No connection. Check your internet and try again.", "auth/popup-blocked": "Your browser blocked the Google window. Allow pop-ups and try again.",
+    "auth/operation-not-allowed": "This sign-in option isn't switched on in Firebase yet.", "auth/unauthorized-domain": "This website isn't on the Firebase authorised domains list yet.",
+    "auth/user-mismatch": "That's a different account from the one signed in."
+  }[e?.code] || "That didn't work. Try again.");
+  const quiet = e => ["auth/popup-closed-by-user", "auth/cancelled-popup-request"].includes(e?.code);
+  // UK numbers typed as 07… become +447…; numbers already in +country form are kept
+  const e164 = v => { let s = String(v).replace(/[\s().-]/g, ""); if (s.startsWith("00")) s = "+" + s.slice(2); else if (s.startsWith("0")) s = "+44" + s.slice(1); return s; };
+  const verifiers = {};
+  const verifier = id => verifiers[id] ||= new firebase.auth.RecaptchaVerifier(id, { size: "invisible" });
+  const resetVerifier = id => { try { verifiers[id]?.clear(); } catch (e) {} delete verifiers[id]; };
+
+  function authMode(on) {
+    state.needsAuth = on;
+    document.querySelectorAll("section.view").forEach(v => { v.hidden = on ? v.id !== "view-auth" : v.id !== "view-" + state.view; });
+    document.querySelectorAll(".tabs, .bottombar, .period").forEach(el => { el.hidden = on; });
+  }
+  function authNote(msg, ok) { $("#aErr").hidden = ok || !msg; $("#aMsg").hidden = !ok || !msg; $(ok ? "#aMsg" : "#aErr").textContent = msg; }
+  async function authTry(btn, fn) {
+    authNote(""); btn.disabled = true;
+    try { await fn(); state.verifiedAt = Date.now(); }
+    catch (e) { if (!quiet(e)) authNote(authMsg(e)); }
+    finally { btn.disabled = false; }
+  }
+  $("#aMode").addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    $("#aMode").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+    $("#aEmailForm").hidden = b.dataset.m !== "email"; $("#aPhoneForm").hidden = b.dataset.m !== "phone"; authNote("");
+  });
+  $("#aGoogle").onclick = () => authTry($("#aGoogle"), async () => {
+    const p = new firebase.auth.GoogleAuthProvider();
+    try { await state.auth.signInWithPopup(p); }
+    catch (e) { if (e?.code === "auth/popup-blocked" || e?.code === "auth/operation-not-supported-in-this-environment") await state.auth.signInWithRedirect(p); else throw e; }
+  });
+  $("#aEmailForm").addEventListener("submit", e => { e.preventDefault(); authTry($("#aSignIn"), () => state.auth.signInWithEmailAndPassword($("#aEmail").value.trim(), $("#aPass").value)); });
+  $("#aCreate").onclick = () => {
+    if ($("#aPass").value.length < 8) { authNote("Use a password of at least 8 characters."); return; }
+    authTry($("#aCreate"), () => state.auth.createUserWithEmailAndPassword($("#aEmail").value.trim(), $("#aPass").value));
+  };
+  $("#aForgot").onclick = async () => {
+    const em = $("#aEmail").value.trim();
+    if (!em) { authNote("Type your email address first, then tap Forgot password."); return; }
+    try { await state.auth.sendPasswordResetEmail(em); authNote(`If there's an account for ${em}, a reset link is on its way.`, true); }
+    catch (e) { authNote(e?.code === "auth/user-not-found" ? `If there's an account for ${em}, a reset link is on its way.` : authMsg(e), e?.code === "auth/user-not-found"); }
+  };
+  let phoneConf = null;
+  $("#aPhoneForm").addEventListener("submit", e => {
+    e.preventDefault();
+    const btn = $("#aPhoneBtn");
+    if (!phoneConf) {
+      authNote(""); btn.disabled = true;
+      state.auth.signInWithPhoneNumber(e164($("#aPhone").value), verifier("aRecaptcha"))
+        .then(c => { phoneConf = c; $("#aCodeRow").hidden = false; btn.textContent = "Sign in"; $("#aCode").focus(); authNote("We've sent a 6-digit code by text.", true); })
+        .catch(e2 => { resetVerifier("aRecaptcha"); authNote(authMsg(e2)); })
+        .finally(() => { btn.disabled = false; });
+      return;
+    }
+    authTry(btn, () => phoneConf.confirm($("#aCode").value.trim()));
+  });
+  $("#aPhone").addEventListener("input", () => { if (phoneConf) { phoneConf = null; $("#aCodeRow").hidden = true; $("#aPhoneBtn").textContent = "Text me a code"; } });
+  $("#signOut").onclick = async () => { try { await state.auth.signOut(); } catch (e) {} location.reload(); };
+
+  // Step-up check before changing loans: password, Google or a text code, depending on how the person signs in.
+  // Device-only and Claude modes have no separate account here, so they skip it.
+  function confirmIdentity(action) {
+    const u = state.auth?.currentUser;
+    if (!u || Date.now() - state.verifiedAt < FRESH_MS) return Promise.resolve(true);
+    const pid = (u.providerData[0] || {}).providerId;
+    return new Promise(resolve => {
+      let conf = null;
+      const m = $("#authModal"), go = $("#amGo"), err = msg => { $("#amErr").textContent = msg; $("#amErr").hidden = !msg; };
+      $("#amPw").hidden = pid !== "password"; $("#amCode").hidden = true; $("#amPass").value = ""; $("#amCodeIn").value = ""; err("");
+      go.textContent = pid === "phone" ? "Text me a code" : pid === "google.com" ? "Continue with Google" : "Confirm";
+      $("#amText").textContent = `To ${action}, confirm it's you. ` + (pid === "password" ? `Type the password for ${u.email}.` : pid === "phone" ? `We'll text a code to ${u.phoneNumber}.` : pid === "google.com" ? `Sign in again with ${u.email}.` : "");
+      m.hidden = false; (pid === "password" ? $("#amPass") : go).focus();
+      const close = ok => { m.hidden = true; go.onclick = null; $("#amCancel").onclick = null; resetVerifier("amRecaptcha"); resolve(ok); };
+      go.onclick = async () => {
+        go.disabled = true; err("");
+        try {
+          if (pid === "password") await u.reauthenticateWithCredential(firebase.auth.EmailAuthProvider.credential(u.email, $("#amPass").value));
+          else if (pid === "google.com") await u.reauthenticateWithPopup(new firebase.auth.GoogleAuthProvider());
+          else if (pid === "phone") {
+            if (!conf) { conf = await u.reauthenticateWithPhoneNumber(u.phoneNumber, verifier("amRecaptcha")); $("#amCode").hidden = false; go.textContent = "Confirm code"; $("#amCodeIn").focus(); return; }
+            await conf.confirm($("#amCodeIn").value.trim());
+          } else throw { code: "auth/operation-not-allowed" };
+          state.verifiedAt = Date.now(); close(true);
+        } catch (e) { if (pid === "phone" && !conf) resetVerifier("amRecaptcha"); if (!quiet(e)) err(authMsg(e)); }
+        finally { go.disabled = false; }
+      };
+      $("#amCancel").onclick = () => close(false);
+    });
+  }
+  $("#authModal").addEventListener("keydown", e => { if (e.key === "Escape") $("#amCancel").click(); if (e.key === "Enter" && e.target.tagName === "INPUT") $("#amGo").click(); });
+
+  const loadScript = src => new Promise((ok, no) => { const s = document.createElement("script"); s.src = src; s.onload = ok; s.onerror = no; document.head.appendChild(s); });
+  async function startFirebase() {
+    setSync("", "Connecting…");
+    try { for (const m of ["app", "auth", "firestore"]) await loadScript(`${FIREBASE_SDK}firebase-${m}-compat.js`); }
+    catch (e) { setSync("bad", "Can't reach the sign-in service. Check your connection"); state.loaded = true; render(); return; }
+    firebase.initializeApp(FIREBASE_CONFIG);
+    state.auth = firebase.auth(); state.downloads = localDownloads;
+    const db = firebase.firestore();
+    $("#privNote").textContent = "Your shifts and money are saved to your account and are private to you. Sign in on any device to see them.";
+    let started = false;
+    state.auth.onAuthStateChanged(u => {
+      if (!u) { if (started) { location.reload(); return; } authMode(true); setSync("", "Not signed in"); return; }
+      if (started) return;
+      started = true; authMode(false);
+      $("#acctRow").hidden = false; $("#restoreBtn").hidden = false; $("#acct").textContent = "Signed in as " + (u.email || u.phoneNumber || "you");
+      attach(db, "data/users/" + u.uid, "Saved to your account");
+    });
+  }
 
   // ---------- boot ----------
   try { const v = localStorage.getItem("sb.view"); if (v && v !== "log") show(v); } catch (e) {}
@@ -1470,10 +1751,11 @@ body::before{background:var(--brand)!important}
 
   (async () => {
     const local = !window.claude?.use;
+    if (local && FIREBASE_CONFIG.apiKey) { startFirebase(); return; }
     let ok = true; if (local) { try { localStorage.setItem("shiftbook.test", "1"); } catch (e) { ok = false; } }
     if (!ok) { setSync("bad", "This browser can't save. Turn off private browsing"); state.loaded = true; render(); return; }
     const [db, user, dl] = local ? [localDb(), null, localDownloads] : await Promise.all([claude.use("db"), claude.use("user"), claude.use("downloads")]);
-    state.db = db; state.mcp = null; state.downloads = dl;
+    state.mcp = null; state.downloads = dl;
     if (local) {
       $("#restoreBtn").hidden = false;
       $("#privNote").textContent = "Your shifts are saved in this browser on this device only. Use Back up all data on the Timesheet tab to keep a copy, and Restore from backup to move them to another device.";
@@ -1481,10 +1763,16 @@ body::before{background:var(--brand)!important}
     const uid = local ? "me" : user ? await user.id() : null;
     if (!db || !uid) { setSync("bad", "Sign in to Claude to use Shiftbook"); state.loaded = true; render(); return; }
     // every viewer's data lives in their own private subtree: data/users/<their id>/...
-    const base = "data/users/" + uid;
+    attach(db, "data/users/" + uid, local ? "Saved on this device" : "Live · private to you");
+  })();
+
+  function attach(db, base, label) {
+    state.db = db;
     S = { main: () => db.doc(base + "/main"), money: () => db.doc(base + "/money"),
-          shifts: () => db.doc(base + "/main").collection("shifts"), spend: () => db.doc(base + "/main").collection("spend") };
-    setSync("ok", local ? "Saved on this device" : "Live · private to you");
+          shifts: () => db.doc(base + "/main").collection("shifts"), spend: () => db.doc(base + "/main").collection("spend"),
+          loans: () => db.doc(base + "/main").collection("loans") };
+    setSync("ok", label);
+    S.loans().limit(300).onSnapshot(snap => { state.loans = new Map(snap.docs.map(d => [d.id, d.data()])); render(); }, () => {});
     S.main().onSnapshot(snap => {
       state.needsSetup = !snap.exists; setupMode(state.needsSetup);
       state.cfg = { ...DEFAULTS, ...(snap.exists ? snap.data() : {}) }; fillSettings(); if (!state.editing || state.view !== "log") renderUserChips(); render();
@@ -1499,7 +1787,7 @@ body::before{background:var(--brand)!important}
       state.shifts = new Map(snap.docs.map(d => [d.id, d.data()]));
       state.loaded = true; render();
     }, e => { setSync("bad", e?.code === "revoked" ? "Access to this Shiftbook changed" : "Live updates stopped. Reload to reconnect"); });
-  })();
+  }
 })();
 </script>
 
