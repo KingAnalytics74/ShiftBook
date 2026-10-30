@@ -273,6 +273,11 @@ body::before{background:var(--brand)!important}
 .btn.secondary{border:1px solid var(--line)}
 .poweredby{text-align:center;padding-block:28px 8px;font-size:12.5px;color:var(--muted);letter-spacing:.02em}
 .poweredby b{font-family:var(--f-display);font-weight:700;color:var(--ink);letter-spacing:0}
+.poweredlink{display:inline-block;padding:10px 4px;color:var(--ink);text-decoration:underline;text-underline-offset:3px}
+.poweredlink:hover b{color:var(--day)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.gbtn{display:flex;align-items:center;justify-content:center;gap:10px}
+.gbtn svg{flex:none}
 .paytable{min-width:0!important}
 .paytable td.okc{color:var(--good);font-weight:700} .paytable td.badc{color:var(--bad);font-weight:700}
 .card:has(#payBody){--accent:var(--good)}

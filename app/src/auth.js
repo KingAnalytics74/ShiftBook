@@ -86,13 +86,13 @@
     if (WANT.email) opts.push(`<button type="button" class="btn ${WANT.phone ? "secondary" : ""} authbtn" data-a="email">${verb} with email code</button>`);
     if (WANT.password) opts.push(`<button type="button" class="btn ${WANT.phone || WANT.email ? "secondary" : ""} authbtn" data-a="password">${verb} with email and password</button>`);
     const social = [];
-    if (WANT.google) social.push(`<button type="button" class="btn secondary authbtn" data-a="google">Continue with Google</button>`);
+    if (WANT.google) social.push(`<button type="button" class="btn secondary authbtn gbtn" data-a="google"><svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.8 1.1 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3 0 5.8 1.1 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>Continue with Google</button>`);
     if (WANT.apple) social.push(`<button type="button" class="btn secondary authbtn" data-a="apple">Continue with Apple</button>`);
     root().innerHTML = `
       <button type="button" class="linkback" id="authBack">‹ Back</button>
       <h2 class="obh">${up() ? "Create your Shiftbook" : "Welcome back"}</h2>
       <p class="obsub">${up() ? (WANT.password ? "Choose a password, or skip it and we'll text or email you a code each time you sign in on a new device." : "No password to remember. We'll text or email you a code each time you sign in on a new device.") : (WANT.password ? "Use the phone number or email you signed up with. We'll send you a code, or you can use your password." : "Use the phone number or email you signed up with. We'll send you a code.")}</p>
-      <div class="authstack">${opts.join("")}${social.length ? `<div class="author"><span>or</span></div>${social.join("")}` : ""}</div>
+      <div class="authstack">${social.length ? `${social.join("")}<div class="author"><span>or</span></div>` : ""}${opts.join("")}</div>
       <div class="banner bad" id="authErr" hidden></div>
       <p class="obpriv">${up() ? `Already have an account? <button type="button" class="linkinline" id="swap">Sign in</button>` : `New to Shiftbook? <button type="button" class="linkinline" id="swap">Create an account</button>`}</p>`;
     $("#authBack").onclick = screenWelcome;
@@ -364,10 +364,44 @@
     r.onclick = () => { if (!r.disabled) sendCode(r); };
   }
 
+  // Supabase's public settings say which providers are switched on, so an unfinished setup shows
+  // a plain message instead of sending people to an error page
+  async function providerOn(provider) {
+    try {
+      const r = await fetch(CFG.supabaseUrl.replace(/\/+$/, "") + "/auth/v1/settings", { headers: { apikey: CFG.supabaseAnonKey } });
+      const j = await r.json(); return !!(j.external && j.external[provider]);
+    } catch (e) { return true; }
+  }
   async function oauth(provider) {
-    if (mode !== "supabase") { err(`${provider === "google" ? "Google" : "Apple"} sign-in needs Supabase set up first.`); return; }
-    const { error } = await client.auth.signInWithOAuth({ provider, options: { redirectTo: location.origin + location.pathname } });
+    const name = provider === "google" ? "Google" : "Apple";
+    if (mode !== "supabase") { if (provider === "google") screenDemoGoogle(); else err(`${name} sign-in needs Supabase set up first.`); return; }
+    err("");
+    if (!(await providerOn(provider))) { err(`${name} sign-in isn't switched on yet. Use your phone number or email for now.`); return; }
+    const { error } = await client.auth.signInWithOAuth({ provider, options: { redirectTo: here() } });
     if (error) err("That didn't work. Try another way to sign in.");
+  }
+  // demo mode can't open Google, so it asks for the Gmail address the real flow would hand back
+  function screenDemoGoogle() {
+    err("");
+    root().innerHTML = `
+      <button type="button" class="linkback" id="authBack">‹ Back</button>
+      <h2 class="obh">Continue with Google</h2>
+      <p class="authdemo"><b>Demo mode.</b> In the live app this opens Google so you can pick your account. Here, type the Gmail address you'd use.</p>
+      <form id="authForm" novalidate>
+        <div class="field"><label for="authId">Google email address</label>
+          <input id="authId" type="email" inputmode="email" autocomplete="email" autocapitalize="off" placeholder="you@gmail.com"></div>
+        <div class="banner bad" id="authErr" hidden></div>
+        <button class="btn secondary authbtn gbtn" type="submit" id="authGo"><svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.8 1.1 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3 0 5.8 1.1 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>Continue</button>
+        ${up() ? `<p class="obpriv" style="margin:0">By creating an account you agree to the <a href="#terms" data-info="terms">Terms of use</a> and to how we keep your data in our <a href="#privacy" data-info="privacy">privacy notice</a>.</p>` : ""}
+      </form>`;
+    $("#authBack").onclick = screenChoose;
+    setTimeout(() => $("#authId")?.focus(), 50);
+    $("#authForm").onsubmit = e => {
+      e.preventDefault();
+      const email = normEmail($("#authId").value);
+      if (!email) { err("Enter an email address like you@gmail.com."); return; }
+      const u = { id: demoId(email), email }; demoAdd(email); store.set(DEMO_KEY, u); signedIn(u);
+    };
   }
 
   const fromSupabase = u => u ? { id: u.id, email: u.email || null, phone: u.phone ? "+" + String(u.phone).replace(/^\+/, "") : null } : null;
