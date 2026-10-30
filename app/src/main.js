@@ -63,16 +63,16 @@
 
   let renderQueued = false;
 
-function scheduleRender() {
-  if (renderQueued) return;
+  function scheduleRender() {
+    if (renderQueued) return;
 
-  renderQueued = true;
+    renderQueued = true;
 
-  requestAnimationFrame(() => {
-    renderQueued = false;
-    render();
-  });
-}
+    requestAnimationFrame(() => {
+      renderQueued = false;
+      render();
+    });
+  }
 
   // ---------- render ----------
   function render() {
@@ -331,7 +331,7 @@ function scheduleRender() {
   }
 
   function renderBurn(spent, net, elapsed, total) {
-        const ps = net ? spent / net : 0, pt = total ? elapsed / total : 0;
+    const ps = net ? spent / net : 0, pt = total ? elapsed / total : 0;
     const verdict = !spent ? "No spending logged yet" : ps > pt + 0.05 ? "Spending faster than the period is passing" : ps < pt - 0.05 ? "Spending slower than the period is passing" : "Spending in step with the period";
     $("#burn").innerHTML = `<div class="cap"><span>Spent <b>${Math.round(ps * 100)}%</b> of take-home</span><span><b>${Math.round(pt * 100)}%</b> of the pay period gone</span></div>
       <div class="bar" role="img" aria-label="${Math.round(ps * 100)}% of take-home spent, ${Math.round(pt * 100)}% of period gone"><div class="fill${ps > 1 ? " over" : ""}" style="width:${Math.min(100, ps * 100)}%"></div><div class="mark" style="left:calc(${Math.min(100, pt * 100)}% - 1px)" title="Today"></div></div>
@@ -362,7 +362,7 @@ function scheduleRender() {
     state.view = view;
     ["overview", "log", "sheet", "money"].forEach(v => { $("#view-" + v).hidden = v !== view; });
     document.querySelectorAll("[data-view]").forEach(b => b.setAttribute("aria-selected", String(b.dataset.view === view)));
-    try { localStorage.setItem("sb.view", view); } catch (e) {}
+    try { localStorage.setItem("sb.view", view); } catch (e) { }
     window.scrollTo({ top: 0 });
   }
   document.querySelectorAll("[data-view]").forEach(b => b.addEventListener("click", () => { if (b.dataset.view === "log" && !state.editing) openLog(todayStr); show(b.dataset.view); }));
@@ -451,7 +451,7 @@ function scheduleRender() {
     try {
       const res = await state.mcp.callTool("Jotform", "create_submission", { question_answers: qa }, { cache: false });
       const id = res?.payload?.data?.submission_id || null;
-      if (id && state.db) { try { await S.shifts().doc(s.date).update({ jotformId: id }); } catch (e) {} }
+      if (id && state.db) { try { await S.shifts().doc(s.date).update({ jotformId: id }); } catch (e) { } }
       setSync("ok", "Synced to Jotform");
     } catch (e) {
       const msg = { needs_reauth: "Reconnect Jotform in Settings → Connectors", server_not_connected: "Add the Jotform connector to sync", not_in_manifest: "Jotform sync is turned off for this page", approval_required: "Allow Jotform to sync copies", blocked_by_policy: "Jotform is blocked by your organisation" }[e?.code] || "Saved here · Jotform copy did not send";
@@ -470,7 +470,7 @@ function scheduleRender() {
     try {
       await S.shifts().doc(s.date).set(body);
       const newOnes = s.users.filter(u => !(state.cfg.serviceUsers || []).includes(u));
-      if (newOnes.length) { state.cfg.serviceUsers = [...(state.cfg.serviceUsers || []), ...newOnes]; try { await S.main().set({ ...state.cfg }); } catch (e) {} }
+      if (newOnes.length) { state.cfg.serviceUsers = [...(state.cfg.serviceUsers || []), ...newOnes]; try { await S.main().set({ ...state.cfg }); } catch (e) { } }
       toast(`Shift saved · ${gbp(calc(s).total)}`);
       state.editing = null; show("overview");
       syncJotform(s);
@@ -491,7 +491,7 @@ function scheduleRender() {
     const p = curPeriod(), sm = summarise(p);
     const lines = [["Date", "Day", "Service user(s)", "Sleep-in", "Day hours", "Break", "Net hours", "Hourly pay", "Sleep-in pay", "Total", "Notes"].join(",")];
     sm.rows.forEach(r => { const s = r.s, c = r.c; lines.push([r.key, fmt(r.date, { weekday: "short" }), s ? `"${(s.users || []).join(", ")}"` : "Day off", s ? (s.sleepIn ? "Y" : "N") : "", s?.dayHours ?? "", s?.breakHrs ?? "", c ? c.net : "", c ? c.hourly.toFixed(2) : "", c ? c.sleep.toFixed(2) : "", c ? c.total.toFixed(2) : "", s?.notes ? `"${s.notes.replace(/"/g, '""')}"` : ""].join(",")); });
-        lines.push(["TOTAL", "", "", sm.t.sleepIns, sm.t.dayHours, sm.t.breaks, sm.t.net, sm.t.hourly.toFixed(2), sm.t.sleep.toFixed(2), sm.t.gross.toFixed(2), ""].join(","));
+    lines.push(["TOTAL", "", "", sm.t.sleepIns, sm.t.dayHours, sm.t.breaks, sm.t.net, sm.t.hourly.toFixed(2), sm.t.sleep.toFixed(2), sm.t.gross.toFixed(2), ""].join(","));
     return { text: lines.join("\n"), name: `Timesheet_${ymd(p.start)}_to_${ymd(p.end)}.csv` };
   }
   $("#csvBtn").onclick = async () => {
@@ -502,8 +502,10 @@ function scheduleRender() {
   // Full JSON backup: every shift, setting, plan and spending record (also the hand-off format for a future GitHub build)
   $("#backupBtn").onclick = async () => {
     if (!state.downloads) { toast("Downloads aren't available in this view"); return; }
-    const data = { exportedAt: new Date().toISOString(), app: "Shiftbook", schemaVersion: 1, config: state.cfg, money: state.money,
-      shifts: [...state.shifts.values()].sort((a, b) => a.date.localeCompare(b.date)), spend: Object.fromEntries(state.spend), payslips: Object.fromEntries(state.payslips) };
+    const data = {
+      exportedAt: new Date().toISOString(), app: "Shiftbook", schemaVersion: 1, config: state.cfg, money: state.money,
+      shifts: [...state.shifts.values()].sort((a, b) => a.date.localeCompare(b.date)), spend: Object.fromEntries(state.spend), payslips: Object.fromEntries(state.payslips)
+    };
     try { await state.downloads.save({ filename: `Shiftbook_backup_${todayStr}.json`, data: JSON.stringify(data, null, 2) }); } catch (e) { if (e?.code !== "cancelled") toast("The backup wasn't saved"); }
   };
   $("#copyBtn").onclick = async () => {
@@ -526,27 +528,29 @@ function scheduleRender() {
   });
 
   $("#resetSetupBtn").addEventListener("click", async () => {
-  if (!confirm("Reset your setup details? Your saved shifts will not be deleted.")) return;
+    if (!confirm("Reset your setup details? Your saved shifts will not be deleted.")) return;
 
-  try {
-    await S.main().delete();
+    try {
+      await S.main().delete();
 
-    state.needsSetup = true;
-    state.cfg = { ...DEFAULTS };
-    setupMode(true);
+      state.needsSetup = true;
+      state.cfg = { ...DEFAULTS };
+      setupMode(true);
 
-    toast("Setup reset. You can enter your details again.");
-  } catch (e) {
-    toast("Could not reset setup. Please try again.");
-  }
-});
+      toast("Setup reset. You can enter your details again.");
+    } catch (e) {
+      toast("Could not reset setup. Please try again.");
+    }
+  });
 
   // ---------- money ----------
   // 2026/27 rates (England, Wales & NI): personal allowance £12,570; basic rate 20% on next £37,700, 40% above;
   // employee NI 8% from £1,048/month to £4,189/month, 2% above; self-employed Class 4 6% / 2%;
   // auto-enrolment qualifying earnings £520–£4,189/month; student loan monthly thresholds below.
-  const R = { FREE_M: 1048.25, PA: 12570, BASIC: 37700, PT_M: 1048, UEL_M: 4189, QE_LO_M: 520, QE_HI_M: 4189,
-    SL: { p1: [2241, 0.09], p2: [2448, 0.09], p4: [2816, 0.09], p5: [2083, 0.09], pg: [1750, 0.06] } };
+  const R = {
+    FREE_M: 1048.25, PA: 12570, BASIC: 37700, PT_M: 1048, UEL_M: 4189, QE_LO_M: 520, QE_HI_M: 4189,
+    SL: { p1: [2241, 0.09], p2: [2448, 0.09], p4: [2816, 0.09], p5: [2083, 0.09], pg: [1750, 0.06] }
+  };
   const MONEY_DEFAULTS = { employment: "paye", taxCode: "1257L", pensionPct: 4, studentLoan: "none", pots: [] };
   const KIND = { need: "Needs", want: "Wants", save: "Savings" };
   state.money = { ...MONEY_DEFAULTS }; state.spend = new Map(); state.planDraft = null; state.builtKey = "";
@@ -667,7 +671,7 @@ function scheduleRender() {
         <div class="pfoot"><span id="pl-${esc(pt.id)}"></span><span id="pc-${esc(pt.id)}"></span></div>
       </div>`).join("") : `<div class="empty">${state.loaded ? "No pots yet. Add one to start planning your take-home." : "Loading your plan…"}</div>`;
   }
-    function updatePlanNumbers() {
+  function updatePlanNumbers() {
     const net = state.moneyNet || 0, sp = spendFor(state.moneyKey), list = pots();
     const byKind = { need: 0, want: 0, save: 0 }; let total = 0, spentTotal = 0;
     list.forEach(pt => {
@@ -826,103 +830,103 @@ function scheduleRender() {
     { id: "rent", name: "Rent & bills", mode: "pct", value: 35, kind: "need" }, { id: "food", name: "Food & groceries", mode: "pct", value: 12, kind: "need" },
     { id: "transport", name: "Transport", mode: "pct", value: 8, kind: "need" }, { id: "phone", name: "Phone & subscriptions", mode: "pct", value: 3, kind: "need" },
     { id: "family", name: "Family & giving", mode: "pct", value: 10, kind: "need" }, { id: "savings", name: "Savings", mode: "pct", value: 15, kind: "save" },
-        { id: "fun", name: "Personal & fun", mode: "pct", value: 10, kind: "want" }, { id: "buffer", name: "Buffer", mode: "pct", value: 7, kind: "want" }];
+    { id: "fun", name: "Personal & fun", mode: "pct", value: 10, kind: "want" }, { id: "buffer", name: "Buffer", mode: "pct", value: 7, kind: "want" }];
   function setupMode(on) {
     document.querySelectorAll("section.view").forEach(v => { v.hidden = on ? v.id !== "view-setup" : v.id !== "view-" + state.view; });
     document.querySelectorAll(".tabs, .bottombar, .period").forEach(el => { el.hidden = on; });
   }
- const setupFields = {
-  uName: "Please enter your name.",
-  uRole: "Please enter your role.",
-  uRate: "Please enter a valid hourly rate greater than £0.",
-  uSleep: "Please enter a valid sleep-in rate of £0 or more.",
-  uDay: "Enter a whole number between 1 and 28."
-};
+  const setupFields = {
+    uName: "Please enter your name.",
+    uRole: "Please enter your role.",
+    uRate: "Please enter a valid hourly rate greater than £0.",
+    uSleep: "Please enter a valid sleep-in rate of £0 or more.",
+    uDay: "Enter a whole number between 1 and 28."
+  };
 
-function showFieldError(id, message) {
-  const input = document.getElementById(id);
-  const error = document.getElementById(id + "Err");
+  function showFieldError(id, message) {
+    const input = document.getElementById(id);
+    const error = document.getElementById(id + "Err");
 
-  error.textContent = message;
-  error.hidden = !message;
-  input.setAttribute("aria-invalid", message ? "true" : "false");
-}
-
-
-$("#setupForm").addEventListener("submit", async e => {
-  e.preventDefault();
-
-  const name = $("#uName").value.trim();
-  const rateText = $("#uRate").value.trim();
-  const sleepText = $("#uSleep").value.trim();
-  const dayText = $("#uDay").value.trim();
-
-  const rate = Number(rateText);
-  const sleep = Number(sleepText);
-  const day = Number(dayText);
-
-  const errors = [];
-
-  if (!name) {
-    errors.push("Please enter your name.");
+    error.textContent = message;
+    error.hidden = !message;
+    input.setAttribute("aria-invalid", message ? "true" : "false");
   }
 
-  if (!rateText) {
-    errors.push("Please enter hourly rate.");
-  } else if (!Number.isFinite(rate) || rate <= 0) {
-    errors.push("Invalid hourly rate.");
-  }
 
-  if (!sleepText) {
-    errors.push("Please enter sleep-in rate.");
-  } else if (!Number.isFinite(sleep) || sleep < 0) {
-    errors.push("Invalid sleep-in rate.");
-  }
+  $("#setupForm").addEventListener("submit", async e => {
+    e.preventDefault();
 
-  if (!dayText) {
-    errors.push("Please enter pay-period start day.");
-  } else if (!Number.isInteger(day) || day < 1 || day > 28) {
-    errors.push("Invalid pay-period start day. Enter a day from 1 to 28.");
-  }
+    const name = $("#uName").value.trim();
+    const rateText = $("#uRate").value.trim();
+    const sleepText = $("#uSleep").value.trim();
+    const dayText = $("#uDay").value.trim();
 
-  if (errors.length) {
-    $("#setupErr").innerHTML =
-      "<ul>" + errors.map(error => `<li>${error}</li>`).join("") + "</ul>";
-    $("#setupErr").hidden = false;
-    return;
-  }
+    const rate = Number(rateText);
+    const sleep = Number(sleepText);
+    const day = Number(dayText);
 
-  $("#setupErr").hidden = true;
-  $("#setupBtn").disabled = true;
+    const errors = [];
 
-  try {
-    await S.money().set({ ...MONEY_DEFAULTS, pots: STARTER_POTS });
+    if (!name) {
+      errors.push("Please enter your name.");
+    }
 
-    await S.main().set({
-      name,
-      role: $("#uRole").value.trim() || "Support Worker",
-      hourlyRate: rate,
-      sleepInRate: sleep,
-      periodStartDay: day,
-      serviceUsers: $("#uUsers").value
-        .split(",").map(x => x.trim()).filter(Boolean)
-    });
+    if (!rateText) {
+      errors.push("Please enter hourly rate.");
+    } else if (!Number.isFinite(rate) || rate <= 0) {
+      errors.push("Invalid hourly rate.");
+    }
 
-    state.view = "log";
-    toast("Welcome to Shiftbook. Log your first shift");
+    if (!sleepText) {
+      errors.push("Please enter sleep-in rate.");
+    } else if (!Number.isFinite(sleep) || sleep < 0) {
+      errors.push("Invalid sleep-in rate.");
+    }
 
-  } catch (e2) {
-    $("#setupErr").textContent =
-      e2?.code === "invalid_argument"
-        ? "Shiftbook can't save for you yet. Ask the person who shared it to invite you by email as an editor."
-        : "That didn't save. Check your connection and try again.";
+    if (!dayText) {
+      errors.push("Please enter pay-period start day.");
+    } else if (!Number.isInteger(day) || day < 1 || day > 28) {
+      errors.push("Invalid pay-period start day. Enter a day from 1 to 28.");
+    }
 
-    $("#setupErr").hidden = false;
+    if (errors.length) {
+      $("#setupErr").innerHTML =
+        "<ul>" + errors.map(error => `<li>${error}</li>`).join("") + "</ul>";
+      $("#setupErr").hidden = false;
+      return;
+    }
 
-  } finally {
-    $("#setupBtn").disabled = false;
-  }
-});
+    $("#setupErr").hidden = true;
+    $("#setupBtn").disabled = true;
+
+    try {
+      await S.money().set({ ...MONEY_DEFAULTS, pots: STARTER_POTS });
+
+      await S.main().set({
+        name,
+        role: $("#uRole").value.trim() || "Support Worker",
+        hourlyRate: rate,
+        sleepInRate: sleep,
+        periodStartDay: day,
+        serviceUsers: $("#uUsers").value
+          .split(",").map(x => x.trim()).filter(Boolean)
+      });
+
+      state.view = "log";
+      toast("Welcome to Shiftbook. Log your first shift");
+
+    } catch (e2) {
+      $("#setupErr").textContent =
+        e2?.code === "invalid_argument"
+          ? "Shiftbook can't save for you yet. Ask the person who shared it to invite you by email as an editor."
+          : "That didn't save. Check your connection and try again.";
+
+      $("#setupErr").hidden = false;
+
+    } finally {
+      $("#setupBtn").disabled = false;
+    }
+  });
 
   // ---------- standalone mode (e.g. GitHub Pages) ----------
   // Outside Claude there is no artifact db, so the same doc/collection API is backed by localStorage on this device.
@@ -949,11 +953,13 @@ $("#setupForm").addEventListener("submit", async e => {
     });
     return { doc };
   }
-  const localDownloads = { save: async ({ filename, data }) => {
-    const url = URL.createObjectURL(new Blob([data], { type: filename.endsWith(".csv") ? "text/csv" : "application/json" }));
-    const a = document.createElement("a"); a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-  } };
+  const localDownloads = {
+    save: async ({ filename, data }) => {
+      const url = URL.createObjectURL(new Blob([data], { type: filename.endsWith(".csv") ? "text/csv" : "application/json" }));
+      const a = document.createElement("a"); a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+  };
   // Restore reads the file written by "Back up all data", so data can also move from the Claude version to this one
   $("#restoreBtn").onclick = () => $("#restoreFile").click();
   $("#restoreFile").addEventListener("change", async e => {
@@ -972,7 +978,7 @@ $("#setupForm").addEventListener("submit", async e => {
   });
 
   // ---------- boot ----------
-  try { const v = localStorage.getItem("sb.view"); if (v && v !== "log") show(v); } catch (e) {}
+  try { const v = localStorage.getItem("sb.view"); if (v && v !== "log") show(v); } catch (e) { }
   openLog(todayStr); fillSettings(); scheduleRender();
 
   (async () => {
@@ -989,19 +995,21 @@ $("#setupForm").addEventListener("submit", async e => {
     if (!db || !uid) { setSync("bad", "Sign in to Claude to use Shiftbook"); state.loaded = true; scheduleRender(); return; }
     // every viewer's data lives in their own private subtree: data/users/<their id>/...
     const base = "data/users/" + uid;
-    S = { main: () => db.doc(base + "/main"), money: () => db.doc(base + "/money"),
-          shifts: () => db.doc(base + "/main").collection("shifts"), spend: () => db.doc(base + "/main").collection("spend") };
+    S = {
+      main: () => db.doc(base + "/main"), money: () => db.doc(base + "/money"),
+      shifts: () => db.doc(base + "/main").collection("shifts"), spend: () => db.doc(base + "/main").collection("spend")
+    };
     setSync("ok", local ? "Saved on this device" : "Live · private to you");
     S.main().onSnapshot(snap => {
       state.needsSetup = !snap.exists; setupMode(state.needsSetup);
       state.cfg = { ...DEFAULTS, ...(snap.exists ? snap.data() : {}) }; fillSettings(); if (!state.editing || state.view !== "log") renderUserChips(); scheduleRender();
-    }, () => {});
-    S.money().onSnapshot(snap => { state.money = { ...MONEY_DEFAULTS, ...(snap.exists ? snap.data() : {}) }; scheduleRender(); }, () => {});
-    payCol().limit(120).onSnapshot(snap => { state.payslips = new Map(snap.docs.map(d => [d.id, d.data()])); scheduleRender(); }, () => {});
+    }, () => { });
+    S.money().onSnapshot(snap => { state.money = { ...MONEY_DEFAULTS, ...(snap.exists ? snap.data() : {}) }; scheduleRender(); }, () => { });
+    payCol().limit(120).onSnapshot(snap => { state.payslips = new Map(snap.docs.map(d => [d.id, d.data()])); scheduleRender(); }, () => { });
     S.spend().limit(200).onSnapshot(snap => {
       const typingSpend = /^ps-/.test(document.activeElement?.id || "");
       if (!typingSpend) { state.spend = new Map(snap.docs.map(d => [d.id, d.data()])); scheduleRender(); }
-    }, () => {});
+    }, () => { });
     S.shifts().limit(1000).onSnapshot(snap => {
       state.shifts = new Map(snap.docs.map(d => [d.id, d.data()]));
       state.loaded = true; scheduleRender();
