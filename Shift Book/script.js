@@ -1,601 +1,3 @@
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#C8102E">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<title>My Shiftbook</title>
-<meta name="claude:viewport-fit-sides" content="cover">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
-<style>
-/* Layout: phone-first shift app — sticky period bar, three views (Overview / Log / Timesheet), bottom tab bar on phones, top tabs on wide screens */
-:root{
-  --bg:#EEF2F8; --brand:#C8102E; --brand-2:#8F0A20; --on-bg:#FFFFFF; --on-bg-muted:#FFE1E5;
-  --hero-bg:#14213D; --hero-2:#233A6E; --hero-fg:#FFFFFF; --hero-muted:#C9D3EA; --hero-accent:#FFD23F; --c4-soft:#EDE5FD;
-  --surface:#FFFFFF; --sunk:#F1F3F9; --line:#DCE1EC;
-  --ink:#14213D; --muted:#55607A; --faint:#8C95AA;
-  --day:#2563EB; --day-soft:#DCE6FF;
-  --night:#C98A00; --night-soft:#FFF1BF; --night-ink:#7A5A00; --c4:#7C3AED;
-  --amber:#C8102E; --amber-soft:#FCE0E4;
-  --bad:#B4122B; --bad-soft:#FCE0E4;
-  --focus:#14213D; --good:#1E7A3F; --good-soft:#DDF3E6;
-  --f-display:"Bricolage Grotesque", "Figtree", system-ui, sans-serif;
-  --f-body:"Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --f-num:"IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
-  --r:14px;
-}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#0D111C; --brand:#8E1022; --brand-2:#5C0915; --on-bg:#FFFFFF; --on-bg-muted:#F5C9CF;
-  --hero-bg:#1B2747; --hero-2:#2A3D6E; --hero-fg:#FFFFFF; --hero-muted:#B9C4DE; --hero-accent:#FFD23F; --c4-soft:#2B2350;
-  --surface:#161B2B; --sunk:#20263A; --line:#2E3550;
-  --ink:#EEF1F8; --muted:#A9B1C7; --faint:#717A93;
-  --day:#4F7FF0; --day-soft:#1E2C55; --night:#B88A0E; --night-soft:#3D3214; --night-ink:#FFD23F; --c4:#9566E8;
-  --amber:#E0485A; --amber-soft:#43161D; --bad:#FF7A7A; --bad-soft:#43161D; --focus:#FFD23F; --good:#4CC38A; --good-soft:#163828;
-  color-scheme:dark}}
-:root[data-theme="dark"]{
-  --bg:#0D111C; --brand:#8E1022; --brand-2:#5C0915; --on-bg:#FFFFFF; --on-bg-muted:#F5C9CF;
-  --hero-bg:#1B2747; --hero-2:#2A3D6E; --hero-fg:#FFFFFF; --hero-muted:#B9C4DE; --hero-accent:#FFD23F; --c4-soft:#2B2350;
-  --surface:#161B2B; --sunk:#20263A; --line:#2E3550;
-  --ink:#EEF1F8; --muted:#A9B1C7; --faint:#717A93;
-  --day:#4F7FF0; --day-soft:#1E2C55; --night:#B88A0E; --night-soft:#3D3214; --night-ink:#FFD23F; --c4:#9566E8;
-  --amber:#E0485A; --amber-soft:#43161D; --bad:#FF7A7A; --bad-soft:#43161D; --focus:#FFD23F; --good:#4CC38A; --good-soft:#163828;
-  color-scheme:dark}
-/* red ground: header text, tabs and KPI tiles sit directly on it */
-.top{color:var(--on-bg);border-bottom-color:rgba(255,255,255,.25)!important}
-.brand .who,.period .label small,.sync{color:var(--on-bg-muted)!important}
-.period button.arrow{color:var(--ink)}
-.tab{color:var(--on-bg-muted)!important}
-.tab[aria-selected="true"]{background:var(--surface)!important;color:var(--ink)!important}
-.kpi{background:var(--surface)!important;border:1px solid var(--line)}
-.pill.sleep{color:var(--night-ink)!important}
-.dot.ok{background:var(--night)!important}
-.hero .big{color:var(--day)}
-.btn.secondary{background:var(--surface)}
-
-*{box-sizing:border-box}
-[hidden]{display:none!important}
-html,body{background:var(--bg);color:var(--ink)}
-body{font-family:var(--f-body);font-size:15px;line-height:1.45;margin:0}
-.num{font-family:var(--f-num);font-variant-numeric:tabular-nums}
-button,input,select,textarea{font:inherit;color:inherit}
-:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
-@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
-
-body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
-.wrap{max-width:980px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 110px}
-
-/* top bar */
-.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:14px 10px;display:flex;flex-direction:column;gap:10px;border-bottom:1px solid var(--line)}
-.brand{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.brand h1{font-family:var(--f-display);font-weight:700;font-size:22px;letter-spacing:-.01em;margin:0}
-.brand .who{color:var(--muted);font-size:13px}
-.sync{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px;white-space:nowrap}
-.dot{width:8px;height:8px;border-radius:50%;background:var(--faint)}
-.dot.ok{background:var(--day)} .dot.warn{background:var(--amber)} .dot.bad{background:var(--bad)}
-.period{display:flex;align-items:center;gap:8px}
-.period button.arrow{width:36px;height:36px;border-radius:10px;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-size:18px;line-height:1}
-.period .label{flex:1;min-width:0;text-align:center;font-weight:600}
-.period .label small{display:block;font-weight:400;color:var(--muted);font-size:12px}
-.tabs{display:none;gap:4px}
-.tab{border:0;background:transparent;padding:8px 14px;border-radius:999px;cursor:pointer;font-weight:600;color:var(--muted)}
-.tab[aria-selected="true"]{background:var(--ink);color:var(--bg)}
-@media (min-width:760px){.tabs{display:flex}.bottombar{display:none!important}.top{flex-direction:row;align-items:center;justify-content:space-between}.period{min-width:340px}}
-
-.bottombar{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--surface);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,1fr);padding:6px max(10px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(10px,env(safe-area-inset-left,0px))}
-.bottombar button{border:0;background:transparent;padding:8px 4px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;border-radius:10px}
-.bottombar button[aria-selected="true"]{color:var(--ink);background:var(--sunk)}
-.bottombar svg{width:22px;height:22px}
-
-section.view{display:flex;flex-direction:column;gap:16px;padding-top:16px}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px}
-.card h2{font-family:var(--f-display);font-weight:600;font-size:17px;margin:0 0 12px;text-wrap:balance}
-.eyebrow{text-transform:uppercase;letter-spacing:.08em;font-size:11px;font-weight:700;color:var(--muted)}
-.grid2{display:grid;grid-template-columns:1fr;gap:16px}
-@media (min-width:760px){.grid2{grid-template-columns:1.25fr 1fr}}
-.grid2>*{min-width:0}
-
-/* hero */
-.hero{display:flex;flex-direction:column;gap:12px}
-.hero .big{font-family:var(--f-num);font-weight:600;font-size:clamp(34px,9vw,52px);letter-spacing:-.02em;line-height:1}
-.split{height:12px;border-radius:999px;background:var(--sunk);overflow:hidden;display:flex}
-.split i{display:block;height:100%}
-.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--muted)}
-.legend b{color:var(--ink);font-family:var(--f-num);font-weight:600}
-.sw{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
-
-.kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-@media (min-width:560px){.kpis{grid-template-columns:repeat(4,1fr)}}
-.kpi{background:var(--sunk);border-radius:12px;padding:12px}
-.kpi .v{font-family:var(--f-num);font-weight:600;font-size:22px;margin-top:4px}
-.kpi .s{font-size:12px;color:var(--muted)}
-
-.insights{display:flex;flex-direction:column;gap:8px;margin:0;padding:0;list-style:none}
-.insights li{display:flex;gap:10px;align-items:flex-start;font-size:14px}
-.insights li::before{content:"";flex:none;width:6px;height:6px;border-radius:50%;background:var(--night);margin-top:8px}
-
-/* calendar */
-.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
-.cal .dow{font-size:11px;text-align:center;color:var(--faint);font-weight:700;letter-spacing:.05em}
-.cal button{aspect-ratio:1;max-width:100%;border-radius:9px;border:1px solid var(--line);background:var(--surface);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:2px;min-width:0}
-.cal button .d{font-size:13px;font-weight:600}
-.cal button .e{font-family:var(--f-num);font-size:10px;color:var(--muted)}
-.cal button.day{background:var(--day-soft);border-color:transparent}
-.cal button.night{background:var(--night-soft);border-color:transparent}
-.cal button.both{background:linear-gradient(135deg,var(--day-soft) 50%,var(--night-soft) 50%);border-color:transparent}
-.cal button.future{border-style:dashed;border-color:var(--faint)}
-.cal button.today{outline:2px solid var(--ink);outline-offset:1px}
-.cal .pad{visibility:hidden}
-
-/* bars */
-.hbars{display:flex;flex-direction:column;gap:8px}
-.hbar{display:grid;grid-template-columns:minmax(64px,auto) 1fr 72px;gap:10px;align-items:center;font-size:14px}
-.hbar .track{height:10px;background:var(--sunk);border-radius:999px;overflow:hidden}
-.hbar .fill{height:100%;background:var(--day);border-radius:999px}
-.hbar .val{text-align:right;color:var(--muted);font-size:13px}
-svg text{fill:var(--muted);font-family:var(--f-body);font-size:11px}
-svg .tot{fill:var(--ink);font-family:var(--f-num);font-weight:600;font-size:11px}
-
-/* form */
-form{display:flex;flex-direction:column;gap:18px}
-.field{display:flex;flex-direction:column;gap:8px}
-.field>label,.field>.lbl{font-weight:600;font-size:14px}
-.hint{font-size:12px;color:var(--muted);font-weight:400}
-input[type=date],input[type=number],textarea,input[type=text]{width:100%;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--surface);font-size:16px}
-textarea{min-height:70px;resize:vertical}
-.chips{display:flex;flex-wrap:wrap;gap:8px}
-.chip{border:1px solid var(--line);background:var(--surface);padding:8px 14px;border-radius:999px;cursor:pointer;font-weight:600;font-size:14px}
-.chip[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
-.chip.ghost{border-style:dashed;color:var(--muted)}
-.seg{display:grid;grid-template-columns:1fr 1fr;background:var(--sunk);border-radius:12px;padding:4px;gap:4px}
-.seg button{border:0;padding:10px;border-radius:9px;background:transparent;font-weight:600;cursor:pointer;color:var(--muted)}
-.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
-.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.row2>*{min-width:0}
-.quick{display:flex;gap:6px;flex-wrap:wrap}
-.quick button{border:1px solid var(--line);background:transparent;border-radius:8px;padding:4px 10px;font-size:13px;cursor:pointer;font-family:var(--f-num)}
-.preview{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:12px 14px;border-radius:12px;background:var(--sunk)}
-.preview .num{font-size:20px;font-weight:600}
-.btn{border:0;border-radius:12px;padding:14px 18px;font-weight:700;cursor:pointer;background:var(--ink);color:var(--surface);font-size:16px}
-.btn.secondary{background:var(--sunk);color:var(--ink)}
-.btn.danger{background:var(--bad-soft);color:var(--bad)}
-.btn:disabled{opacity:.5;cursor:not-allowed}
-.actions{display:flex;gap:10px;flex-wrap:wrap}
-.actions .btn{flex:1;min-width:140px}
-.banner{padding:10px 12px;border-radius:10px;font-size:14px}
-.banner.info{background:var(--night-soft)} .banner.ok{background:var(--day-soft)} .banner.warn{background:var(--amber-soft)} .banner.bad{background:var(--bad-soft);color:var(--bad)}
-.confirm{display:flex;flex-direction:column;gap:10px;padding:12px;border-radius:12px;border:1px solid var(--bad);background:var(--bad-soft)}
-
-/* table */
-.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r);background:var(--surface)}
-table{border-collapse:collapse;width:100%;min-width:720px;font-size:13.5px}
-th,td{padding:9px 10px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
-th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);background:var(--sunk);position:sticky;top:0}
-th:nth-child(-n+3),td:nth-child(-n+3){text-align:left}
-td.num{font-family:var(--f-num)}
-tr.off td{color:var(--faint)}
-tr.wkend td:nth-child(2){font-weight:700}
-tr.clickable{cursor:pointer}
-tr.clickable:hover td{background:var(--sunk)}
-tfoot td{font-weight:700;background:var(--sunk);border-bottom:0}
-.pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11.5px;font-weight:700}
-.pill.worked{background:var(--day-soft);color:var(--day)}
-.pill.rostered{background:var(--amber-soft);color:var(--amber)}
-.pill.sleep{background:var(--night-soft);color:var(--night)}
-.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--surface);padding:10px 16px;border-radius:12px;font-weight:600;z-index:20;max-width:calc(100% - 32px)}
-@media (min-width:760px){.toast{bottom:24px}}
-.empty{color:var(--muted);text-align:center;padding:24px 8px}
-.settings{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.settings>*{min-width:0}
-select{width:100%;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--surface);font-size:15px}
-.step{display:flex;justify-content:space-between;gap:12px;padding:10px 12px;border-radius:10px;background:var(--sunk)}
-.step .num{font-weight:600}
-.step.minus .num{color:var(--amber)}
-.step.total{background:var(--day-soft)}
-.step.total .num{font-size:18px;color:var(--day)}
-.planrows{display:flex;flex-direction:column;gap:10px}
-.pot{display:grid;grid-template-columns:1fr auto;gap:8px 10px;padding:12px;border:1px solid var(--line);border-radius:12px;align-items:center}
-.pot>*{min-width:0}
-.pot .ptop{display:flex;gap:8px;align-items:center;min-width:0}
-.pot .pname{font-weight:600;padding:8px 10px}
-.pot .pplanned{font-size:17px;font-weight:600;text-align:right}
-.pot .pplan{display:grid;grid-template-columns:76px 1fr 1fr;gap:6px}
-.pot .pplan input,.pot .pplan select,.pot .pspent input{padding:8px;font-size:14px;border-radius:9px}
-.pot .pspent{display:flex;align-items:center;gap:6px;justify-self:end}
-.pot .pspent input{width:96px}
-.pot .pbar{grid-column:1/-1;height:8px;border-radius:999px;background:var(--sunk);overflow:hidden}
-.pot .pbar i{display:block;height:100%;border-radius:999px;background:var(--day)}
-.pot .pbar i.over{background:var(--amber)}
-.pot .pfoot{grid-column:1/-1;display:flex;justify-content:space-between;gap:8px;font-size:12.5px;color:var(--muted)}
-.pdel{border:0;background:transparent;color:var(--muted);font-size:20px;line-height:1;cursor:pointer;padding:4px 8px;border-radius:8px}
-.pvs{display:grid;grid-template-columns:minmax(80px,30%) 1fr;gap:4px 10px;align-items:center;font-size:13.5px}
-.pvs .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.pvs .tr{position:relative;height:14px;border-radius:999px;background:transparent}
-.pvs .tr .pl{position:absolute;inset:0 auto 0 0;border-radius:999px;background:var(--sunk);border:1px solid var(--line)}
-.pvs .tr .sp{position:absolute;top:3px;bottom:3px;left:3px;border-radius:999px;background:var(--day)}
-.pvs .tr .sp.over{background:var(--amber)}
-.pvs .fig{grid-column:2;font-size:12px;color:var(--muted);font-family:var(--f-num)}
-.charthead{display:flex;justify-content:space-between;align-items:baseline;gap:6px 12px;flex-wrap:wrap;margin-bottom:8px}
-.charthead h2{margin:0}
-.chart{position:relative;width:100%}
-.chart svg{display:block;width:100%;height:auto;overflow:visible;touch-action:pan-y}
-.chart .hit{fill:transparent;cursor:crosshair}
-.ln{display:inline-block;width:18px;height:0;margin-right:6px;vertical-align:middle}
-svg .lbl{fill:var(--ink);font-family:var(--f-num);font-weight:600;font-size:11px}
-svg .axis{fill:var(--muted);font-size:10.5px}
-#tip{position:fixed;z-index:30;pointer-events:none;background:var(--ink);color:var(--surface);border-radius:10px;padding:8px 10px;font-size:12.5px;line-height:1.4;max-width:240px;box-shadow:0 6px 18px rgba(0,0,0,.18)}
-#tip b{font-family:var(--f-num)}
-#tip .t{font-weight:700;margin-bottom:2px}
-.burn{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
-.burn .bar{position:relative;height:18px;border-radius:999px;background:var(--sunk);border:1px solid var(--line);overflow:visible}
-.burn .fill{position:absolute;top:2px;bottom:2px;left:2px;border-radius:999px;background:var(--day);max-width:calc(100% - 4px)}
-.burn .fill.over{background:var(--amber)}
-.burn .mark{position:absolute;top:-5px;bottom:-5px;width:2px;background:var(--ink);border-radius:2px}
-.burn .cap{display:flex;justify-content:space-between;gap:10px;font-size:13px;color:var(--muted);flex-wrap:wrap}
-.burn .cap b{color:var(--ink);font-family:var(--f-num)}
-.restcard.lvl-red{border:2px solid var(--bad);background:linear-gradient(var(--bad-soft),var(--surface) 120px)}
-.restcard.lvl-amber{border:2px solid var(--night)}
-.rpill{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:999px;font-weight:700;font-size:13px}
-.rpill.red{background:var(--bad);color:var(--surface)} .rpill.amber{background:var(--night-soft);color:var(--night-ink)} .rpill.ok{background:var(--good-soft);color:var(--good)}
-.resthead{margin:4px 0 14px;font-size:15px}
-.reststrip{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:3px;height:34px}
-.reststrip i{display:block;border-radius:5px;background:var(--sunk);cursor:default}
-.reststrip i.off{background:var(--good-soft);border:1px solid var(--good)}
-.reststrip i.amber{background:var(--night)} .reststrip i.red{background:var(--bad)}
-.reststrip i.today{outline:2px solid var(--ink);outline-offset:1px}
-.stripax{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:4px}
-.cal button.rest-red{box-shadow:inset 0 0 0 2.5px var(--bad)}
-.cal button.rest-amber{box-shadow:inset 0 0 0 2.5px var(--night)}
-#restWarn.red{background:var(--bad-soft);color:var(--bad)} #restWarn.amber{background:var(--night-soft);color:var(--night-ink)}
-.kind-need{--k:var(--day)} .kind-want{--k:var(--night)} .kind-save{--k:var(--c4)}
-.pot{border-left:4px solid var(--k)}
-@media (max-width:520px){.pot{grid-template-columns:1fr}.pot .pplanned{text-align:left}.pot .pspent{justify-self:start}.pot .pplan{grid-template-columns:70px 1fr 1fr}}
-@media (max-width:480px){.settings{grid-template-columns:1fr}}
-
-/* ---- colour system: red header band, light ground, navy hero, accent per card ---- */
-body::before{background:var(--brand)!important}
-.top{background:var(--brand)!important;box-shadow:0 0 0 100vmax var(--brand);clip-path:inset(0 -100vmax);border-bottom:0!important}
-.top::after{content:"";position:absolute;inset:auto -100vmax 0;height:4px;background:linear-gradient(90deg,var(--day) 0 33%,var(--hero-accent) 33% 66%,var(--brand-2) 66%)}
-.top{position:sticky}
-.hero{background:linear-gradient(135deg,var(--hero-bg),var(--hero-2));color:var(--hero-fg);border:0;box-shadow:0 10px 24px rgba(20,33,61,.18)}
-.hero .eyebrow{color:var(--hero-muted)}
-.hero .big{color:var(--hero-accent)!important}
-.hero .legend{color:var(--hero-muted)} .hero .legend b{color:var(--hero-fg)}
-.hero .split{background:rgba(255,255,255,.14)}
-.kpis .kpi{border:0!important;border-top:4px solid var(--k-accent,var(--day))!important;background:var(--k-bg,var(--surface))!important}
-.kpis .kpi:nth-child(4n+1){--k-accent:var(--day);--k-bg:var(--day-soft)}
-.kpis .kpi:nth-child(4n+2){--k-accent:var(--night);--k-bg:var(--night-soft)}
-.kpis .kpi:nth-child(4n+3){--k-accent:var(--brand);--k-bg:var(--bad-soft)}
-.kpis .kpi:nth-child(4n+4){--k-accent:var(--c4);--k-bg:var(--c4-soft)}
-.card{--accent:var(--line)}
-.card:not(.hero):not(.restcard){border-top:4px solid var(--accent)}
-.card h2{display:flex;align-items:center;gap:8px}
-.card:not(.hero) h2::before{content:"";flex:none;width:10px;height:10px;border-radius:3px;background:var(--accent)}
-.card:has(#cum),.card:has(#weekly),.card:has(#mSteps),.card:has(#sKpis){--accent:var(--day)}
-.card:has(#insights),.card:has(#dow),.card:has(#taxForm){--accent:var(--night)}
-.card:has(#cal),.card:has(#calc),.card:has(#fPreview){--accent:var(--brand)}
-.card:has(#users),.card:has(#trend),.card:has(#wf),.card:has(#planRows),.card:has(#setForm),.card:has(#setupForm){--accent:var(--c4)}
-.restcard h2::before{background:var(--bad)}
-.bottombar{background:var(--hero-bg)!important;border-top:0!important;box-shadow:0 -6px 18px rgba(20,33,61,.18)}
-.bottombar button{color:var(--hero-muted)!important}
-.bottombar button[aria-selected="true"]{background:var(--hero-accent)!important;color:#14213D!important}
-.btn.secondary{border:1px solid var(--line)}
-.poweredby{text-align:center;padding-block:28px 8px;font-size:12.5px;color:var(--muted);letter-spacing:.02em}
-.poweredby b{font-family:var(--f-display);font-weight:700;color:var(--ink);letter-spacing:0}
-.paytable{min-width:0!important}
-.paytable td.okc{color:var(--good);font-weight:700} .paytable td.badc{color:var(--bad);font-weight:700}
-.card:has(#payBody){--accent:var(--good)}
-.tab{white-space:nowrap}
-</style>
-
-<div class="wrap">
-  <header class="top">
-    <div class="brand">
-      <div>
-        <h1>Shiftbook</h1>
-        <div class="who" id="who">Support Worker</div>
-      </div>
-      <div class="sync" id="sync"><span class="dot"></span><span>Connecting…</span></div>
-    </div>
-    <div class="period">
-      <button class="arrow" id="prev" aria-label="Previous pay period">‹</button>
-      <div class="label" id="periodLabel">Pay period<small>&nbsp;</small></div>
-      <button class="arrow" id="next" aria-label="Next pay period">›</button>
-    </div>
-    <nav class="tabs" role="tablist">
-      <button class="tab" role="tab" data-view="overview" aria-selected="true">Overview</button>
-      <button class="tab" role="tab" data-view="log" aria-selected="false">Log shift</button>
-      <button class="tab" role="tab" data-view="sheet" aria-selected="false">Timesheet</button>
-      <button class="tab" role="tab" data-view="money" aria-selected="false">Money</button>
-    </nav>
-  </header>
-
-  <!-- FIRST-TIME SETUP -->
-  <section class="view" id="view-setup" hidden>
-    <div class="card">
-      <h2>Set up your Shiftbook</h2>
-      <p class="hint" style="margin:0 0 16px">Takes a minute. Everything you add is private to you. You can change any of this later in Timesheet → Settings.</p>
-      <form id="setupForm" class="settings" novalidate>
-        <div class="field"><label for="uName">Your name</label><input type="text" id="uName" autocomplete="name"></div>
-        <div class="field"><label for="uRole">Role</label><input type="text" id="uRole" placeholder="Support Worker"></div>
-        <div class="field"><label for="uRate">Hourly rate (£)</label><input type="number" id="uRate" step="0.01" min="0" inputmode="decimal" placeholder="e.g. 13.00"></div>
-        <div class="field"><label for="uSleep">Sleep-in rate (£ per night)</label><input type="number" id="uSleep" step="0.01" min="0" inputmode="decimal" placeholder="e.g. 40"></div>
-        <div class="field"><label for="uDay">Pay period starts on day</label><input type="number" id="uDay" min="1" max="28" inputmode="numeric" placeholder="e.g. 26"></div>
-        <div class="field"><label for="uUsers">Service users <span class="hint">comma-separated, optional</span></label><input type="text" id="uUsers" placeholder="e.g. Alex, Sam"></div>
-        <div class="banner bad" id="setupErr" style="grid-column:1/-1" hidden></div>
-        <div class="actions" style="grid-column:1/-1"><button class="btn" type="submit" id="setupBtn">Start my Shiftbook</button></div>
-      </form>
-    </div>
-  </section>
-
-  <!-- OVERVIEW -->
-  <section class="view" id="view-overview">
-    <div class="card hero">
-      <div class="eyebrow">Gross pay this period</div>
-      <div class="big" id="gross">£0.00</div>
-      <div class="legend" id="grossNet"></div>
-      <div class="split" id="split" aria-hidden="true"></div>
-      <div class="legend" id="splitLegend"></div>
-    </div>
-    <div class="kpis" id="kpis"></div>
-    <div class="card">
-      <div class="charthead"><h2>Earnings build-up</h2><span class="hint" id="cumNote"></span></div>
-      <div class="chart" id="cum"></div>
-      <div class="legend" style="margin-top:8px">
-        <span><span class="ln" style="border-top:2px solid var(--day)"></span>Earned</span>
-        <span><span class="ln" style="border-top:2px dashed var(--day)"></span>Rostered</span>
-        <span id="cumPrevKey"><span class="ln" style="border-top:2px solid var(--faint)"></span>Last period</span>
-      </div>
-    </div>
-    <div class="grid2">
-      <div class="card">
-        <h2>Weekly earnings</h2>
-        <div id="weekly"></div>
-        <div class="legend" style="margin-top:8px"><span><span class="sw" style="background:var(--day)"></span>Hourly pay</span><span><span class="sw" style="background:var(--night)"></span>Sleep-in pay</span></div>
-      </div>
-      <div class="card">
-        <h2>What stands out</h2>
-        <ul class="insights" id="insights"></ul>
-      </div>
-    </div>
-    <div class="grid2">
-      <div class="card">
-        <h2>Shift calendar</h2>
-        <div class="cal" id="cal"></div>
-        <div class="legend" style="margin-top:10px">
-          <span><span class="sw" style="background:var(--day-soft)"></span>Day shift</span>
-          <span><span class="sw" style="background:var(--night-soft)"></span>Sleep-in</span>
-          <span><span class="sw" style="background:linear-gradient(135deg,var(--day-soft) 50%,var(--night-soft) 50%)"></span>Both</span>
-          <span><span class="sw" style="border:1px dashed var(--faint)"></span>Rostered</span>
-          <span><span class="sw" style="box-shadow:inset 0 0 0 2px var(--bad)"></span>Not resting enough</span>
-        </div>
-      </div>
-      <div class="card">
-        <h2>Shifts by service user</h2>
-        <div class="hbars" id="users"></div>
-        <p class="hint" style="margin:10px 0 0">Shifts with several people count once for each person.</p>
-      </div>
-    </div>
-    <div class="card restcard" id="restCard">
-      <div class="charthead"><h2>Rest check</h2><span class="rpill ok" id="restPill">Checking…</span></div>
-      <p class="resthead" id="restHead"></p>
-      <div class="reststrip" id="restStrip" role="img" aria-label="Rest status for each day of the pay period"></div>
-      <div class="stripax" id="restAx"></div>
-      <div class="legend" style="margin:10px 0 14px">
-        <span><span class="sw" style="background:var(--good-soft);border:1px solid var(--good)"></span>Day off</span>
-        <span><span class="sw" style="background:var(--sunk);border:1px solid var(--line)"></span>Worked, rested</span>
-        <span><span class="sw" style="background:var(--night)"></span>Watch</span>
-        <span><span class="sw" style="background:var(--bad)"></span>Not resting enough</span>
-      </div>
-      <div class="kpis" id="restKpis"></div>
-      <p class="hint" style="margin:12px 0 0">A guide based on UK working time rules: at least 24 hours off in every 7 days, rest between shifts, and no more than 48 hours of work a week on average. It's not legal advice, and some contracts or opt-outs differ.</p>
-    </div>
-    <div class="grid2">
-      <div class="card">
-        <h2>Earnings by day of the week</h2>
-        <div class="chart" id="dow"></div>
-        <div class="legend" style="margin-top:8px"><span><span class="sw" style="background:var(--day)"></span>Hourly pay</span><span><span class="sw" style="background:var(--night)"></span>Sleep-in pay</span></div>
-      </div>
-      <div class="card" id="trendCard" hidden>
-        <h2>Gross pay by period</h2>
-        <div id="trend"></div>
-      </div>
-    </div>
-  </section>
-
-  <!-- LOG -->
-  <section class="view" id="view-log" hidden>
-    <div class="card">
-      <h2 id="logTitle">Log a shift</h2>
-      <form id="logForm" novalidate>
-        <div class="field">
-          <label for="fDate">Shift date</label>
-          <input type="date" id="fDate" required>
-          <div class="banner info" id="editNote" hidden></div>
-        </div>
-        <div class="field">
-          <span class="lbl">Service user(s)</span>
-          <div class="chips" id="fUsers"></div>
-          <div class="row2" id="addUserRow" hidden>
-            <input type="text" id="fNewUser" placeholder="New name" aria-label="New service user name">
-            <button type="button" class="btn secondary" id="addUserBtn">Add</button>
-          </div>
-        </div>
-        <div class="field">
-          <span class="lbl">Sleep-in?</span>
-          <div class="seg" id="fSleep">
-            <button type="button" data-v="yes" aria-pressed="false">Yes</button>
-            <button type="button" data-v="no" aria-pressed="true">No</button>
-          </div>
-        </div>
-        <div class="row2">
-          <div class="field">
-            <label for="fHours">Day hours <span class="hint">blank if sleep-in only</span></label>
-            <input type="number" id="fHours" min="0" max="24" step="0.25" inputmode="decimal">
-            <div class="quick"><button type="button" data-h="12">12</button><button type="button" data-h="8">8</button><button type="button" data-h="4.5">4.5</button></div>
-          </div>
-          <div class="field">
-            <label for="fBreak">Break (hrs)</label>
-            <input type="number" id="fBreak" min="0" max="24" step="0.25" inputmode="decimal">
-            <div class="quick"><button type="button" data-b="2">2</button><button type="button" data-b="1">1</button><button type="button" data-b="0">0</button></div>
-          </div>
-        </div>
-        <div class="field">
-          <label for="fNotes">Notes <span class="hint">optional</span></label>
-          <textarea id="fNotes"></textarea>
-        </div>
-        <div class="preview"><span>This shift pays</span><span class="num" id="fPreview">£0.00</span></div>
-        <p class="hint" id="fBreakNote" style="margin:-8px 0 0" hidden></p>
-        <div class="banner" id="restWarn" hidden></div>
-        <div class="banner bad" id="formError" hidden></div>
-        <div class="actions">
-          <button type="submit" class="btn" id="saveBtn">Save shift</button>
-          <button type="button" class="btn danger" id="delBtn" hidden>Delete</button>
-        </div>
-        <div class="confirm" id="delConfirm" hidden>
-          <span id="delText">Delete this shift?</span>
-          <div class="actions">
-            <button type="button" class="btn danger" id="delYes">Yes, delete it</button>
-            <button type="button" class="btn secondary" id="delNo">Keep it</button>
-          </div>
-        </div>
-        <p class="hint" id="privNote" style="margin:0">Your shifts and money are private to you. Nobody else using Shiftbook can see them, including whoever shared it with you.</p>
-      </form>
-    </div>
-  </section>
-
-  <!-- TIMESHEET -->
-  <section class="view" id="view-sheet" hidden>
-    <div class="actions">
-      <button class="btn secondary" id="csvBtn">Download CSV</button>
-      <button class="btn secondary" id="copyBtn">Copy summary for manager</button>
-      <button class="btn secondary" id="backupBtn">Back up all data</button>
-      <button class="btn secondary" id="restoreBtn" hidden>Restore from backup</button>
-      <input type="file" id="restoreFile" accept=".json,application/json" hidden>
-    </div>
-    <div class="tablewrap"><table id="sheet"></table></div>
-    <div class="card">
-      <h2>Pay calculation</h2>
-      <div id="calc"></div>
-    </div>
-    <div class="card">
-      <h2>Settings</h2>
-      <form id="setForm" class="settings" novalidate>
-        <div class="field"><label for="sName">Name</label><input type="text" id="sName"></div>
-        <div class="field"><label for="sRole">Role</label><input type="text" id="sRole"></div>
-        <div class="field"><label for="sRate">Hourly rate (£)</label><input type="number" id="sRate" step="0.01" min="0"></div>
-        <div class="field"><label for="sSleep">Sleep-in rate (£/night)</label><input type="number" id="sSleep" step="0.01" min="0"></div>
-        <div class="field"><label for="sStart">Pay period starts on day</label><input type="number" id="sStart" min="1" max="28"></div>
-        <div class="field"><label for="sUsers">Service users <span class="hint">comma-separated</span></label><input type="text" id="sUsers"></div>
-        <div class="actions" style="grid-column:1/-1"><button class="btn" type="submit" id="setSave">Save settings</button></div>
-      </form>
-    </div>
-  </section>
-
-  <!-- MONEY -->
-  <section class="view" id="view-money" hidden>
-    <div class="card hero">
-      <div class="eyebrow">Estimated take-home this period</div>
-      <div class="big" id="mNet">£0.00</div>
-      <div class="split" id="mSplit" aria-hidden="true"></div>
-      <div class="legend" id="mLegend"></div>
-    </div>
-    <div class="kpis" id="mKpis"></div>
-    <div class="card">
-      <div class="charthead"><h2>Where every pound goes</h2><span class="hint">Gross pay → deductions → take-home → your plan</span></div>
-      <div class="chart" id="wf"></div>
-    </div>
-    <div class="card" id="payCard">
-      <div class="charthead"><h2>Payslip check</h2><span class="hint" id="payHint"></span></div>
-      <div id="payBody"></div>
-      <form id="payForm" class="settings" novalidate hidden>
-        <div class="field"><label for="pDate">Pay date</label><input type="date" id="pDate"></div>
-        <div class="field"><label for="pHours">Hours paid</label><input type="number" id="pHours" step="0.25" min="0" inputmode="decimal"></div>
-        <div class="field"><label for="pGross">Total payments (gross £)</label><input type="number" id="pGross" step="0.01" min="0" inputmode="decimal"></div>
-        <div class="field"><label for="pSleep">Sleep-in pay on payslip (£) <span class="hint">0 if none listed</span></label><input type="number" id="pSleep" step="0.01" min="0" inputmode="decimal"></div>
-        <div class="field"><label for="pTax">Income tax (£)</label><input type="number" id="pTax" step="0.01" min="0" inputmode="decimal"></div>
-        <div class="field"><label for="pNi">National Insurance (£)</label><input type="number" id="pNi" step="0.01" min="0" inputmode="decimal"></div>
-        <div class="field"><label for="pPension">Pension (£)</label><input type="number" id="pPension" step="0.01" min="0" inputmode="decimal"></div>
-        <div class="field"><label for="pNet">Net pay (£)</label><input type="number" id="pNet" step="0.01" min="0" inputmode="decimal"></div>
-        <div class="banner bad" id="payErr" style="grid-column:1/-1" hidden></div>
-        <div class="actions" style="grid-column:1/-1"><button class="btn" type="submit" id="paySave">Save payslip</button><button class="btn secondary" type="button" id="payCancel">Cancel</button></div>
-      </form>
-      <div class="actions" style="margin-top:12px"><button class="btn secondary" type="button" id="payEdit">Add the payslip for this period</button></div>
-    </div>
-    <div class="grid2">
-      <div class="card">
-        <h2>From gross pay to take-home</h2>
-        <div class="hbars" id="mSteps"></div>
-        <p class="hint" style="margin:12px 0 0">Estimate for one monthly pay period using 2026/27 rates for England, Wales and Northern Ireland. Your payslip is the final word: tax codes, pension schemes and pay dates can change the exact figures.</p>
-      </div>
-      <div class="card">
-        <h2>Tax settings</h2>
-        <form id="taxForm" class="settings" novalidate>
-          <div class="field"><label for="tEmp">How you're paid</label>
-            <select id="tEmp"><option value="paye">Employee (PAYE payslip)</option><option value="self">Self-employed (set tax aside)</option></select></div>
-          <div class="field"><label for="tCode">Tax code</label>
-            <select id="tCode"><option value="1257L">1257L · this is my main job</option><option value="BR">BR · this is a second job</option></select></div>
-          <div class="field"><label for="tPension">Pension you pay (%) <span class="hint">usually 4%</span></label><input type="number" id="tPension" min="0" max="50" step="0.5"></div>
-          <div class="field"><label for="tLoan">Student loan</label>
-            <select id="tLoan"><option value="none">None</option><option value="p1">Plan 1</option><option value="p2">Plan 2</option><option value="p4">Plan 4</option><option value="p5">Plan 5</option><option value="pg">Postgraduate</option></select></div>
-        </form>
-      </div>
-    </div>
-    <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap">
-        <h2 style="margin:0">Spending plan</h2>
-        <span class="hint" id="mAlloc"></span>
-      </div>
-      <div class="split" id="mPlanBar" style="margin:12px 0 4px;height:16px" aria-hidden="true"></div>
-      <div class="legend" id="mPlanLegend" style="margin-bottom:12px"></div>
-      <div id="planRows" class="planrows"></div>
-      <div class="actions" style="margin-top:14px">
-        <button class="btn secondary" type="button" id="addPot">+ Add a pot</button>
-        <button class="btn secondary" type="button" id="fitPlan" hidden>Fit plan to take-home</button>
-        <button class="btn" type="button" id="savePlan">Save plan</button>
-      </div>
-      <p class="hint" style="margin:10px 0 0">Plan each pot as a % of take-home or a fixed £ amount. Type what you actually spent in each pot as the period goes. That saves on its own for this pay period.</p>
-    </div>
-    <div class="card">
-      <h2>Spending analytics</h2>
-      <div class="burn" id="burn"></div>
-      <div class="kpis" id="sKpis"></div>
-      <div class="banner info" id="sEmpty" style="margin-top:12px" hidden>Type what you've spent into the "Spent £" boxes in your spending plan. The charts below fill in as you go.</div>
-      <div class="grid2" style="margin-top:16px">
-        <div>
-          <div class="eyebrow" style="margin-bottom:10px">Plan vs spent, by pot</div>
-          <div class="hbars" id="sPots"></div>
-          <div class="legend" style="margin-top:10px"><span><span class="sw" style="background:var(--sunk);border:1px solid var(--line)"></span>Planned</span><span><span class="sw" style="background:var(--day)"></span>Spent</span><span><span class="sw" style="background:var(--amber)"></span>Over plan</span></div>
-        </div>
-        <div>
-          <div class="eyebrow" style="margin-bottom:10px">Where your money went</div>
-          <div class="split" id="sKindBar" style="height:16px" aria-hidden="true"></div>
-          <div class="legend" id="sKindLegend" style="margin-top:8px"></div>
-          <div class="eyebrow" style="margin:18px 0 10px">What stands out</div>
-          <ul class="insights" id="sInsights"></ul>
-        </div>
-      </div>
-      <div id="sTrendWrap" style="margin-top:18px" hidden>
-        <div class="eyebrow" style="margin-bottom:10px">Spent vs take-home, by pay period</div>
-        <div class="hbars" id="sTrend"></div>
-      </div>
-    </div>
-  </section>
-  <footer class="poweredby">Powered by <b>WesTech Innovation</b></footer>
-</div>
-
-<nav class="bottombar" role="tablist">
-  <button role="tab" data-view="overview" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Overview</button>
-  <button role="tab" data-view="log" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>Log shift</button>
-  <button role="tab" data-view="sheet" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>Timesheet</button>
-  <button role="tab" data-view="money" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="13" rx="2"/><circle cx="12" cy="12.5" r="2.5"/><path d="M6 6V4h12v2"/></svg>Money</button>
-</nav>
-<div class="toast" id="toast" hidden></div>
-<div id="tip" role="tooltip" hidden></div>
-
-<script>
 /*
  * Shiftbook — personal shift log, pay and budget app.
  *
@@ -658,6 +60,19 @@ body::before{background:var(--brand)!important}
     rows.forEach(r => { if (!r.s) return; (r.s.users || []).forEach(u => { const x = users.get(u) || { shifts: 0, sleeps: 0, net: 0 }; x.shifts++; if (r.s.sleepIn) x.sleeps++; x.net += r.c.net; users.set(u, x); }); });
     return { rows, t, weeks, users };
   }
+
+  let renderQueued = false;
+
+function scheduleRender() {
+  if (renderQueued) return;
+
+  renderQueued = true;
+
+  requestAnimationFrame(() => {
+    renderQueued = false;
+    render();
+  });
+}
 
   // ---------- render ----------
   function render() {
@@ -916,7 +331,7 @@ body::before{background:var(--brand)!important}
   }
 
   function renderBurn(spent, net, elapsed, total) {
-    const ps = net ? spent / net : 0, pt = total ? elapsed / total : 0;
+        const ps = net ? spent / net : 0, pt = total ? elapsed / total : 0;
     const verdict = !spent ? "No spending logged yet" : ps > pt + 0.05 ? "Spending faster than the period is passing" : ps < pt - 0.05 ? "Spending slower than the period is passing" : "Spending in step with the period";
     $("#burn").innerHTML = `<div class="cap"><span>Spent <b>${Math.round(ps * 100)}%</b> of take-home</span><span><b>${Math.round(pt * 100)}%</b> of the pay period gone</span></div>
       <div class="bar" role="img" aria-label="${Math.round(ps * 100)}% of take-home spent, ${Math.round(pt * 100)}% of period gone"><div class="fill${ps > 1 ? " over" : ""}" style="width:${Math.min(100, ps * 100)}%"></div><div class="mark" style="left:calc(${Math.min(100, pt * 100)}% - 1px)" title="Today"></div></div>
@@ -1076,7 +491,7 @@ body::before{background:var(--brand)!important}
     const p = curPeriod(), sm = summarise(p);
     const lines = [["Date", "Day", "Service user(s)", "Sleep-in", "Day hours", "Break", "Net hours", "Hourly pay", "Sleep-in pay", "Total", "Notes"].join(",")];
     sm.rows.forEach(r => { const s = r.s, c = r.c; lines.push([r.key, fmt(r.date, { weekday: "short" }), s ? `"${(s.users || []).join(", ")}"` : "Day off", s ? (s.sleepIn ? "Y" : "N") : "", s?.dayHours ?? "", s?.breakHrs ?? "", c ? c.net : "", c ? c.hourly.toFixed(2) : "", c ? c.sleep.toFixed(2) : "", c ? c.total.toFixed(2) : "", s?.notes ? `"${s.notes.replace(/"/g, '""')}"` : ""].join(",")); });
-    lines.push(["TOTAL", "", "", sm.t.sleepIns, sm.t.dayHours, sm.t.breaks, sm.t.net, sm.t.hourly.toFixed(2), sm.t.sleep.toFixed(2), sm.t.gross.toFixed(2), ""].join(","));
+        lines.push(["TOTAL", "", "", sm.t.sleepIns, sm.t.dayHours, sm.t.breaks, sm.t.net, sm.t.hourly.toFixed(2), sm.t.sleep.toFixed(2), sm.t.gross.toFixed(2), ""].join(","));
     return { text: lines.join("\n"), name: `Timesheet_${ymd(p.start)}_to_${ymd(p.end)}.csv` };
   }
   $("#csvBtn").onclick = async () => {
@@ -1109,6 +524,22 @@ body::before{background:var(--brand)!important}
     const next = { name: $("#sName").value.trim(), role: $("#sRole").value.trim(), hourlyRate: Number($("#sRate").value) || 0, sleepInRate: Number($("#sSleep").value) || 0, periodStartDay: Math.min(28, Math.max(1, Number($("#sStart").value) || 1)), serviceUsers: $("#sUsers").value.split(",").map(x => x.trim()).filter(Boolean) };
     try { await S.main().set(next); toast("Settings saved"); } catch (e2) { toast("Settings didn't save"); }
   });
+
+  $("#resetSetupBtn").addEventListener("click", async () => {
+  if (!confirm("Reset your setup details? Your saved shifts will not be deleted.")) return;
+
+  try {
+    await S.main().delete();
+
+    state.needsSetup = true;
+    state.cfg = { ...DEFAULTS };
+    setupMode(true);
+
+    toast("Setup reset. You can enter your details again.");
+  } catch (e) {
+    toast("Could not reset setup. Please try again.");
+  }
+});
 
   // ---------- money ----------
   // 2026/27 rates (England, Wales & NI): personal allowance £12,570; basic rate 20% on next £37,700, 40% above;
@@ -1236,8 +667,7 @@ body::before{background:var(--brand)!important}
         <div class="pfoot"><span id="pl-${esc(pt.id)}"></span><span id="pc-${esc(pt.id)}"></span></div>
       </div>`).join("") : `<div class="empty">${state.loaded ? "No pots yet. Add one to start planning your take-home." : "Loading your plan…"}</div>`;
   }
-
-  function updatePlanNumbers() {
+    function updatePlanNumbers() {
     const net = state.moneyNet || 0, sp = spendFor(state.moneyKey), list = pots();
     const byKind = { need: 0, want: 0, save: 0 }; let total = 0, spentTotal = 0;
     list.forEach(pt => {
@@ -1396,26 +826,103 @@ body::before{background:var(--brand)!important}
     { id: "rent", name: "Rent & bills", mode: "pct", value: 35, kind: "need" }, { id: "food", name: "Food & groceries", mode: "pct", value: 12, kind: "need" },
     { id: "transport", name: "Transport", mode: "pct", value: 8, kind: "need" }, { id: "phone", name: "Phone & subscriptions", mode: "pct", value: 3, kind: "need" },
     { id: "family", name: "Family & giving", mode: "pct", value: 10, kind: "need" }, { id: "savings", name: "Savings", mode: "pct", value: 15, kind: "save" },
-    { id: "fun", name: "Personal & fun", mode: "pct", value: 10, kind: "want" }, { id: "buffer", name: "Buffer", mode: "pct", value: 7, kind: "want" }];
+        { id: "fun", name: "Personal & fun", mode: "pct", value: 10, kind: "want" }, { id: "buffer", name: "Buffer", mode: "pct", value: 7, kind: "want" }];
   function setupMode(on) {
     document.querySelectorAll("section.view").forEach(v => { v.hidden = on ? v.id !== "view-setup" : v.id !== "view-" + state.view; });
     document.querySelectorAll(".tabs, .bottombar, .period").forEach(el => { el.hidden = on; });
   }
-  $("#setupForm").addEventListener("submit", async e => {
-    e.preventDefault();
-    const name = $("#uName").value.trim(), rate = Number($("#uRate").value), sleep = Number($("#uSleep").value), day = Number($("#uDay").value);
-    if (!name || !(rate > 0) || !(sleep >= 0) || !(day >= 1 && day <= 28)) { $("#setupErr").textContent = "Fill in your name, hourly rate, sleep-in rate and a pay start day from 1 to 28."; $("#setupErr").hidden = false; return; }
-    $("#setupErr").hidden = true; $("#setupBtn").disabled = true;
-    try {
-      await S.money().set({ ...MONEY_DEFAULTS, pots: STARTER_POTS });
-      await S.main().set({ name, role: $("#uRole").value.trim() || "Support Worker", hourlyRate: rate, sleepInRate: sleep, periodStartDay: day,
-        serviceUsers: $("#uUsers").value.split(",").map(x => x.trim()).filter(Boolean) });
-      state.view = "log"; toast("Welcome to Shiftbook. Log your first shift");
-    } catch (e2) {
-      $("#setupErr").textContent = e2?.code === "invalid_argument" ? "Shiftbook can't save for you yet. Ask the person who shared it to invite you by email as an editor." : "That didn't save. Check your connection and try again.";
-      $("#setupErr").hidden = false;
-    } finally { $("#setupBtn").disabled = false; }
-  });
+ const setupFields = {
+  uName: "Please enter your name.",
+  uRole: "Please enter your role.",
+  uRate: "Please enter a valid hourly rate greater than £0.",
+  uSleep: "Please enter a valid sleep-in rate of £0 or more.",
+  uDay: "Enter a whole number between 1 and 28."
+};
+
+function showFieldError(id, message) {
+  const input = document.getElementById(id);
+  const error = document.getElementById(id + "Err");
+
+  error.textContent = message;
+  error.hidden = !message;
+  input.setAttribute("aria-invalid", message ? "true" : "false");
+}
+
+
+$("#setupForm").addEventListener("submit", async e => {
+  e.preventDefault();
+
+  const name = $("#uName").value.trim();
+  const rateText = $("#uRate").value.trim();
+  const sleepText = $("#uSleep").value.trim();
+  const dayText = $("#uDay").value.trim();
+
+  const rate = Number(rateText);
+  const sleep = Number(sleepText);
+  const day = Number(dayText);
+
+  const errors = [];
+
+  if (!name) {
+    errors.push("Please enter your name.");
+  }
+
+  if (!rateText) {
+    errors.push("Please enter hourly rate.");
+  } else if (!Number.isFinite(rate) || rate <= 0) {
+    errors.push("Invalid hourly rate.");
+  }
+
+  if (!sleepText) {
+    errors.push("Please enter sleep-in rate.");
+  } else if (!Number.isFinite(sleep) || sleep < 0) {
+    errors.push("Invalid sleep-in rate.");
+  }
+
+  if (!dayText) {
+    errors.push("Please enter pay-period start day.");
+  } else if (!Number.isInteger(day) || day < 1 || day > 28) {
+    errors.push("Invalid pay-period start day. Enter a day from 1 to 28.");
+  }
+
+  if (errors.length) {
+    $("#setupErr").innerHTML =
+      "<ul>" + errors.map(error => `<li>${error}</li>`).join("") + "</ul>";
+    $("#setupErr").hidden = false;
+    return;
+  }
+
+  $("#setupErr").hidden = true;
+  $("#setupBtn").disabled = true;
+
+  try {
+    await S.money().set({ ...MONEY_DEFAULTS, pots: STARTER_POTS });
+
+    await S.main().set({
+      name,
+      role: $("#uRole").value.trim() || "Support Worker",
+      hourlyRate: rate,
+      sleepInRate: sleep,
+      periodStartDay: day,
+      serviceUsers: $("#uUsers").value
+        .split(",").map(x => x.trim()).filter(Boolean)
+    });
+
+    state.view = "log";
+    toast("Welcome to Shiftbook. Log your first shift");
+
+  } catch (e2) {
+    $("#setupErr").textContent =
+      e2?.code === "invalid_argument"
+        ? "Shiftbook can't save for you yet. Ask the person who shared it to invite you by email as an editor."
+        : "That didn't save. Check your connection and try again.";
+
+    $("#setupErr").hidden = false;
+
+  } finally {
+    $("#setupBtn").disabled = false;
+  }
+});
 
   // ---------- standalone mode (e.g. GitHub Pages) ----------
   // Outside Claude there is no artifact db, so the same doc/collection API is backed by localStorage on this device.
@@ -1466,12 +973,12 @@ body::before{background:var(--brand)!important}
 
   // ---------- boot ----------
   try { const v = localStorage.getItem("sb.view"); if (v && v !== "log") show(v); } catch (e) {}
-  openLog(todayStr); fillSettings(); render();
+  openLog(todayStr); fillSettings(); scheduleRender();
 
   (async () => {
     const local = !window.claude?.use;
     let ok = true; if (local) { try { localStorage.setItem("shiftbook.test", "1"); } catch (e) { ok = false; } }
-    if (!ok) { setSync("bad", "This browser can't save. Turn off private browsing"); state.loaded = true; render(); return; }
+    if (!ok) { setSync("bad", "This browser can't save. Turn off private browsing"); state.loaded = true; scheduleRender(); return; }
     const [db, user, dl] = local ? [localDb(), null, localDownloads] : await Promise.all([claude.use("db"), claude.use("user"), claude.use("downloads")]);
     state.db = db; state.mcp = null; state.downloads = dl;
     if (local) {
@@ -1479,7 +986,7 @@ body::before{background:var(--brand)!important}
       $("#privNote").textContent = "Your shifts are saved in this browser on this device only. Use Back up all data on the Timesheet tab to keep a copy, and Restore from backup to move them to another device.";
     }
     const uid = local ? "me" : user ? await user.id() : null;
-    if (!db || !uid) { setSync("bad", "Sign in to Claude to use Shiftbook"); state.loaded = true; render(); return; }
+    if (!db || !uid) { setSync("bad", "Sign in to Claude to use Shiftbook"); state.loaded = true; scheduleRender(); return; }
     // every viewer's data lives in their own private subtree: data/users/<their id>/...
     const base = "data/users/" + uid;
     S = { main: () => db.doc(base + "/main"), money: () => db.doc(base + "/money"),
@@ -1487,21 +994,17 @@ body::before{background:var(--brand)!important}
     setSync("ok", local ? "Saved on this device" : "Live · private to you");
     S.main().onSnapshot(snap => {
       state.needsSetup = !snap.exists; setupMode(state.needsSetup);
-      state.cfg = { ...DEFAULTS, ...(snap.exists ? snap.data() : {}) }; fillSettings(); if (!state.editing || state.view !== "log") renderUserChips(); render();
+      state.cfg = { ...DEFAULTS, ...(snap.exists ? snap.data() : {}) }; fillSettings(); if (!state.editing || state.view !== "log") renderUserChips(); scheduleRender();
     }, () => {});
-    S.money().onSnapshot(snap => { state.money = { ...MONEY_DEFAULTS, ...(snap.exists ? snap.data() : {}) }; render(); }, () => {});
-    payCol().limit(120).onSnapshot(snap => { state.payslips = new Map(snap.docs.map(d => [d.id, d.data()])); render(); }, () => {});
+    S.money().onSnapshot(snap => { state.money = { ...MONEY_DEFAULTS, ...(snap.exists ? snap.data() : {}) }; scheduleRender(); }, () => {});
+    payCol().limit(120).onSnapshot(snap => { state.payslips = new Map(snap.docs.map(d => [d.id, d.data()])); scheduleRender(); }, () => {});
     S.spend().limit(200).onSnapshot(snap => {
       const typingSpend = /^ps-/.test(document.activeElement?.id || "");
-      if (!typingSpend) { state.spend = new Map(snap.docs.map(d => [d.id, d.data()])); render(); }
+      if (!typingSpend) { state.spend = new Map(snap.docs.map(d => [d.id, d.data()])); scheduleRender(); }
     }, () => {});
     S.shifts().limit(1000).onSnapshot(snap => {
       state.shifts = new Map(snap.docs.map(d => [d.id, d.data()]));
-      state.loaded = true; render();
+      state.loaded = true; scheduleRender();
     }, e => { setSync("bad", e?.code === "revoked" ? "Access to this Shiftbook changed" : "Live updates stopped. Reload to reconnect"); });
   })();
 })();
-</script>
-
-</body>
-</html>
