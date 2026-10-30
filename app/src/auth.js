@@ -121,7 +121,7 @@
     err(""); setBusy(true, btn);
     try {
       if (mode === "supabase") {
-        const options = { shouldCreateUser: up() };
+        const options = { shouldCreateUser: up(), emailRedirectTo: location.origin + location.pathname };
         const { error } = await client.auth.signInWithOtp(kind === "phone" ? { phone: ident, options } : { email: ident, options });
         if (error) throw error;
       } else {
