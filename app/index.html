@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -13,13 +14,12 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-  <link
-    rel="stylesheet"
-    href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap"
-  >
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
 
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="src/styles/style.css">
 </head>
+
 <body>
 
   <div class="wrap">
@@ -71,11 +71,11 @@
             <label for="uRole">Role</label>
             <input type="text" id="uRole" placeholder="Support Worker">
           </div>
-        <small class="field-error" id="uNameErr" hidden></small>
-        <small class="field-error" id="uRoleErr" hidden></small>
-        <small class="field-error" id="uRateErr" hidden></small>
-        <small class="field-error" id="uSleepErr" hidden></small>
-        <small class="field-error" id="uDayErr" hidden></small>
+          <small class="field-error" id="uNameErr" hidden></small>
+          <small class="field-error" id="uRoleErr" hidden></small>
+          <small class="field-error" id="uRateErr" hidden></small>
+          <small class="field-error" id="uSleepErr" hidden></small>
+          <small class="field-error" id="uDayErr" hidden></small>
 
           <div class="field">
             <label for="uRate">Hourly rate (£)</label>
@@ -155,7 +155,8 @@
           <div class="legend" style="margin-top:10px">
             <span><span class="sw" style="background:var(--day-soft)"></span>Day shift</span>
             <span><span class="sw" style="background:var(--night-soft)"></span>Sleep-in</span>
-            <span><span class="sw" style="background:linear-gradient(135deg,var(--day-soft) 50%,var(--night-soft) 50%)"></span>Both</span>
+            <span><span class="sw"
+                style="background:linear-gradient(135deg,var(--day-soft) 50%,var(--night-soft) 50%)"></span>Both</span>
             <span><span class="sw" style="border:1px dashed var(--faint)"></span>Rostered</span>
             <span><span class="sw" style="box-shadow:inset 0 0 0 2px var(--bad)"></span>Not resting enough</span>
           </div>
@@ -179,7 +180,8 @@
         <div class="stripax" id="restAx"></div>
         <div class="legend" style="margin:10px 0 14px">
           <span><span class="sw" style="background:var(--good-soft);border:1px solid var(--good)"></span>Day off</span>
-          <span><span class="sw" style="background:var(--sunk);border:1px solid var(--line)"></span>Worked, rested</span>
+          <span><span class="sw" style="background:var(--sunk);border:1px solid var(--line)"></span>Worked,
+            rested</span>
           <span><span class="sw" style="background:var(--night)"></span>Watch</span>
           <span><span class="sw" style="background:var(--bad)"></span>Not resting enough</span>
         </div>
@@ -339,8 +341,8 @@
           <div class="actions" style="grid-column:1/-1">
             <button class="btn" type="submit" id="setSave">Save settings</button>
             <button class="btn secondary" type="button" id="resetSetupBtn">
-  Reset Shiftbook setup
-</button>
+              Reset Shiftbook setup
+            </button>
           </div>
         </form>
       </div>
@@ -524,20 +526,30 @@
   <nav class="bottombar" role="tablist">
     <button role="tab" data-view="overview" aria-selected="true">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>
+        <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" />
       </svg>
       Overview
     </button>
     <button role="tab" data-view="log" aria-selected="false">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="9" />
+        <path d="M12 8v8M8 12h8" />
+      </svg>
       Log shift
     </button>
     <button role="tab" data-view="sheet" aria-selected="false">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="4" y="3" width="16" height="18" rx="2" />
+        <path d="M8 8h8M8 12h8M8 16h5" />
+      </svg>
       Timesheet
     </button>
     <button role="tab" data-view="money" aria-selected="false">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="13" rx="2"/><circle cx="12" cy="12.5" r="2.5"/><path d="M6 6V4h12v2"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="2" y="6" width="20" height="13" rx="2" />
+        <circle cx="12" cy="12.5" r="2.5" />
+        <path d="M6 6V4h12v2" />
+      </svg>
       Money
     </button>
   </nav>
@@ -545,6 +557,7 @@
   <div class="toast" id="toast" hidden></div>
   <div id="tip" role="tooltip" hidden></div>
 
-  <script src="script.js" defer></script>
+  <script src="src/main.js" defer></script>
 </body>
+
 </html>
