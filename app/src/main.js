@@ -11,9 +11,12 @@
  *
  * PAY RULES   net hours = day hours − break; pay = net hours × hourlyRate + (sleepIn ? sleepInRate : 0)
  * PERIODS     run from periodStartDay of one month to the day before it next month
- * TAX         monthly estimate, 2026/27 rUK rates (see R below) — not a payslip
+ * TAX         monthly estimate, 2026/27 rUK rates (see core/tax.js) — not a payslip
  * SYNC        none in this edition (no Jotform)
  */
+import { deductions } from "./core/tax.js";
+import { periodFor as periodForCore, daysIn } from "./core/periods.js";
+
 (() => {
   const DEFAULTS = { name: "", role: "Support Worker", hourlyRate: 13, sleepInRate: 40, periodStartDay: 26, serviceUsers: [] };
   const $ = s => document.querySelector(s);
@@ -30,17 +33,8 @@
   const state = { cfg: { ...DEFAULTS }, shifts: new Map(), loaded: false, offset: 0, view: "overview", db: null, mcp: null, downloads: null, canWrite: true, editing: null, form: { users: new Set(), sleep: false } };
 
   // ---------- periods ----------
-  function periodFor(d, k = 0) {
-    const sd = state.cfg.periodStartDay || 26;
-    let y = d.getFullYear(), m = d.getMonth();
-    if (d.getDate() < sd) m -= 1;
-    m += k;
-    const start = new Date(y, m, sd);
-    const end = addDays(new Date(y, m + 1, sd), -1);
-    return { start, end };
-  }
+  const periodFor = (d, k = 0) => periodForCore(d, k, state.cfg.periodStartDay);
   const curPeriod = () => periodFor(new Date(), state.offset);
-  function daysIn(p) { const out = []; for (let d = p.start; d <= p.end; d = addDays(d, 1)) out.push(d); return out; }
 
   // ---------- calc ----------
   function calc(s) {
@@ -544,31 +538,11 @@
   });
 
   // ---------- money ----------
-  // 2026/27 rates (England, Wales & NI): personal allowance £12,570; basic rate 20% on next £37,700, 40% above;
-  // employee NI 8% from £1,048/month to £4,189/month, 2% above; self-employed Class 4 6% / 2%;
-  // auto-enrolment qualifying earnings £520–£4,189/month; student loan monthly thresholds below.
-  const R = {
-    FREE_M: 1048.25, PA: 12570, BASIC: 37700, PT_M: 1048, UEL_M: 4189, QE_LO_M: 520, QE_HI_M: 4189,
-    SL: { p1: [2241, 0.09], p2: [2448, 0.09], p4: [2816, 0.09], p5: [2083, 0.09], pg: [1750, 0.06] }
-  };
   const MONEY_DEFAULTS = { employment: "paye", taxCode: "1257L", pensionPct: 4, studentLoan: "none", pots: [] };
   const KIND = { need: "Needs", want: "Wants", save: "Savings" };
   state.money = { ...MONEY_DEFAULTS }; state.spend = new Map(); state.planDraft = null; state.builtKey = "";
   let spendTimer;
 
-  function deductions(g, mc) {
-    const pct = (Number(mc.pensionPct) || 0) / 100;
-    const pension = mc.employment === "paye" ? Math.max(0, Math.min(g, R.QE_HI_M) - R.QE_LO_M) * pct : g * pct;
-    const paM = R.PA / 12, basicM = R.BASIC / 12;
-    let tax;
-    if (mc.employment === "paye" && mc.taxCode === "BR") tax = g * 0.2;
-    else { const t = mc.employment === "paye" ? Math.max(0, Math.floor(g - R.FREE_M)) : Math.max(0, g - paM); tax = Math.min(t, basicM) * 0.2 + Math.max(0, t - basicM) * 0.4; }
-    const lo = mc.employment === "paye" ? R.PT_M : paM, rate = mc.employment === "paye" ? 0.08 : 0.06;
-    const ni = Math.max(0, Math.min(g, R.UEL_M) - lo) * rate + Math.max(0, g - R.UEL_M) * 0.02;
-    const L = R.SL[mc.studentLoan];
-    const sl = L ? Math.max(0, g - L[0]) * L[1] : 0;
-    return { tax, ni, pension, sl, net: Math.max(0, g - tax - ni - pension - sl) };
-  }
   const pots = () => state.planDraft || state.money.pots || [];
   const planned = (pot, net) => pot.mode === "fixed" ? Number(pot.value) || 0 : (Number(pot.value) || 0) / 100 * net;
   const spendFor = key => state.spend.get(key) || {};
