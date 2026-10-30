@@ -1,6 +1,9 @@
 /*
- * auth.js — sign-in for Shiftbook. No passwords: people sign in with a 6-digit code
- * sent to their phone or email, or with Google / Apple.
+ * auth.js — sign-in for Shiftbook. People sign in with a 6-digit code sent to their phone or email,
+ * with an email and password, or with Google / Apple.
+ * Passwords: Supabase keeps only a hash. "Forgot your password?" emails a link that brings the person
+ * back here to choose a new one (type=recovery in the URL). Someone who signed up with an email code
+ * can use the same link to add a password to that account.
  *
  * Supabase mode (config.js filled in): real accounts, sessions kept for months on that device.
  * Demo mode (config.js empty): the code is shown on screen and the account lives in this browser,
@@ -15,7 +18,9 @@
  */
 (function () {
   const CFG = window.SHIFTBOOK_CONFIG || {};
-  const WANT = { phone: true, email: true, google: false, apple: false, ...(CFG.signIn || {}) };
+  const WANT = { phone: true, email: true, password: true, google: false, apple: false, ...(CFG.signIn || {}) };
+  // read before the Supabase client tidies the URL: a password-reset link lands here with type=recovery
+  let recovering = /(^|[#&?])type=recovery(&|$)/.test(location.hash + location.search);
   const mode = CFG.supabaseUrl && CFG.supabaseAnonKey && window.supabase ? "supabase" : "demo";
   const client = mode === "supabase" ? window.supabase.createClient(CFG.supabaseUrl, CFG.supabaseAnonKey, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } }) : null;
   const DEMO_KEY = "shiftbook:auth";
@@ -78,20 +83,201 @@
     const verb = up() ? "Sign up" : "Sign in";
     const opts = [];
     if (WANT.phone) opts.push(`<button type="button" class="btn authbtn" data-a="phone">${verb} with phone number</button>`);
-    if (WANT.email) opts.push(`<button type="button" class="btn ${WANT.phone ? "secondary" : ""} authbtn" data-a="email">${verb} with email</button>`);
+    if (WANT.email) opts.push(`<button type="button" class="btn ${WANT.phone ? "secondary" : ""} authbtn" data-a="email">${verb} with email code</button>`);
+    if (WANT.password) opts.push(`<button type="button" class="btn ${WANT.phone || WANT.email ? "secondary" : ""} authbtn" data-a="password">${verb} with email and password</button>`);
     const social = [];
     if (WANT.google) social.push(`<button type="button" class="btn secondary authbtn" data-a="google">Continue with Google</button>`);
     if (WANT.apple) social.push(`<button type="button" class="btn secondary authbtn" data-a="apple">Continue with Apple</button>`);
     root().innerHTML = `
       <button type="button" class="linkback" id="authBack">‹ Back</button>
       <h2 class="obh">${up() ? "Create your Shiftbook" : "Welcome back"}</h2>
-      <p class="obsub">${up() ? "No password to remember. We'll text or email you a code each time you sign in on a new device." : "Use the phone number or email you signed up with. We'll send you a code."}</p>
+      <p class="obsub">${up() ? (WANT.password ? "Choose a password, or skip it and we'll text or email you a code each time you sign in on a new device." : "No password to remember. We'll text or email you a code each time you sign in on a new device.") : (WANT.password ? "Use the phone number or email you signed up with. We'll send you a code, or you can use your password." : "Use the phone number or email you signed up with. We'll send you a code.")}</p>
       <div class="authstack">${opts.join("")}${social.length ? `<div class="author"><span>or</span></div>${social.join("")}` : ""}</div>
       <div class="banner bad" id="authErr" hidden></div>
       <p class="obpriv">${up() ? `Already have an account? <button type="button" class="linkinline" id="swap">Sign in</button>` : `New to Shiftbook? <button type="button" class="linkinline" id="swap">Create an account</button>`}</p>`;
     $("#authBack").onclick = screenWelcome;
     $("#swap").onclick = () => { intent = up() ? "signin" : "signup"; screenChoose(); };
-    root().querySelectorAll("[data-a]").forEach(b => b.onclick = () => { const a = b.dataset.a; if (a === "google" || a === "apple") oauth(a); else screenEnter(a); });
+    root().querySelectorAll("[data-a]").forEach(b => b.onclick = () => { const a = b.dataset.a; if (a === "google" || a === "apple") oauth(a); else if (a === "password") screenPassword(); else screenEnter(a); });
+  }
+
+  // ---- email and password ----
+  const PW_MIN = 8;
+  const here = () => location.origin + location.pathname;
+  const PWS = "shiftbook:passwords";               // demo mode only: { email: { salt, hash } }
+  async function demoHash(pw, salt) {
+    const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(salt + ":" + pw));
+    return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, "0")).join("");
+  }
+  async function demoSetPw(email, pw) {
+    const salt = [...crypto.getRandomValues(new Uint8Array(16))].map(x => x.toString(16).padStart(2, "0")).join("");
+    store.set(PWS, { ...(store.get(PWS) || {}), [email]: { salt, hash: await demoHash(pw, salt) } });
+  }
+  function pwProblem(pw, email) {
+    if (pw.length < PW_MIN) return `Use at least ${PW_MIN} characters.`;
+    if (/^(.)\1+$/.test(pw) || /^(12345678|password|qwerty|iloveyou|shiftbook)/i.test(pw)) return "That password is too easy to guess. Try three random words, like 'teapot-river-jumper'.";
+    const name = (email || "").split("@")[0];
+    if (name.length >= 4 && pw.toLowerCase().includes(name)) return "Don't put your email name in your password.";
+    return "";
+  }
+  // password box with a Show button; `mine` sets the autocomplete hint for password managers
+  const pwField = (id, label, hint, mine) => `<div class="field"><label for="${id}">${label}${hint ? ` <span class="hint">${hint}</span>` : ""}</label>
+    <div class="pwrow"><input id="${id}" type="password" autocomplete="${mine}" autocapitalize="off" spellcheck="false"><button type="button" class="pwshow" data-show="${id}" aria-controls="${id}" aria-pressed="false">Show</button></div></div>`;
+  function wireShow() {
+    root().querySelectorAll("[data-show]").forEach(b => b.onclick = () => {
+      const i = document.getElementById(b.dataset.show), on = i.type === "password";
+      i.type = on ? "text" : "password"; b.textContent = on ? "Hide" : "Show"; b.setAttribute("aria-pressed", String(on));
+    });
+  }
+
+  function screenPassword() {
+    kind = "email"; err("");
+    root().innerHTML = `
+      <button type="button" class="linkback" id="authBack">‹ Back</button>
+      <h2 class="obh">${up() ? "Create your account" : "Sign in with your password"}</h2>
+      <p class="obsub">${up() ? "Use an email you can open. We'll send you a link to check it's yours." : "Use the email and password you signed up with."}</p>
+      <form id="authForm" novalidate>
+        <div class="field"><label for="authId">Email address</label>
+          <input id="authId" type="email" inputmode="email" autocomplete="email" autocapitalize="off" placeholder="you@example.com" value="${esc(ident || "")}"></div>
+        ${pwField("authPw", up() ? "Choose a password" : "Password", up() ? `at least ${PW_MIN} characters` : "", up() ? "new-password" : "current-password")}
+        <div class="banner bad" id="authErr" hidden></div>
+        <button class="btn authbtn" type="submit" id="authGo">${up() ? "Create my account" : "Sign in"}</button>
+        ${up() ? `<p class="obpriv" style="margin:0">By creating an account you agree to the <a href="#terms" data-info="terms">Terms of use</a> and to how we keep your data in our <a href="#privacy" data-info="privacy">privacy notice</a>.</p>` : `<button type="button" class="linkbtn2" id="pwForgot">Forgot your password?</button>`}
+      </form>`;
+    $("#authBack").onclick = screenChoose;
+    wireShow();
+    setTimeout(() => $(ident ? "#authPw" : "#authId")?.focus(), 50);
+    if (!up()) $("#pwForgot").onclick = () => { ident = normEmail($("#authId").value) || ident; screenForgot(); };
+    $("#authForm").onsubmit = async e => {
+      e.preventDefault(); if (busy) return;
+      const email = normEmail($("#authId").value), pw = $("#authPw").value;
+      if (!email) { err("Enter an email address like you@example.com."); return; }
+      if (!pw) { err("Enter your password."); return; }
+      if (up()) { const p = pwProblem(pw, email); if (p) { err(p); return; } }
+      ident = email; err(""); setBusy(true, $("#authGo"));
+      try { await (up() ? pwSignUp(email, pw) : pwSignIn(email, pw)); }
+      catch (e2) { pwError(e2, email); }
+      finally { setBusy(false, $("#authGo")); }
+    };
+  }
+  async function pwSignUp(email, pw) {
+    if (mode === "supabase") {
+      const { data, error } = await client.auth.signUp({ email, password: pw, options: { emailRedirectTo: here() } });
+      if (error) throw error;
+      // with email checks on, Supabase answers an existing email with a user that has no identities
+      if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) throw { exists: true };
+      if (data.session) signedIn(fromSupabase(data.user)); else screenCheckEmail(email);
+    } else {
+      if ((store.get(PWS) || {})[email]) throw { exists: true };
+      await demoSetPw(email, pw); demoAdd(email);
+      const u = { id: demoId(email), email }; store.set(DEMO_KEY, u); signedIn(u);
+    }
+  }
+  async function pwSignIn(email, pw) {
+    if (mode === "supabase") {
+      const { data, error } = await client.auth.signInWithPassword({ email, password: pw });
+      if (error) throw error; signedIn(fromSupabase(data.user));
+    } else {
+      const rec = (store.get(PWS) || {})[email];
+      if (!rec || rec.hash !== await demoHash(pw, rec.salt)) throw { badLogin: true };
+      const u = { id: demoId(email), email }; store.set(DEMO_KEY, u); signedIn(u);
+    }
+  }
+  function pwError(e, email) {
+    const m = (e && e.message) || "";
+    const offer = (label, fn) => { const box = $("#authErr"); if (box) { box.insertAdjacentHTML("beforeend", ` <button type="button" class="linkinline" id="pwOffer">${label}</button>`); $("#pwOffer").onclick = fn; } };
+    if (e && e.exists || /already registered|already exists/i.test(m)) { err("There's already an account for that email."); offer("Sign in instead", () => { intent = "signin"; screenPassword(); }); }
+    else if (e && e.badLogin || /invalid login credentials/i.test(m)) { err("The email or password is wrong. If you usually sign in with a code, use that, or reset your password to add one."); offer("Reset my password", screenForgot); }
+    else if (/not confirmed/i.test(m)) { err("Confirm your email first: tap the link we sent you."); offer("Send the link again", () => screenCheckEmail(email, true)); }
+    else if (/weak|pwned|leaked|characters/i.test(m)) err("That password is too easy to guess or has appeared in a data leak. Choose a different one.");
+    else err(/rate|security purposes|seconds|too many/i.test(m) ? "Too many tries. Wait a minute and try again." : "That didn't work. Check your connection and try again.");
+  }
+  async function screenCheckEmail(email, resend) {
+    root().innerHTML = `
+      <h2 class="obh">Check your email</h2>
+      <p class="obsub">We've sent a link to <b>${esc(email)}</b>. Tap it to finish creating your account. It brings you straight back to Shiftbook.</p>
+      <p class="obpriv" style="margin:0">Can't see it? Check your spam folder.</p>
+      <div class="banner bad" id="authErr" hidden></div>
+      <button type="button" class="linkbtn2" id="authResend">Send the link again</button>
+      <button type="button" class="linkback" id="authBack">‹ Back to sign in</button>`;
+    const again = async () => {
+      setBusy(true, $("#authResend"));
+      try { const { error } = await client.auth.resend({ type: "signup", email, options: { emailRedirectTo: here() } }); if (error) throw error; err(""); $("#authResend").dataset.label = "Link sent again"; }
+      catch (e) { err(/rate|seconds/i.test((e && e.message) || "") ? "Wait a minute before asking for another link." : "We couldn't send the link. Try again."); }
+      finally { setBusy(false, $("#authResend")); }
+    };
+    $("#authResend").onclick = again;
+    $("#authBack").onclick = () => { intent = "signin"; screenPassword(); };
+    if (resend) again();
+  }
+  function screenForgot() {
+    err("");
+    root().innerHTML = `
+      <button type="button" class="linkback" id="authBack">‹ Back</button>
+      <h2 class="obh">Reset your password</h2>
+      <p class="obsub">We'll email you a link to choose a new password. It works for one hour.</p>
+      <form id="authForm" novalidate>
+        <div class="field"><label for="authId">Email address</label>
+          <input id="authId" type="email" inputmode="email" autocomplete="email" autocapitalize="off" placeholder="you@example.com" value="${esc(ident || "")}"></div>
+        <div class="banner bad" id="authErr" hidden></div>
+        <button class="btn authbtn" type="submit" id="authGo">Email me a reset link</button>
+      </form>`;
+    $("#authBack").onclick = () => { intent = "signin"; screenPassword(); };
+    setTimeout(() => $("#authId")?.focus(), 50);
+    $("#authForm").onsubmit = async e => {
+      e.preventDefault(); if (busy) return;
+      const email = normEmail($("#authId").value);
+      if (!email) { err("Enter an email address like you@example.com."); return; }
+      ident = email;
+      if (mode !== "supabase") { screenNewPassword(email); return; }
+      const btn = $("#authGo"); setBusy(true, btn);
+      try {
+        const { error } = await client.auth.resetPasswordForEmail(email, { redirectTo: here() });
+        if (error) throw error;
+        // same answer whether or not the email has an account, so nobody can use this to check who's signed up
+        root().innerHTML = `
+          <h2 class="obh">Check your email</h2>
+          <p class="obsub">If there's a Shiftbook account for <b>${esc(email)}</b>, we've sent it a link to choose a new password. The link works for one hour.</p>
+          <p class="obpriv" style="margin:0">Can't see it? Check your spam folder.</p>
+          <button type="button" class="linkback" id="authBack">‹ Back to sign in</button>`;
+        $("#authBack").onclick = () => { intent = "signin"; screenPassword(); };
+      } catch (e2) { err(/rate|seconds/i.test((e2 && e2.message) || "") ? "Wait a minute before asking for another link." : "We couldn't send the link. Try again."); }
+      finally { setBusy(false, btn); }
+    };
+  }
+  // reached from the reset link (Supabase), or straight from "Forgot your password?" in demo mode
+  function screenNewPassword(demoEmail) {
+    document.body.classList.add("authing");
+    const box = $("#view-auth"); if (box) box.hidden = false;
+    root().innerHTML = `
+      <h2 class="obh">Choose a new password</h2>
+      ${mode === "demo" ? `<p class="authdemo"><b>Demo mode.</b> No email is sent, so you can choose a new password for ${esc(demoEmail || "")} here.</p>` : `<p class="obsub">Then you'll go straight to your shifts.</p>`}
+      <form id="authForm" novalidate>
+        ${pwField("authPw", "New password", `at least ${PW_MIN} characters`, "new-password")}
+        <div class="banner bad" id="authErr" hidden></div>
+        <button class="btn authbtn" type="submit" id="authGo">Save my new password</button>
+      </form>`;
+    wireShow();
+    setTimeout(() => $("#authPw")?.focus(), 50);
+    $("#authForm").onsubmit = async e => {
+      e.preventDefault(); if (busy) return;
+      const pw = $("#authPw").value, p = pwProblem(pw, demoEmail || "");
+      if (p) { err(p); return; }
+      setBusy(true, $("#authGo"));
+      try {
+        if (mode === "supabase") {
+          const { data, error } = await client.auth.updateUser({ password: pw });
+          if (error) throw error;
+          recovering = false; try { history.replaceState(null, "", location.pathname); } catch (e3) {}
+          signedIn(fromSupabase(data.user));
+        } else {
+          await demoSetPw(demoEmail, pw); demoAdd(demoEmail);
+          const u = { id: demoId(demoEmail), email: demoEmail }; store.set(DEMO_KEY, u); signedIn(u);
+        }
+      } catch (e2) {
+        const m = (e2 && e2.message) || "";
+        err(/same|different from the old/i.test(m) ? "Choose a password you haven't used here before." : /weak|pwned|leaked/i.test(m) ? "That password is too easy to guess or has appeared in a data leak. Choose a different one." : /session|expired|jwt/i.test(m) ? "This reset link has expired. Ask for a new one from the sign-in screen." : "That didn't save. Try again.");
+      } finally { setBusy(false, $("#authGo")); }
+    };
   }
 
   function screenEnter(k) {
@@ -257,8 +443,12 @@
   async function start() {
     if (mode === "supabase") {
       const { data } = await client.auth.getSession();
-      if (data && data.session) signedIn(fromSupabase(data.session.user)); else needSignIn();
-      client.auth.onAuthStateChange((ev, s) => { if (ev === "SIGNED_IN" && s && !current) signedIn(fromSupabase(s.user)); });
+      if (data && data.session && recovering) screenNewPassword();
+      else if (data && data.session) signedIn(fromSupabase(data.session.user)); else needSignIn();
+      client.auth.onAuthStateChange((ev, s) => {
+        if (ev === "PASSWORD_RECOVERY") { recovering = true; screenNewPassword(); return; }
+        if (ev === "SIGNED_IN" && s && !current && !recovering) signedIn(fromSupabase(s.user));
+      });
     } else {
       const u = store.get(DEMO_KEY);
       if (u && u.id) signedIn(u); else needSignIn();

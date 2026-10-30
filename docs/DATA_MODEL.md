@@ -36,7 +36,7 @@ Every document above is one row in `public.documents` (see `supabase/schema.sql`
 | `data` | the document itself, as JSON |
 | `updated_at` | last change |
 
-`<id>` in every path is the signed-in user's Supabase id. Row-level security only lets people read and write rows where `user_id = auth.uid()`, and a check stops a row being saved outside `data/users/<their id>/`. `delete_my_account()` removes the person's rows and their sign-in.
+`<id>` in every path is the signed-in user's Supabase id. Row-level security only lets people read and write rows where `user_id = auth.uid()`, and a check stops a row being saved outside `data/users/<their id>/`. `delete_my_account()` removes the person's rows and their sign-in. Sign-in details (phone, email and, if someone chooses one, a password) live in Supabase Auth (`auth.users`), not in `documents`; passwords are stored only as a hash.
 
 ## Profiles and messages (Supabase)
 

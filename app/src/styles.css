@@ -131,7 +131,7 @@ form{display:flex;flex-direction:column;gap:18px}
 .field{display:flex;flex-direction:column;gap:8px}
 .field>label,.field>.lbl{font-weight:600;font-size:14px}
 .hint{font-size:12px;color:var(--muted);font-weight:400}
-input[type=date],input[type=number],textarea,input[type=text]{width:100%;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--surface);font-size:16px}
+input[type=date],input[type=number],textarea,input[type=text],input[type=email],input[type=tel],input[type=password]{width:100%;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--surface);font-size:16px}
 textarea{min-height:70px;resize:vertical}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
 .chip{border:1px solid var(--line);background:var(--surface);padding:8px 14px;border-radius:999px;cursor:pointer;font-weight:600;font-size:14px}
@@ -444,6 +444,9 @@ body.authing .tabs,body.authing .bottombar,body.authing .period{display:none!imp
 .linkback,.linkbtn2{border:0;background:transparent;color:var(--day);font-weight:700;cursor:pointer;padding:4px 0;align-self:flex-start;font-size:15px}
 .linkbtn2:disabled{color:var(--muted);cursor:default}
 #authForm,#codeForm{display:flex;flex-direction:column;gap:14px}
+.pwrow{display:flex;gap:8px}
+.pwrow input{flex:1;min-width:0}
+.pwshow{flex:none;min-width:72px;min-height:44px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink);font:inherit;font-weight:700;cursor:pointer}
 .codebox{font-family:var(--f-num);font-size:30px!important;letter-spacing:.45em;text-align:center;padding:14px!important}
 .authdemo{margin:0;padding:12px 14px;border-radius:12px;background:var(--night-soft);color:var(--ink);font-size:14px}
 .authdemo code{font-family:var(--f-num);font-size:13px}

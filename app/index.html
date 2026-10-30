@@ -40,7 +40,7 @@
     </nav>
   </header>
 
-  <!-- SIGN IN: phone or email code, Google or Apple (src/auth.js) -->
+  <!-- SIGN IN: phone or email code, email and password, Google or Apple (src/auth.js) -->
   <section class="view" id="view-auth" hidden>
     <div class="card onb" id="authBox"></div>
   </section>
@@ -528,7 +528,7 @@
     <div class="card info">
       <button type="button" class="btn secondary backbtn" data-info-back>‹ Back</button>
       <h2>Privacy</h2>
-      <p class="hint">Last updated 28 October 2026</p>
+      <p class="hint">Last updated 30 October 2026</p>
       <h3>In short</h3>
       <p>Shiftbook keeps your shift, pay and money details so it can work out your pay. We don't sell your data, show ads, track you with cookies or share anything with your employer.</p>
       <h3>Who we are</h3>
@@ -536,6 +536,7 @@
       <h3>What Shiftbook keeps</h3>
       <ul>
         <li>What you enter in setup: your first name, role, hourly and sleep-in rates, pay period start day and usual shift times.</li><li>Your profile: age group, sex (optional), your area, your employer (optional) and your community nickname. Other carers only ever see your nickname. Your employer never sees any of it. Age group and sex are only used, added up across all users, to understand who uses Shiftbook.</li>
+        <li>How you sign in: your mobile number or email address and, if you choose one, a password. Your password is only ever kept scrambled (hashed) by Supabase, so nobody at Shiftbook can read it.</li>
         <li>Your shifts: dates, hours, breaks, sleep-ins, notes, and the service users you choose to add.</li>
         <li>Payslip figures you type in, your tax settings, your spending plan and spending amounts.</li>
         <li>In the community: your public profile (nickname and area only), your posts, and messages you send. Messages to the Shiftbook team are read only by you and the team.</li>
@@ -637,7 +638,8 @@
         <details class="faq"><summary>How do I change or delete a shift?</summary><div>Tap the day on the calendar or its row on the Timesheet tab. Change the details and tap Save changes, or tap Delete. If you only worked part of a shift, change the hours instead of deleting it.</div></details>
         <details class="faq"><summary>How do I send my timesheet to my manager?</summary><div>Timesheet tab → Download CSV. The file includes your name, the pay period, every shift and the totals. It opens in Excel or Google Sheets.</div></details>
         <details class="faq"><summary>Can my employer see my data?</summary><div>No. Your data is private to your account. Your employer, your manager and other carers can't see it. Only what you choose to send, such as a downloaded timesheet, leaves the app.</div></details>
-        <details class="faq"><summary>Can I use Shiftbook on more than one device?</summary><div>Yes. Sign in with the same phone number or email on your phone or computer and you'll see the same data. In demo mode, data stays on one device.</div></details>
+        <details class="faq"><summary>I forgot my password. What do I do?</summary><div>On the sign-in screen, tap Sign in with email and password, then Forgot your password? We'll email you a link to choose a new one. It works for one hour. You can also sign in with a code sent to your email instead. If you signed up with an email code, the same link lets you add a password.</div></details>
+        <details class="faq"><summary>Can I use Shiftbook on more than one device?</summary><div>Yes. Sign in with the same phone number, email or password on your phone or computer and you'll see the same data. In demo mode, data stays on one device.</div></details>
         <details class="faq"><summary>Should I put service users' full names in?</summary><div>No. Use first names or initials only. Shiftbook only needs to tell your service users apart, and it's kinder to their privacy.</div></details>
         <details class="faq"><summary>Does it work for weekly pay, Scotland or two jobs?</summary><div>Not yet. Shiftbook currently supports monthly pay periods, one hourly and one sleep-in rate, and tax rules for England, Wales and Northern Ireland. These are on the roadmap.</div></details>
         <details class="faq"><summary>Who makes Shiftbook?</summary><div>WesTech Innovation. Visit <a href="https://westechinnovation.com/" target="_blank" rel="noopener">westechinnovation.com</a> to get in touch.</div></details>

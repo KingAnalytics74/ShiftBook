@@ -8,7 +8,7 @@ Powered by **WesTech Innovation**.
 
 ## Features
 
-- **Sign in without a password:** a 6-digit code by text or email, or Google / Apple. People stay signed in on their own phone.
+- **Sign in the way that suits you:** a 6-digit code by text or email, an email and password (with a reset link if it's forgotten), or Google / Apple. People stay signed in on their own phone.
 - **Quick setup:** one question per screen (name, age group and sex, area, employer and community nickname, pay, pay month, usual shifts, who you support), then log a first shift and see what it pays.
 - **Log shifts in seconds:** one-tap shift types (Day 08:00–20:00, Sleep-in 20:00–08:00, Day + sleep-in), service users, breaks and notes.
 - **Pay analytics:** gross pay, an earnings build-up chart, weekly earnings, earnings by day of the week, a shift calendar and shifts by service user.
@@ -37,9 +37,10 @@ npx serve .
 2. **Create the database:** open **SQL Editor → New query**, paste `supabase/schema.sql` and run it. It creates one `documents` table, locks every row to its owner with row-level security, turns on live sync between devices, and adds `delete_my_account()`.
 3. **Turn on sign-in methods** in **Authentication → Providers**:
    - **Email:** on by default. To send a 6-digit code instead of a link, go to **Authentication → Email Templates → Magic Link** and put `{{ .Token }}` in the message, for example *"Your Shiftbook code is {{ .Token }}"*.
+   - **Email and password:** uses the same Email provider. Keep **Confirm email** on so people prove the email is theirs. Under **Authentication → Providers → Email**, set the minimum password length to 8 and, on a paid plan, turn on **leaked password protection**. The *Confirm signup* and *Reset password* email templates send the links, so check their wording. Set `password: false` in `app/src/config.js` to hide this option.
    - **Phone:** turn on Phone and connect an SMS provider such as Twilio. UK texts cost a few pence each.
    - **Google / Apple:** optional. Add the client IDs from Google Cloud or Apple Developer.
-4. **Set the site address** in **Authentication → URL Configuration**: put your GitHub Pages address in *Site URL* and *Redirect URLs*.
+4. **Set the site address** in **Authentication → URL Configuration**: put your GitHub Pages address in *Site URL*, and add the app's address (for example `https://kinganalytics74.github.io/ShiftBook/app/`) to *Redirect URLs*. Email confirmation and password reset links bring people back to that address.
 5. **Connect the app:** in **Project Settings → API**, copy the *Project URL* and the *anon public* key into `app/src/config.js`. Set `google` or `apple` to `true` if you turned them on. The anon key is safe to publish; row-level security protects the data.
 6. **Moderators:** after you've signed up, find your user id in **Authentication → Users** and run `insert into public.community_moderators (user_id) values ('<your id>');` in the SQL Editor. Moderators see reported posts and can hide or unhide them. They are also **the Shiftbook team**: they read and answer messages to the team, send announcements, see reported private messages and can stop someone sending private messages. Private messages that nobody has reported stay unreadable to moderators in the app.
 7. **Limit abuse:** in **Authentication → Rate Limits**, keep the limits on codes per hour.
@@ -84,10 +85,10 @@ legacy-app/          the earlier single-user version, kept for reference
 
 The first screen has two clear choices:
 
-- **Create my Shiftbook** (sign up): choose phone or email, get a 6-digit code, tap **Create my account**, then the six setup screens and the first shift.
+- **Create my Shiftbook** (sign up): choose phone or email and get a 6-digit code, or choose **email and password** and tap the link we email to confirm it. Then come the six setup screens and the first shift.
 - **I already have an account** (sign in): the same code, then straight back to your shifts. If the number or email has no account yet, it says so and offers **Create one instead**, so nobody gets stuck.
 
-There's no password to forget. The code fills in automatically from the text on most phones, and **Resend code** appears after 30 seconds. People stay signed in on their own phone until they tap **Sign out**, which is at the bottom of every screen and in Timesheet → Your account.
+A password is optional: people who'd rather not have one use a code. **Forgot your password?** emails a link to choose a new one, and the same link lets someone who signed up with an email code add a password. The code fills in automatically from the text on most phones, and **Resend code** appears after 30 seconds. People stay signed in on their own phone until they tap **Sign out**, which is at the bottom of every screen and in Timesheet → Your account.
 
 | Action | Where | What happens |
 |---|---|---|

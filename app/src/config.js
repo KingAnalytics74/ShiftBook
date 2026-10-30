@@ -12,6 +12,7 @@ window.SHIFTBOOK_CONFIG = {
   signIn: {
     phone: true,            // code by text message (needs an SMS provider such as Twilio set up in Supabase)
     email: true,            // code by email
+    password: true,         // email and password (Supabase → Authentication → Providers → Email, on by default)
     google: false,          // turn on after adding Google in Supabase → Authentication → Providers
     apple: false            // turn on after adding Apple in Supabase → Authentication → Providers
   },
