@@ -1,7 +1,7 @@
--- Shiftbook database for Supabase.
+-- Shiftbuck database for Supabase.
 -- Run this once in Supabase → SQL Editor → New query.
 --
--- Every Shiftbook document (settings, shifts, payslips, spending, holiday…) is one row.
+-- Every Shiftbuck document (settings, shifts, payslips, spending, holiday…) is one row.
 -- path   = the document's full path, e.g. data/users/<user id>/main/shifts/2026-10-27
 -- parent = the collection it sits in,  e.g. data/users/<user id>/main/shifts
 
@@ -181,12 +181,12 @@ grant execute on function public.community_post(text, text, uuid, text, text), p
   public.community_is_moderator() to authenticated;
 
 -- ============================================================================
--- Profiles, private messages, messages to the Shiftbook team, announcements
+-- Profiles, private messages, messages to the Shiftbuck team, announcements
 --
 -- * Other carers see a profile's nickname and area, through the community_people view. Never the user id.
 -- * A private message can only be read by the two carers in the conversation. If the person who received
 --   it reports it, moderators can read that one message so they can act on it.
--- * Messages to the Shiftbook team are read only by the carer and the team (the community_moderators table).
+-- * Messages to the Shiftbuck team are read only by the carer and the team (the community_moderators table).
 -- * Every table has row-level security on and no policies: all access goes through the functions below.
 -- ============================================================================
 
@@ -391,7 +391,7 @@ begin
 end;
 $$;
 
--- ---------- messages to and from the Shiftbook team ----------
+-- ---------- messages to and from the Shiftbuck team ----------
 create or replace function public.team_send(p_body text)
 returns void language plpgsql security definer set search_path = public as $$
 begin
@@ -446,7 +446,7 @@ create or replace function public.team_reply(p_who uuid, p_body text)
 returns void language plpgsql security definer set search_path = public as $$
 declare who uuid;
 begin
-  if not public.community_is_moderator() then raise exception 'Shiftbook team only'; end if;
+  if not public.community_is_moderator() then raise exception 'Shiftbuck team only'; end if;
   select user_id into who from public.community_profiles where id = p_who;
   if who is null then raise exception 'No such carer'; end if;
   insert into public.team_messages (user_id, from_team, body) values (who, true, trim(p_body));
@@ -457,7 +457,7 @@ $$;
 create or replace function public.team_mark_read_for(p_who uuid)
 returns void language plpgsql security definer set search_path = public as $$
 begin
-  if not public.community_is_moderator() then raise exception 'Shiftbook team only'; end if;
+  if not public.community_is_moderator() then raise exception 'Shiftbuck team only'; end if;
   update public.team_messages set read_at = now()
   where user_id = (select user_id from public.community_profiles where id = p_who) and not from_team and read_at is null;
 end;
@@ -475,7 +475,7 @@ grant select on public.announcements_feed to authenticated;
 create or replace function public.announce(p_body text)
 returns void language plpgsql security definer set search_path = public as $$
 begin
-  if not public.community_is_moderator() then raise exception 'Shiftbook team only'; end if;
+  if not public.community_is_moderator() then raise exception 'Shiftbuck team only'; end if;
   insert into public.announcements (body) values (trim(p_body));
 end;
 $$;
@@ -483,7 +483,7 @@ $$;
 create or replace function public.announce_delete(p_id uuid)
 returns void language plpgsql security definer set search_path = public as $$
 begin
-  if not public.community_is_moderator() then raise exception 'Shiftbook team only'; end if;
+  if not public.community_is_moderator() then raise exception 'Shiftbuck team only'; end if;
   delete from public.announcements where id = p_id;
 end;
 $$;

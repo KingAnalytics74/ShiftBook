@@ -1,6 +1,6 @@
-/* Shiftbook app logic. Built from the Shiftbook for Carers edition: every path lives under data/users/<signed-in user id>/ */
+/* Shiftbuck app logic. Built from the Shiftbuck carers edition: every path lives under data/users/<signed-in user id>/ */
 /*
- * Shiftbook — personal shift log, pay and budget app.
+ * Shiftbuck — personal shift log, pay and budget app.
  *
  * MULTI-USER EDITION: every path below lives under the viewer's private subtree data/users/<id>/
  * DATA MODEL (artifact db)
@@ -562,7 +562,7 @@
       state.editing = null; show("overview");
       syncJotform(s);
     } catch (e2) {
-      $("#formError").textContent = e2?.code === "invalid_argument" ? "Shiftbook couldn't save. Sign out and back in, then try again." : "The shift didn't save. Check your connection and try again.";
+      $("#formError").textContent = e2?.code === "invalid_argument" ? "Shiftbuck couldn't save. Sign out and back in, then try again." : "The shift didn't save. Check your connection and try again.";
       $("#formError").hidden = false;
     } finally { $("#saveBtn").disabled = false; }
   });
@@ -593,9 +593,9 @@
   // Full JSON backup: every shift, setting, plan and spending record (also the hand-off format for a future GitHub build)
   $("#backupBtn").onclick = async () => {
     if (!state.downloads) { toast("Downloads aren't available in this view"); return; }
-    const data = { exportedAt: new Date().toISOString(), app: "Shiftbook", schemaVersion: 1, config: state.cfg, money: state.money,
+    const data = { exportedAt: new Date().toISOString(), app: "Shiftbuck", schemaVersion: 1, config: state.cfg, money: state.money,
       shifts: [...state.shifts.values()].sort((a, b) => a.date.localeCompare(b.date)), spend: Object.fromEntries(state.spend), payslips: Object.fromEntries(state.payslips) };
-    try { await state.downloads.save({ filename: `Shiftbook_backup_${todayStr}.json`, data: JSON.stringify(data, null, 2) }); } catch (e) { if (e?.code !== "cancelled") toast("The backup wasn't saved"); }
+    try { await state.downloads.save({ filename: `Shiftbuck_backup_${todayStr}.json`, data: JSON.stringify(data, null, 2) }); } catch (e) { if (e?.code !== "cancelled") toast("The backup wasn't saved"); }
   };
   $("#copyBtn").onclick = async () => {
     const p = curPeriod(), t = summarise(p).t;
@@ -764,7 +764,7 @@
     }
     $("#tCode").disabled = self;
     const tcI = parseTaxCode(mc.taxCode);
-    $("#tCodeHelp").textContent = self ? "Not used when you're self-employed." : !tcI.ok ? `"${mc.taxCode}" isn't a tax code Shiftbook recognises, so it's using 1257L. Check your payslip.` : tcI.region === "scotland" ? "Scottish tax bands aren't supported yet, so this uses UK rates." : tcI.kind === "flat" ? `All your pay is taxed at ${Math.round(tcI.rate * 100)}%.` : tcI.kind === "none" ? "No tax is taken with this code." : tcI.k ? `K code: about ${gbp(-tcI.freeM)} a month is added to your taxable pay.` : `About ${gbp(tcI.freeM)} a month is tax-free.`;
+    $("#tCodeHelp").textContent = self ? "Not used when you're self-employed." : !tcI.ok ? `"${mc.taxCode}" isn't a tax code Shiftbuck recognises, so it's using 1257L. Check your payslip.` : tcI.region === "scotland" ? "Scottish tax bands aren't supported yet, so this uses UK rates." : tcI.kind === "flat" ? `All your pay is taxed at ${Math.round(tcI.rate * 100)}%.` : tcI.kind === "none" ? "No tax is taken with this code." : tcI.k ? `K code: about ${gbp(-tcI.freeM)} a month is added to your taxable pay.` : `About ${gbp(tcI.freeM)} a month is tax-free.`;
     $("#tCodeHelp").style.color = !self && !tcI.ok ? "var(--bad)" : "";
     const key = state.moneyKey + "|" + JSON.stringify(pots()) + "|" + JSON.stringify(spendFor(state.moneyKey));
     const typing = $("#planRows").contains(document.activeElement);
@@ -774,7 +774,7 @@
   }
 
   // ---------- payslip check ----------
-  // A payslip is stored against the Shiftbook pay period it covers (doc id = period start date).
+  // A payslip is stored against the Shiftbuck pay period it covers (doc id = period start date).
   state.payslips = new Map(); state.payEditing = null;
   const payCol = () => S.main().collection("payslips");
   function renderPayslip(p, sm) {
@@ -782,7 +782,7 @@
     $("#payHint").textContent = `For work ${fmt(p.start, { day: "numeric", month: "short" })} – ${fmt(p.end, { day: "numeric", month: "short" })}`;
     $("#payForm").hidden = !editing; $("#payEdit").hidden = editing;
     $("#payEdit").textContent = ps ? "Edit this payslip" : "Add the payslip for this period";
-    if (!ps) { $("#payBody").innerHTML = `<p class="hint" style="margin:0">No payslip saved for this period yet. When it arrives, add it here and Shiftbook checks it against your logged shifts and its own tax maths.</p>`; return; }
+    if (!ps) { $("#payBody").innerHTML = `<p class="hint" style="margin:0">No payslip saved for this period yet. When it arrives, add it here and Shiftbuck checks it against your logged shifts and its own tax maths.</p>`; return; }
     const app = sm.t.shifts ? { hours: sm.t.net, gross: sm.t.gross, ...deductions(sm.t.gross, state.money) } : null;
     const hF = v => hrs(v) + " hrs";
     const row = (label, slip, est, f = gbp) => {
@@ -796,12 +796,12 @@
     const own = deductions(ps.gross, state.money);
     const checks = [["Income tax", ps.tax, own.tax], ["National Insurance", ps.ni, own.ni], ["Pension", ps.pension, own.pension]];
     const bad = checks.filter(([, a, b]) => Math.abs(a - b) >= 1);
-    let notes = bad.length ? `<div class="banner warn">On this payslip's gross, Shiftbook's ${bad.map(b => b[0].toLowerCase()).join(" and ")} ${bad.length > 1 ? "differ" : "differs"} from your payslip (${bad.map(([l, a, b]) => `${l}: payslip ${gbp(a)}, Shiftbook ${gbp(b)}`).join("; ")}).${bad.some(b => b[0] === "Pension") && ps.gross > 520 ? ` Your payslip pension works out at ${Math.round((ps.pension / (Math.min(ps.gross, 4189) - 520)) * 1000) / 10}% of qualifying earnings, so set "Pension you pay" to that.` : ""}</div>`
-      : `<div class="banner ok">✓ Shiftbook's tax, NI and pension maths matches this payslip to within £1.</div>`;
-    if (!app) notes += `<p class="hint" style="margin:8px 0 0">No shifts were logged in Shiftbook for this period, so only the deductions are checked.</p>`;
+    let notes = bad.length ? `<div class="banner warn">On this payslip's gross, Shiftbuck's ${bad.map(b => b[0].toLowerCase()).join(" and ")} ${bad.length > 1 ? "differ" : "differs"} from your payslip (${bad.map(([l, a, b]) => `${l}: payslip ${gbp(a)}, Shiftbuck ${gbp(b)}`).join("; ")}).${bad.some(b => b[0] === "Pension") && ps.gross > 520 ? ` Your payslip pension works out at ${Math.round((ps.pension / (Math.min(ps.gross, 4189) - 520)) * 1000) / 10}% of qualifying earnings, so set "Pension you pay" to that.` : ""}</div>`
+      : `<div class="banner ok">✓ Shiftbuck's tax, NI and pension maths matches this payslip to within £1.</div>`;
+    if (!app) notes += `<p class="hint" style="margin:8px 0 0">No shifts were logged in Shiftbuck for this period, so only the deductions are checked.</p>`;
     else if (Math.abs(ps.gross - app.gross) >= 1) {
       const more = app.gross - ps.gross;
-      notes += `<div class="banner ${more > 0 ? "bad" : "warn"}" style="margin-top:8px">${more > 0 ? `Your logged shifts come to <b>${gbp(more)}</b> more than this payslip.` : `This payslip is <b>${gbp(-more)}</b> more than your logged shifts. A shift may be missing from Shiftbook.`}${more > 0 && !(ps.sleepPay > 0) && sm.t.sleep > 0 ? ` The payslip shows no sleep-in pay, but you logged ${sm.t.sleepIns} sleep-ins worth ${gbp(sm.t.sleep)}. Ask payroll how sleep-ins are being paid.` : more > 0 ? " Check for hours that weren't paid." : ""}</div>`;
+      notes += `<div class="banner ${more > 0 ? "bad" : "warn"}" style="margin-top:8px">${more > 0 ? `Your logged shifts come to <b>${gbp(more)}</b> more than this payslip.` : `This payslip is <b>${gbp(-more)}</b> more than your logged shifts. A shift may be missing from Shiftbuck.`}${more > 0 && !(ps.sleepPay > 0) && sm.t.sleep > 0 ? ` The payslip shows no sleep-in pay, but you logged ${sm.t.sleepIns} sleep-ins worth ${gbp(sm.t.sleep)}. Ask payroll how sleep-ins are being paid.` : more > 0 ? " Check for hours that weren't paid." : ""}</div>`;
     }
     $("#payBody").innerHTML = `<div class="tablewrap" style="margin-bottom:10px"><table class="paytable">${head}<tbody>${body}</tbody></table></div>${notes}${ps.payDate ? `<p class="hint" style="margin:8px 0 0">Paid ${fmt(parse(ps.payDate), { day: "numeric", month: "long", year: "numeric" })}.</p>` : ""}`;
   }
@@ -1015,7 +1015,7 @@
   ["uAge", "uSex", "uArea", "uEmployer", "uNick"].forEach(id => $("#" + id).addEventListener("input", () => { $("#setupErr").hidden = true; }));
   function profileCheck() {
     const err = m => { $("#setupErr").textContent = m; $("#setupErr").hidden = false; return false; };
-    if (obStep === 2) { const a = $("#uAge").value; if (!a) return err("Choose your age group."); if (a === "under18") return err("Shiftbook is for care workers aged 18 and over."); }
+    if (obStep === 2) { const a = $("#uAge").value; if (!a) return err("Choose your age group."); if (a === "under18") return err("Shiftbuck is for workers aged 18 and over."); }
     if (obStep === 3) {
       if (!obVal("uArea")) return err("Add your town or county, for example Leicester.");
       const n = obVal("uNick"), first = obVal("uName").toLowerCase();
@@ -1056,7 +1056,7 @@
     $("#obPatPrev").innerHTML = chosen.length ? `You picked <b>${chosen.length}</b> shift${chosen.length === 1 ? "" : "s"}: ${chosen.map(t => esc(t.name)).join(", ")}` : "Pick at least one shift.";
     $("#obTypes").innerHTML = chosen.map((t, i) => `<button type="button" data-t="${i}" aria-pressed="${obType === i}">${esc(t.name)}<small>${t.start}–${t.end}</small></button>`).join("") + `<button type="button" data-t="none" aria-pressed="${obType === "none"}">Not now</button>`;
     $("#obPay").hidden = obType === "none"; $("#obPayV").textContent = gbp(obShiftPay());
-    $("#setupBtn").textContent = obType === "none" || !chosen.length ? "Start my Shiftbook" : "Save and start";
+    $("#setupBtn").textContent = obType === "none" || !chosen.length ? "Start my Shiftbuck" : "Save and start";
     if (!$("#obDate").value) $("#obDate").value = todayStr;
     $("#setupErr").hidden = true;
   }
@@ -1099,7 +1099,7 @@
       state.view = obType === "none" ? "log" : "overview";
       toast(obType === "none" ? `Welcome, ${name}. Log your first shift when you're ready` : `Welcome, ${name}. Your first shift pays ${gbp(pay)}`);
     } catch (e2) {
-      $("#setupErr").textContent = e2?.code === "invalid_argument" ? "Shiftbook couldn't save. Sign out and back in, then try again." : "That didn't save. Check your connection and try again.";
+      $("#setupErr").textContent = e2?.code === "invalid_argument" ? "Shiftbuck couldn't save. Sign out and back in, then try again." : "That didn't save. Check your connection and try again.";
       $("#setupErr").hidden = false;
     } finally { $("#setupBtn").disabled = false; }
   });
@@ -1141,7 +1141,7 @@
     const f = forecast(), f0 = d => fmt(d, { weekday: "short", day: "numeric", month: "short" });
     if (!f.days.length) {
       $("#fcRange").textContent = "Next 7 days"; $("#fcPay").textContent = "–";
-      $("#fcLegend").innerHTML = "<span>Log a few weeks of shifts and Shiftbook will predict your next week.</span>";
+      $("#fcLegend").innerHTML = "<span>Log a few weeks of shifts and Shiftbuck will predict your next week.</span>";
       $("#fcList").innerHTML = ""; $("#fcBasis").textContent = ""; $("#fcRestText").textContent = ""; $("#fcRestPill").textContent = ""; return;
     }
     const likely = f.days.filter(x => x.existing || x.p >= 0.5);
@@ -1207,7 +1207,7 @@
         await Promise.all(jobs);
         await S.money().delete(); await S.main().delete();
         if (window.SBAuth) { try { await SBAuth.deleteAccount(); } catch (e3) {} toast("Your account has been deleted"); setTimeout(() => location.reload(), 1200); return; }
-        $("#delAllConfirm").hidden = true; toast("All your Shiftbook data has been deleted");
+        $("#delAllConfirm").hidden = true; toast("All your Shiftbuck data has been deleted");
         closeInfo();
       } catch (e2) { toast("Some data wasn't deleted. Try again."); }
       finally { $("#delAllYes").disabled = false; }
@@ -1268,7 +1268,7 @@
       return { pid, nick: a.nick || pp.nick || "Carer", area: a.area || pp.area || "", thread, last: thread[thread.length - 1] || null, unread: (a.msgs || []).filter(m => m.at > seen).length, fromTeamDoc: b };
     }).filter(x => x.thread.length).sort((x, y) => (y.last?.at || "").localeCompare(x.last?.at || ""));
     const emit = () => {
-      const thread = [...toTeam.map(m => ({ ...m, mine: true, who: "You" })), ...fromTeam.map(m => ({ ...m, mine: false, who: "Shiftbook team" }))].sort(byAt);
+      const thread = [...toTeam.map(m => ({ ...m, mine: true, who: "You" })), ...fromTeam.map(m => ({ ...m, mine: false, who: "Shiftbuck team" }))].sort(byAt);
       cb({ posts: posts.filter(p => isMod || !hidden.has(p.id) || p.mine), hidden, reports, people, canDM: false, isTeam,
         team: { thread, unread: fromTeam.filter(m => m.at > teamSeen).length }, announcements: ann, inbox: isTeam ? inbox() : [], dms: { threads: [], blocked: new Set() } });
     };
@@ -1382,7 +1382,7 @@
     renderMessages(); cmRenderSheet();
   }
 
-  // ---------- messages: the Shiftbook team, and (full app) other carers ----------
+  // ---------- messages: the Shiftbuck team, and (full app) other carers ----------
   const cmInitial = n => esc(String(n || "?").replace(/[^A-Za-z0-9]/g, "").charAt(0).toUpperCase() || "?");
   function cmUnreadTotal(f = cm.feed) {
     return (f.team?.unread || 0) + (cm.isTeam ? (f.inbox || []).reduce((a, x) => a + (x.unread || 0), 0) : 0) + (f.dms?.threads || []).reduce((a, x) => a + (x.unread || 0), 0);
@@ -1390,12 +1390,12 @@
   function cmBadge() { const n = cmUnreadTotal(); document.querySelectorAll('[data-view="community"]').forEach(b => { b.toggleAttribute("data-unread", n > 0); b.setAttribute("aria-label", n ? `Community, ${n} unread message${n === 1 ? "" : "s"}` : "Community"); }); }
   function cmThreadInfo(t, f = cm.feed) {
     if (!t) return null;
-    if (t.kind === "team") return { name: "Shiftbook team", sub: "Only you and the Shiftbook team can read these messages.", msgs: f.team?.thread || [], unread: f.team?.unread || 0 };
+    if (t.kind === "team") return { name: "Shiftbuck team", sub: "Only you and the Shiftbuck team can read these messages.", msgs: f.team?.thread || [], unread: f.team?.unread || 0 };
     const pp = (f.people && f.people.get(t.pid)) || {};
     if (t.kind === "inbox") {
       const x = (f.inbox || []).find(i => i.pid === t.pid) || {};
       const msgs = x.thread || (f.open && f.open.key === "inbox:" + t.pid ? f.open.msgs : null);
-      return { name: x.nick || pp.nick || "Carer", sub: `${x.area || pp.area ? esc(x.area || pp.area) + " · " : ""}Writing to the Shiftbook team. Your replies show as "Shiftbook team".`, msgs, unread: x.unread || 0 };
+      return { name: x.nick || pp.nick || "Carer", sub: `${x.area || pp.area ? esc(x.area || pp.area) + " · " : ""}Writing to the Shiftbuck team. Your replies show as "Shiftbuck team".`, msgs, unread: x.unread || 0 };
     }
     const x = (f.dms?.threads || []).find(i => i.pid === t.pid) || {};
     const msgs = f.open && f.open.key === "dm:" + t.pid ? f.open.msgs : null;
@@ -1419,7 +1419,7 @@
     $("#cmMsgHint").textContent = total ? `${total} unread` : "";
     if (!t) {
       const team = f.team || { thread: [] }, lastT = team.thread[team.thread.length - 1];
-      let h = cmRow("team", "S", "Shiftbook team", lastT ? cmLast(lastT) : "Questions, problems or ideas? Message us.", team.unread, true);
+      let h = cmRow("team", "S", "Shiftbuck team", lastT ? cmLast(lastT) : "Questions, problems or ideas? Message us.", team.unread, true);
       if (cm.isTeam) {
         h += `<div class="cmsect">Carers writing to the team</div>`;
         h += (f.inbox || []).length ? f.inbox.map(x => cmRow("inbox:" + x.pid, cmInitial(x.nick), x.nick || "Carer", cmLast(x.last) || x.area || "", x.unread)).join("") : `<div class="cmempty">No messages from carers yet.</div>`;
@@ -1428,7 +1428,7 @@
         h += `<div class="cmsect">Carers</div>`;
         h += (f.dms?.threads || []).length ? f.dms.threads.map(x => cmRow("dm:" + x.pid, cmInitial(x.nick), x.nick || "Carer", cmLast(x.last), x.unread)).join("") : `<p class="hint" style="margin:0">To message a carer, tap their nickname on a post.</p>`;
       } else {
-        h += `<p class="hint" style="margin:10px 0 0">${cmDemo() ? "Demo mode: the community and messages only live in this browser, so there's nobody else here yet. Connect Shiftbook to Supabase (see the README) and carers can post to each other and send private messages." : "Private messages between carers come with the full Shiftbook app, where only the two people talking can read them. Until then, reply to each other's posts."}</p>`;
+        h += `<p class="hint" style="margin:10px 0 0">${cmDemo() ? "Demo mode: the community and messages only live in this browser, so there's nobody else here yet. Connect Shiftbuck to Supabase (see the README) and carers can post to each other and send private messages." : "Private messages between carers come with the full Shiftbuck app, where only the two people talking can read them. Until then, reply to each other's posts."}</p>`;
       }
       $("#cmMsgList").innerHTML = h; cm.lastBubbles = "";
       return;
@@ -1439,10 +1439,10 @@
     $("#cmThreadSub").innerHTML = blocked ? "You've blocked this carer. Unblock them to message again." : info.sub;
     $("#cmThreadActs").innerHTML = t.kind === "dm" ? `<button type="button" data-prof="${esc(t.pid)}">Profile</button><button type="button" class="danger" data-${blocked ? "unblock" : "block"}="${esc(t.pid)}">${blocked ? "Unblock" : "Block"}</button>` : "";
     $("#cmMsgForm").hidden = !!blocked;
-    $("#cmMsgLbl").textContent = t.kind === "inbox" ? "Reply as the Shiftbook team" : t.kind === "team" ? "Message the Shiftbook team" : `Message ${info.name}`;
+    $("#cmMsgLbl").textContent = t.kind === "inbox" ? "Reply as the Shiftbuck team" : t.kind === "team" ? "Message the Shiftbuck team" : `Message ${info.name}`;
     const reasons = [["unwanted", "Unwanted or creepy"], ["abuse", "Abusive or threatening"], ["details", "Asks for personal details or money"], ["spam", "Spam or selling"], ["other", "Something else"]];
     const html = info.msgs == null ? `<div class="cmempty">Loading…</div>` : info.msgs.length ? info.msgs.map(m => `<div class="cmbub${m.mine ? " mine" : ""}"><span class="who">${esc(m.who)}</span><span class="txt">${esc(m.text)}</span><span class="when">${cmAgo(m.at)}</span>${t.kind === "dm" && !m.mine ? (cm.dmReporting === m.id ? `<div class="cmreport"><b>Why are you reporting this?</b><div class="obchips">${reasons.map(([k, l]) => `<button type="button" data-dmrep="${k}" data-id="${esc(m.id)}">${l}</button>`).join("")}</div><button type="button" class="linkinline" data-dmrepcancel>Cancel</button></div>` : `<button type="button" class="linkinline" data-dmreport="${esc(m.id)}">Report</button>`) : ""}</div>`).join("")
-      : `<div class="cmempty">${t.kind === "team" ? "Tell us what's working, what isn't, or ask anything about Shiftbook." : "No messages yet. Say hello."}</div>`;
+      : `<div class="cmempty">${t.kind === "team" ? "Tell us what's working, what isn't, or ask anything about Shiftbuck." : "No messages yet. Say hello."}</div>`;
     if (html !== cm.lastBubbles) { $("#cmBubbles").innerHTML = html; cm.lastBubbles = html; $("#cmBubbles").scrollTop = $("#cmBubbles").scrollHeight; }
     const key = t.kind + ":" + (t.pid || "");
     if (info.unread && cm.marking !== key && cm.store?.markRead) { cm.marking = key; cm.store.markRead(t).catch(() => {}).finally(() => { setTimeout(() => { if (cm.marking === key) cm.marking = ""; }, 1500); }); }
@@ -1469,7 +1469,7 @@
       note = "This is you. Other carers only see your nickname and area.";
       if (f.canDM) acts = `<button type="button" class="btn secondary" data-dmopen="${p.dmOpen ? "off" : "on"}">${p.dmOpen ? "Stop new messages from carers" : "Let carers message me"}</button>`;
     } else if (!f.canDM) {
-      note = cmDemo() ? "In demo mode there are no other carers to message. Connect Supabase to turn on private messages." : "Private messages between carers come with the full Shiftbook app. For now, reply to their posts.";
+      note = cmDemo() ? "In demo mode there are no other carers to message. Connect Supabase to turn on private messages." : "Private messages between carers come with the full Shiftbuck app. For now, reply to their posts.";
     } else if (blocked) {
       note = "You've blocked this carer. They can't message you.";
       acts = `<button type="button" class="btn secondary" data-unblock="${esc(pid)}">Unblock</button>`;
@@ -1499,12 +1499,12 @@
       else if (t.kind === "inbox") await cm.store.teamReply(t.pid, text);
       else await cm.store.dmSend(t.pid, text);
       $("#cmMsgText").value = ""; toast("Message sent");
-    } catch (e2) { err(t.kind === "dm" ? "That didn't send. This carer may not be taking messages, or you've sent a lot in the last hour." : t.kind === "inbox" ? "That didn't send. Only the Shiftbook team can reply here." : "That didn't send. Check your connection and try again."); }
+    } catch (e2) { err(t.kind === "dm" ? "That didn't send. This carer may not be taking messages, or you've sent a lot in the last hour." : t.kind === "inbox" ? "That didn't send. Only the Shiftbuck team can reply here." : "That didn't send. Check your connection and try again."); }
     finally { $("#cmMsgSend").disabled = false; }
   });
   $("#cmAnnForm").addEventListener("submit", async e => {
     e.preventDefault(); const text = $("#cmAnnText").value.trim(); if (!text || !cm.store?.announce) return;
-    try { await cm.store.announce(text); $("#cmAnnText").value = ""; toast("Sent to everyone"); } catch (e2) { toast("Only the Shiftbook team can send announcements."); }
+    try { await cm.store.announce(text); $("#cmAnnText").value = ""; toast("Sent to everyone"); } catch (e2) { toast("Only the Shiftbuck team can send announcements."); }
   });
   $("#cmSpaces").addEventListener("click", e => { const b = e.target.closest("[data-cs]"); if (!b) return; cm.space = b.dataset.cs; if (!["all", "area"].includes(cm.space)) $("#cmSpace").value = cm.space; renderCommunity(); });
   $("#cmText").addEventListener("input", () => { $("#cmCount").textContent = `${$("#cmText").value.length} / 1000`; $("#cmErr").hidden = true; });
@@ -1533,7 +1533,7 @@
     if ("dmrepcancel" in d) { cm.dmReporting = null; renderMessages(); return; }
     if (d.dmrep) { try { await cm.store.dmReport(d.id, d.dmrep); toast("Thanks. A moderator will look at it. You can also block them."); } catch (e2) { toast("That didn't send. Try again."); } cm.dmReporting = null; renderMessages(); return; }
     if (d.restrict) { try { await cm.store.dmRestrict(d.restrict); toast("They can no longer send private messages."); } catch (e2) { toast("Only moderators can do that."); } return; }
-    if (d.unann) { try { await cm.store.removeAnnouncement(d.unann); toast("Announcement removed"); } catch (e2) { toast("Only the Shiftbook team can do that."); } return; }
+    if (d.unann) { try { await cm.store.removeAnnouncement(d.unann); toast("Announcement removed"); } catch (e2) { toast("Only the Shiftbuck team can do that."); } return; }
     if (t.dataset.reply) { cm.replyTo = t.dataset.reply; renderCommunity(); $("#cmComposer").scrollIntoView({ block: "center" }); $("#cmText").focus({ preventScroll: true }); return; }
     if (t.dataset.del) { try { await cm.store.remove(t.dataset.del); toast("Post deleted"); } catch (e2) { toast("That didn't delete. Try again."); } return; }
     if (t.dataset.report) { cm.reporting = t.dataset.report; renderCommunity(); return; }
@@ -1563,7 +1563,7 @@
     const [db, user, dl] = await Promise.all([claude.use("db"), claude.use("user"), claude.use("downloads")]);
     state.db = db; state.mcp = null; state.downloads = dl;
     const uid = user ? await user.id() : null;
-    if (!db || !uid) { setSync("bad", "Sign in to use Shiftbook"); state.loaded = true; render(); return; }
+    if (!db || !uid) { setSync("bad", "Sign in to use Shiftbuck"); state.loaded = true; render(); return; }
     // every viewer's data lives in their own private subtree: data/users/<their id>/...
     const base = "data/users/" + uid;
     S = { profile: () => db.doc(base + "/profile"), main: () => db.doc(base + "/main"), money: () => db.doc(base + "/money"),
@@ -1572,7 +1572,7 @@
     const cmSync = () => { const me = cmMe(); if (cm.store && cm.store.syncProfile && me.nick) cm.store.syncProfile(me).catch(() => {}); };
     S.profile().onSnapshot(snap => { state.profile = snap.exists ? snap.data() : null; cmSync(); renderCommunity(); }, () => {});
     try { cm.isMod = !!(user && user.isOwner && await user.isOwner()); } catch (e) { cm.isMod = false; }
-    // the Shiftbook team = people the owner gives edit access (the full app uses its moderators table instead)
+    // the Shiftbuck team = people the owner gives edit access (the full app uses its moderators table instead)
     try { cm.isTeam = !window.SBAuth && !!(user && user.canEdit && await user.canEdit()); } catch (e) { cm.isTeam = false; }
     cm.uid = uid; cm.store = makeCommunityStore({ db, uid, isMod: cm.isMod, isTeam: cm.isTeam, seenDoc: db.doc(base + "/inbox") });
     cm.store.start(f => { cm.feed = { people: new Map(), team: { thread: [], unread: 0 }, announcements: [], inbox: [], dms: { threads: [], blocked: new Set() }, ...f }; if (typeof f.isMod === "boolean") cm.isMod = f.isMod; if (typeof f.isTeam === "boolean") cm.isTeam = f.isTeam; if (state.view === "community") renderCommunity(); else cmBadge(); });
@@ -1590,6 +1590,6 @@
     S.shifts().limit(1000).onSnapshot(snap => {
       state.shifts = new Map(snap.docs.map(d => [d.id, d.data()]));
       state.loaded = true; render();
-    }, e => { setSync("bad", e?.code === "revoked" ? "Access to this Shiftbook changed" : "Live updates stopped. Reload to reconnect"); });
+    }, e => { setSync("bad", e?.code === "revoked" ? "Access to this Shiftbuck changed" : "Live updates stopped. Reload to reconnect"); });
   })();
 })();

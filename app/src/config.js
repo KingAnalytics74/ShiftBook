@@ -1,5 +1,5 @@
 /*
- * config.js — settings for your Shiftbook deployment.
+ * config.js — settings for your Shiftbuck deployment.
  *
  * Leave supabaseUrl and supabaseAnonKey empty to run in DEMO MODE: sign-in codes are shown
  * on screen and data stays in this browser. Fill them in to use real accounts and cloud sync.

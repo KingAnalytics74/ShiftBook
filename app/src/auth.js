@@ -1,5 +1,5 @@
 /*
- * auth.js — sign-in for Shiftbook. No passwords: people sign in with a 6-digit code
+ * auth.js — sign-in for Shiftbuck. No passwords: people sign in with a 6-digit code
  * sent to their phone or email, or with Google / Apple.
  *
  * Supabase mode (config.js filled in): real accounts, sessions kept for months on that device.
@@ -43,7 +43,7 @@
   function setBusy(on, btn) { busy = on; root().querySelectorAll("button").forEach(b => b.disabled = on); if (btn) btn.dataset.label ||= btn.textContent, btn.textContent = on ? "Please wait…" : btn.dataset.label; }
   function err(msg) { const e = $("#authErr"); if (!e) return; e.textContent = msg || ""; e.hidden = !msg; }
 
-  // Two clear paths: "Create my Shiftbook" (sign up) and "I already have an account" (sign in).
+  // Two clear paths: "Create my Shiftbuck" (sign up) and "I already have an account" (sign in).
   // Both use a code; signing in with a number or email we don't know offers to create the account instead.
   const ACCOUNTS = "shiftbook:accounts";           // demo mode only: which phones / emails have an account
   const demoHas = id => (store.get(ACCOUNTS) || []).includes(id);
@@ -64,7 +64,7 @@
         <li><b>Get a warning</b> when you're not getting enough rest.</li>
       </ul>
       <div class="authstack">
-        <button type="button" class="btn authbtn" id="goUp">Create my Shiftbook</button>
+        <button type="button" class="btn authbtn" id="goUp">Create my Shiftbuck</button>
         <button type="button" class="btn secondary authbtn" id="goIn">I already have an account</button>
       </div>
       <p class="obpriv">Free for care workers. Your shifts and pay are private to you; your employer can't see them. <a href="#privacy" data-info="privacy">How your data is kept</a></p>
@@ -84,11 +84,11 @@
     if (WANT.apple) social.push(`<button type="button" class="btn secondary authbtn" data-a="apple">Continue with Apple</button>`);
     root().innerHTML = `
       <button type="button" class="linkback" id="authBack">‹ Back</button>
-      <h2 class="obh">${up() ? "Create your Shiftbook" : "Welcome back"}</h2>
+      <h2 class="obh">${up() ? "Create your Shiftbuck" : "Welcome back"}</h2>
       <p class="obsub">${up() ? "No password to remember. We'll text or email you a code each time you sign in on a new device." : "Use the phone number or email you signed up with. We'll send you a code."}</p>
       <div class="authstack">${opts.join("")}${social.length ? `<div class="author"><span>or</span></div>${social.join("")}` : ""}</div>
       <div class="banner bad" id="authErr" hidden></div>
-      <p class="obpriv">${up() ? `Already have an account? <button type="button" class="linkinline" id="swap">Sign in</button>` : `New to Shiftbook? <button type="button" class="linkinline" id="swap">Create an account</button>`}</p>`;
+      <p class="obpriv">${up() ? `Already have an account? <button type="button" class="linkinline" id="swap">Sign in</button>` : `New to Shiftbuck? <button type="button" class="linkinline" id="swap">Create an account</button>`}</p>`;
     $("#authBack").onclick = screenWelcome;
     $("#swap").onclick = () => { intent = up() ? "signin" : "signup"; screenChoose(); };
     root().querySelectorAll("[data-a]").forEach(b => b.onclick = () => { const a = b.dataset.a; if (a === "google" || a === "apple") oauth(a); else screenEnter(a); });
@@ -132,7 +132,7 @@
     } catch (e) {
       const m = (e && e.message) || "";
       if (e && e.noAccount || /signups not allowed|user not found|not found/i.test(m)) {
-        err(`We couldn't find a Shiftbook account for that ${what(kind)}.`);
+        err(`We couldn't find a Shiftbuck account for that ${what(kind)}.`);
         const box = $("#authErr");
         if (box) { box.insertAdjacentHTML("beforeend", ` <button type="button" class="linkinline" id="makeIt">Create one instead</button>`); $("#makeIt").onclick = () => { intent = "signup"; sendCode($("#authSend")); }; }
       } else err(/rate|security purposes|seconds/i.test(m) ? "Too many codes asked for. Wait a minute and try again." : "We couldn't send a code. Check the number or email and try again.");
@@ -211,7 +211,7 @@
     const since = acct.since ? new Date(acct.since).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }) : "";
     root().innerHTML = `
       <h2 class="obh">Your account is paused</h2>
-      <p class="obsub">You paused Shiftbook${since ? ` on ${esc(since)}` : ""}. All your shifts, payslips and settings are still here, just as you left them.</p>
+      <p class="obsub">You paused Shiftbuck${since ? ` on ${esc(since)}` : ""}. All your shifts, payslips and settings are still here, just as you left them.</p>
       <div class="authstack">
         <button type="button" class="btn authbtn" id="reactBtn">Reactivate my account</button>
         <button type="button" class="btn secondary authbtn" id="pausedOut">Sign out</button>

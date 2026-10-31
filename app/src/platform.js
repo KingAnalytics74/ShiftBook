@@ -1,5 +1,5 @@
 /*
- * platform.js — the storage layer Shiftbook talks to.
+ * platform.js — the storage layer Shiftbuck talks to.
  *
  * app.js uses a small document-store API (the same one the app had as a Claude artifact):
  *   db.doc(path)          -> { get, set, update, delete, onSnapshot, collection(name) }

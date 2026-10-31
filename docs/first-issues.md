@@ -26,7 +26,7 @@ Four starter tasks, in priority order. Copy each into a GitHub issue. Each one i
 
 ## 2. Add holiday tracking to the full app
 
-**Why:** holiday nobody explains is one of the hidden costs carers face. The founder's personal Shiftbook already has it, so copy the logic, not invent new rules.
+**Why:** holiday nobody explains is one of the hidden costs carers face. The founder's personal Shiftbuck already has it, so copy the logic, not invent new rules.
 
 **Do:**
 - Holiday year January to December by default, with the start month in settings.
