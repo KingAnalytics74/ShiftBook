@@ -82,8 +82,11 @@
       remove: async path => ls.removeItem(PREFIX + path),
       list: async (col, limit) => {
         const depth = col.split("/").length + 1, out = [];
-        for (let i = 0; i < ls.length; i++) {
-          const key = ls.key(i);
+        // copy the key list before any await: a write elsewhere while we wait reorders localStorage's
+        // indexes, and walking ls.key(i) across it skipped documents (a shift went missing from totals)
+        const keys = [];
+        for (let i = 0; i < ls.length; i++) keys.push(ls.key(i));
+        for (const key of keys) {
           if (!key || !key.startsWith(PREFIX + col + "/")) continue;
           const path = key.slice(PREFIX.length);
           if (path.split("/").length === depth) out.push(snapDoc(path, await read(path)));
