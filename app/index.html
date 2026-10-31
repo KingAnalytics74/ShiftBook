@@ -1,674 +1,1035 @@
 <!doctype html>
 <html lang="en-GB">
+
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<!-- Security: only this site's own scripts run, and the only outside service is Supabase. See SECURITY.md. -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://*.supabase.co wss://*.supabase.co; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests">
-<meta name="referrer" content="same-origin">
-<style id="antiframe">html{display:none!important}</style>
-<script src="src/guard.js"></script>
-<title>Shiftbuck</title>
-<meta name="description" content="Shift log, pay, tax and budgeting app for care workers.">
-<link rel="stylesheet" href="src/fonts.css">
-<link rel="icon" type="image/svg+xml" href="favicon.svg">
-<link rel="apple-touch-icon" href="favicon.svg">
-<meta name="theme-color" content="#C8102E">
-<link rel="stylesheet" href="src/styles.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <!-- Security: only this site's own scripts run, and the only outside service is Supabase. See SECURITY.md. -->
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://*.supabase.co wss://*.supabase.co; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests">
+  <meta name="referrer" content="same-origin">
+  <style id="antiframe">
+    html {
+      display: none !important
+    }
+  </style>
+  <script src="src/guard.js"></script>
+  <title>Shiftbuck</title>
+  <meta name="description" content="Shift log, pay, tax and budgeting app for care workers.">
+  <link rel="stylesheet" href="src/fonts.css">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="apple-touch-icon" href="favicon.svg">
+  <meta name="theme-color" content="#C8102E">
+  <link rel="stylesheet" href="src/styles.css">
 </head>
+
 <body>
 
-<div class="wrap">
-  <header class="top">
-    <div class="brand">
-      <div class="brandmark">
-        <svg class="logo" viewBox="0 0 120 120" role="img" aria-label="Shiftbuck logo"><rect width="120" height="120" rx="28" fill="#C8102E"/><circle cx="60" cy="65" r="40" fill="#B07800"/><circle cx="60" cy="57" r="40" fill="#F2B705"/><circle cx="60" cy="57" r="37.5" fill="none" stroke="#FFE27A" stroke-width="5" stroke-dasharray="2.6 2.6"/><circle cx="60" cy="57" r="31" fill="#FFD23F" stroke="#C98A00" stroke-width="2.5"/><path d="M60 32v5M60 77v5M35 57h5M80 57h5" stroke="#14213D" stroke-width="4" stroke-linecap="round"/><path d="M60 57V41M60 57l12 8" fill="none" stroke="#14213D" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="60" cy="57" r="4.5" fill="#C8102E" stroke="#14213D" stroke-width="2.5"/><path d="M36 45a27 27 0 0 1 11-12" fill="none" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round" opacity=".9"/></svg>
-        <div>
-          <h1>Shift<span class="wm">buck</span></h1>
-          <div class="who" id="who">Support Worker</div>
-        </div>
-      </div>
-      <div class="sync" id="sync"><span class="dot"></span><span>Connecting…</span></div>
-    </div>
-    <div class="period">
-      <button class="arrow" id="prev" aria-label="Previous pay period">‹</button>
-      <div class="label" id="periodLabel">Pay period<small>&nbsp;</small></div>
-      <button class="arrow" id="next" aria-label="Next pay period">›</button>
-    </div>
-    <nav class="tabs" role="tablist">
-      <button class="tab" role="tab" data-view="overview" aria-selected="true">Overview</button>
-      <button class="tab" role="tab" data-view="log" aria-selected="false">Log shift</button>
-      <button class="tab" role="tab" data-view="sheet" aria-selected="false">Timesheet</button>
-      <button class="tab" role="tab" data-view="money" aria-selected="false">Money</button>
-      <button class="tab" role="tab" data-view="forecast" aria-selected="false">Forecast</button>
-      <button class="tab" role="tab" data-view="community" aria-selected="false">Community</button>
-    </nav>
-  </header>
-
-  <!-- SIGN IN: phone or email code, email and password, Google or Apple (src/auth.js) -->
-  <section class="view" id="view-auth" hidden>
-    <div class="card onb" id="authBox"></div>
-  </section>
-
-  <!-- FIRST-TIME SETUP: one question per screen -->
-  <section class="view" id="view-setup" hidden>
-    <div class="card onb">
-      <div class="onbtop" id="obTop"><div class="onbbar" aria-hidden="true"><i id="obBar"></i></div><span class="hint" id="obCount"></span></div>
-      <form id="setupForm" novalidate>
-        <div class="obstep" data-step="0">
-          <svg class="oblogo" viewBox="0 0 120 120" aria-hidden="true"><rect width="120" height="120" rx="28" fill="#C8102E"/><circle cx="60" cy="65" r="40" fill="#B07800"/><circle cx="60" cy="57" r="40" fill="#F2B705"/><circle cx="60" cy="57" r="37.5" fill="none" stroke="#FFE27A" stroke-width="5" stroke-dasharray="2.6 2.6"/><circle cx="60" cy="57" r="31" fill="#FFD23F" stroke="#C98A00" stroke-width="2.5"/><path d="M60 32v5M60 77v5M35 57h5M80 57h5" stroke="#14213D" stroke-width="4" stroke-linecap="round"/><path d="M60 57V41M60 57l12 8" fill="none" stroke="#14213D" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="60" cy="57" r="4.5" fill="#C8102E" stroke="#14213D" stroke-width="2.5"/><path d="M36 45a27 27 0 0 1 11-12" fill="none" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round" opacity=".9"/></svg>
-          <h2 class="obh">Know your pay before payday</h2>
-          <ul class="obwhy">
-            <li><b>See what every shift pays</b>, including sleep-ins, as you log it.</li>
-            <li><b>Check your payslip</b> and your take-home after tax.</li>
-            <li><b>Get a warning</b> when you're not getting enough rest.</li>
-          </ul>
-          <p class="obpriv">Your shifts and pay are private to you. Your employer can't see them. <a href="#privacy" data-info="privacy">How your data is kept</a></p>
-          <p class="obpriv">By continuing you agree to the <a href="#terms" data-info="terms">Terms of use</a>.</p>
-        </div>
-        <div class="obstep" data-step="1" hidden>
-          <h2 class="obh">What's your first name?</h2>
-          <div class="field"><label for="uName">First name</label><input type="text" id="uName" autocomplete="given-name" autocapitalize="words"></div>
-          <div class="field"><label for="uRole">Job title <span class="hint">optional</span></label><input type="text" id="uRole" placeholder="Support Worker"></div>
-        </div>
-        <div class="obstep" data-step="2" hidden>
-          <h2 class="obh">A bit about you</h2>
-          <p class="obsub">Only used to understand who uses Shiftbuck. Never shown to other carers or to your employer.</p>
-          <div class="field"><label for="uAge">Age group</label>
-            <select id="uAge"><option value="">Choose…</option><option value="under18">Under 18</option><option value="18-24">18–24</option><option value="25-34">25–34</option><option value="35-44">35–44</option><option value="45-54">45–54</option><option value="55-64">55–64</option><option value="65+">65 or over</option><option value="na">Prefer not to say (I'm 18 or over)</option></select></div>
-          <div class="field"><label for="uSex">Sex <span class="hint">optional</span></label>
-            <select id="uSex"><option value="">Prefer not to say</option><option value="female">Female</option><option value="male">Male</option><option value="other">I'd rather describe it</option></select></div>
-          <div class="field" id="uSexOtherWrap" hidden><label for="uSexOther">In your own words <span class="hint">optional</span></label><input type="text" id="uSexOther" maxlength="40"></div>
-        </div>
-        <div class="obstep" data-step="3" hidden>
-          <h2 class="obh">Where do you work?</h2>
-          <p class="obsub">Your area puts you in the right carers' group. Your employer is kept private and never shown to anyone.</p>
-          <div class="field"><label for="uArea">Town or county</label><input type="text" id="uArea" placeholder="e.g. Leicester" autocomplete="address-level2"></div>
-          <div class="field"><label for="uEmployer">Employer <span class="hint">optional, private</span></label><input type="text" id="uEmployer" placeholder="e.g. the care company you work for" autocomplete="organization"></div>
-          <div class="field"><label for="uNick">Your nickname in the carers' community</label>
-            <div class="row2" style="grid-template-columns:1fr auto;align-items:center"><input type="text" id="uNick" maxlength="20" autocapitalize="off" spellcheck="false" placeholder="e.g. NightOwl_Leics"><button type="button" class="btn secondary" id="uNickGen">Suggest one</button></div>
-            <span class="hint">This is how other carers see you. Don't use your real name.</span></div>
-        </div>
-        <div class="obstep" data-step="4" hidden>
-          <h2 class="obh">What are you paid?</h2>
-          <p class="obsub">It's on your contract or payslip. You can change it later.</p>
-          <div class="field"><label for="uRate">Hourly rate (£)</label><input type="number" id="uRate" step="0.01" min="0" inputmode="decimal" placeholder="e.g. 13.00"></div>
-          <div class="field"><label for="uSleep">Sleep-in rate (£ a night) <span class="hint">0 if you don't do sleep-ins</span></label><input type="number" id="uSleep" step="0.01" min="0" inputmode="decimal" placeholder="e.g. 40"></div>
-        </div>
-        <div class="obstep" data-step="5" hidden>
-          <h2 class="obh">When does your pay month start?</h2>
-          <p class="obsub">The first day your payslip counts. For example, if it covers 26 Oct to 25 Nov, pick 26.</p>
-          <div class="obchips" id="obDayChips"><button type="button" data-day="1">1st</button><button type="button" data-day="15">15th</button><button type="button" data-day="25">25th</button><button type="button" data-day="26">26th</button><button type="button" data-day="28">28th</button></div>
-          <div class="field"><label for="uDay">Or type the day (1 to 28)</label><input type="number" id="uDay" min="1" max="28" inputmode="numeric" placeholder="e.g. 26"></div>
-        </div>
-        <div class="obstep" data-step="6" hidden>
-          <h2 class="obh">What are your usual shifts?</h2>
-          <p class="obsub">These become one-tap buttons when you log a shift. Most care shifts are set already.</p>
-          <div class="row2">
-            <div class="field"><label for="obDayStart">Day shift starts</label><input type="time" id="obDayStart" value="08:00"></div>
-            <div class="field"><label for="obDayHours">Day shift hours</label><input type="number" id="obDayHours" value="12" min="1" max="24" step="0.5" inputmode="decimal"></div>
-            <div class="field"><label for="obBreak">Unpaid break (hours)</label><input type="number" id="obBreak" value="2" min="0" max="8" step="0.25" inputmode="decimal"></div>
-            <div class="field"><label for="obSleepStart">Sleep-in starts</label><input type="time" id="obSleepStart" value="20:00"></div>
-            <div class="field"><label for="obSleepEnd">Sleep-in ends</label><input type="time" id="obSleepEnd" value="08:00"></div>
-          </div>
-          <p class="obpreview" id="obPatPrev"></p>
-        </div>
-        <div class="obstep" data-step="7" hidden>
-          <h2 class="obh">Who do you support?</h2>
-          <p class="obsub">First names or initials only, separated by commas. You can skip this and add people as you log shifts.</p>
-          <div class="field"><label for="uUsers">Service users <span class="hint">optional</span></label><input type="text" id="uUsers" placeholder="e.g. Alex, S.B."></div>
-        </div>
-        <div class="obstep" data-step="8" hidden>
-          <h2 class="obh">Log your first shift</h2>
-          <p class="obsub">Your last or next shift. You can skip this.</p>
-          <div class="field"><label for="obDate">Date</label><input type="date" id="obDate"></div>
-          <div class="field"><span class="lbl">Shift type</span>
-            <div class="obtypes" id="obTypes" role="group" aria-label="Shift type">
-              <button type="button" data-t="day" aria-pressed="true"></button><button type="button" data-t="sleep" aria-pressed="false"></button><button type="button" data-t="both" aria-pressed="false"></button><button type="button" data-t="none" aria-pressed="false">Not now</button>
-            </div></div>
-          <div class="obpay" id="obPay"><span>This shift pays</span><b class="num" id="obPayV">£0.00</b></div>
-        </div>
-        <div class="banner bad" id="setupErr" hidden></div>
-        <div class="obnav">
-          <button type="button" class="btn secondary" id="obBack" hidden>Back</button>
-          <button type="button" class="btn" id="obNext">Get started</button>
-          <button type="submit" class="btn" id="setupBtn" hidden>Save and start</button>
-        </div>
-      </form>
-    </div>
-  </section>
-
-  <!-- OVERVIEW -->
-  <section class="view" id="view-overview">
-    <div class="card hero">
-      <div class="eyebrow">Gross pay this period</div>
-      <div class="big" id="gross">£0.00</div>
-      <div class="legend" id="grossNet"></div>
-      <div class="split" id="split" aria-hidden="true"></div>
-      <div class="legend" id="splitLegend"></div>
-    </div>
-    <div class="kpis" id="kpis"></div>
-    <div class="card">
-      <div class="charthead"><h2>Earnings build-up</h2><span class="hint" id="cumNote"></span></div>
-      <div class="chart" id="cum"></div>
-      <div class="legend" style="margin-top:8px">
-        <span><span class="ln" style="border-top:2px solid var(--day)"></span>Earned</span>
-        <span><span class="ln" style="border-top:2px dashed var(--day)"></span>Rostered</span>
-        <span id="cumPrevKey"><span class="ln" style="border-top:2px solid var(--faint)"></span>Last period</span>
-      </div>
-    </div>
-    <div class="grid2">
-      <div class="card">
-        <h2>Weekly earnings</h2>
-        <div id="weekly"></div>
-        <div class="legend" style="margin-top:8px"><span><span class="sw" style="background:var(--day)"></span>Hourly pay</span><span><span class="sw" style="background:var(--night)"></span>Sleep-in pay</span></div>
-      </div>
-      <div class="card">
-        <h2>What stands out</h2>
-        <ul class="insights" id="insights"></ul>
-      </div>
-    </div>
-    <div class="grid2">
-      <div class="card">
-        <h2>Shift calendar</h2>
-        <div class="cal" id="cal"></div>
-        <div class="legend" style="margin-top:10px">
-          <span><span class="sw" style="background:var(--day-soft)"></span>Day shift</span>
-          <span><span class="sw" style="background:var(--night-soft)"></span>Sleep-in</span>
-          <span><span class="sw" style="background:linear-gradient(135deg,var(--day-soft) 50%,var(--night-soft) 50%)"></span>Both</span>
-          <span><span class="sw" style="border:1px dashed var(--faint)"></span>Rostered</span>
-          <span><span class="sw" style="box-shadow:inset 0 0 0 2px var(--bad)"></span>Not resting enough</span>
-        </div>
-      </div>
-      <div class="card">
-        <h2>Shifts by service user</h2>
-        <div class="hbars" id="users"></div>
-        <p class="hint" style="margin:10px 0 0">Shifts with several people count once for each person.</p>
-      </div>
-    </div>
-    <div class="card restcard" id="restCard">
-      <div class="charthead"><h2>Rest check</h2><span class="rpill ok" id="restPill">Checking…</span></div>
-      <p class="resthead" id="restHead"></p>
-      <div class="reststrip" id="restStrip" role="img" aria-label="Rest status for each day of the pay period"></div>
-      <div class="stripax" id="restAx"></div>
-      <div class="legend" style="margin:10px 0 14px">
-        <span><span class="sw" style="background:var(--good-soft);border:1px solid var(--good)"></span>Day off</span>
-        <span><span class="sw" style="background:var(--sunk);border:1px solid var(--line)"></span>Worked, rested</span>
-        <span><span class="sw" style="background:var(--night)"></span>Watch</span>
-        <span><span class="sw" style="background:var(--bad)"></span>Not resting enough</span>
-      </div>
-      <div class="kpis" id="restKpis"></div>
-      <p class="hint" style="margin:12px 0 0">A guide based on UK working time rules: at least 24 hours off in every 7 days, rest between shifts, and no more than 48 hours of work a week on average. It's not legal advice, and some contracts or opt-outs differ.</p>
-    </div>
-    <div class="grid2">
-      <div class="card">
-        <h2>Earnings by day of the week</h2>
-        <div class="chart" id="dow"></div>
-        <div class="legend" style="margin-top:8px"><span><span class="sw" style="background:var(--day)"></span>Hourly pay</span><span><span class="sw" style="background:var(--night)"></span>Sleep-in pay</span></div>
-      </div>
-      <div class="card" id="trendCard" hidden>
-        <h2>Gross pay by period</h2>
-        <div id="trend"></div>
-      </div>
-    </div>
-  </section>
-
-  <!-- FORECAST -->
-  <section class="view" id="view-forecast" hidden>
-    <div class="card hero">
-      <div class="eyebrow" id="fcRange">Next 7 days</div>
-      <div class="big" id="fcPay">£0.00</div>
-      <div class="legend" id="fcLegend"></div>
-    </div>
-    <div class="card restcard" id="fcRestCard">
-      <div class="charthead"><h2>Rest outlook</h2><span class="rpill ok" id="fcRestPill"></span></div>
-      <p class="resthead" id="fcRestText" style="margin-bottom:0"></p>
-    </div>
-    <div class="card">
-      <div class="charthead"><h2>Predicted rota</h2><span class="hint" id="fcBasis"></span></div>
-      <div class="fclist" id="fcList"></div>
-      <p class="hint" style="margin:12px 0 0">Predictions come from the days of the week you usually work and the shifts you usually do on them. They're a guide, not your real rota. Tap <b>Add to rota</b> to check a predicted shift and save it.</p>
-    </div>
-  </section>
-
-  <!-- LOG -->
-  <section class="view" id="view-log" hidden>
-    <div class="card">
-      <h2 id="logTitle">Log a shift</h2>
-      <form id="logForm" novalidate>
-        <div class="field">
-          <label for="fDate">Shift date</label>
-          <input type="date" id="fDate" required>
-          <div class="banner info" id="editNote" hidden></div>
-        </div>
-        <div class="field">
-          <span class="lbl">Service user(s)</span>
-          <div class="chips" id="fUsers"></div>
-          <div class="row2" id="addUserRow" hidden>
-            <input type="text" id="fNewUser" placeholder="New name" aria-label="New service user name">
-            <button type="button" class="btn secondary" id="addUserBtn">Add</button>
+  <div class="wrap">
+    <header class="top">
+      <div class="brand">
+        <div class="brandmark">
+          <svg class="logo" viewBox="0 0 120 120" role="img" aria-label="Shiftbuck logo">
+            <rect width="120" height="120" rx="28" fill="#C8102E" />
+            <circle cx="60" cy="65" r="40" fill="#B07800" />
+            <circle cx="60" cy="57" r="40" fill="#F2B705" />
+            <circle cx="60" cy="57" r="37.5" fill="none" stroke="#FFE27A" stroke-width="5" stroke-dasharray="2.6 2.6" />
+            <circle cx="60" cy="57" r="31" fill="#FFD23F" stroke="#C98A00" stroke-width="2.5" />
+            <path d="M60 32v5M60 77v5M35 57h5M80 57h5" stroke="#14213D" stroke-width="4" stroke-linecap="round" />
+            <path d="M60 57V41M60 57l12 8" fill="none" stroke="#14213D" stroke-width="6" stroke-linecap="round"
+              stroke-linejoin="round" />
+            <circle cx="60" cy="57" r="4.5" fill="#C8102E" stroke="#14213D" stroke-width="2.5" />
+            <path d="M36 45a27 27 0 0 1 11-12" fill="none" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round"
+              opacity=".9" />
+          </svg>
+          <div>
+            <h1>Shift<span class="wm">buck</span></h1>
+            <div class="who" id="who">Support Worker</div>
           </div>
         </div>
-        <div class="field">
-          <span class="lbl">Shift type</span>
-          <div class="quick shiftpre" id="fPreset">
-            <button type="button" data-pre="day">Day · 08:00–20:00</button>
-            <button type="button" data-pre="sleep">Sleep-in · 20:00–08:00</button>
-            <button type="button" data-pre="both">Day + sleep-in · 08:00–08:00</button>
-          </div>
-        </div>
-        <div class="field">
-          <span class="lbl">Sleep-in?</span>
-          <div class="seg" id="fSleep">
-            <button type="button" data-v="yes" aria-pressed="false">Yes</button>
-            <button type="button" data-v="no" aria-pressed="true">No</button>
-          </div>
-        </div>
-        <div class="row2">
-          <div class="field">
-            <label for="fHours">Day hours <span class="hint">blank if sleep-in only</span></label>
-            <input type="number" id="fHours" min="0" max="24" step="0.25" inputmode="decimal">
-            <div class="quick"><button type="button" data-h="12">12</button><button type="button" data-h="8">8</button><button type="button" data-h="4.5">4.5</button></div>
-          </div>
-          <div class="field">
-            <label for="fBreak">Break (hrs)</label>
-            <input type="number" id="fBreak" min="0" max="24" step="0.25" inputmode="decimal">
-            <div class="quick"><button type="button" data-b="2">2</button><button type="button" data-b="1">1</button><button type="button" data-b="0">0</button></div>
-          </div>
-        </div>
-        <div class="field">
-          <label for="fFare">Bus fare for this shift (£) <span class="hint">there and back · optional</span></label>
-          <input type="number" id="fFare" min="0" max="200" step="0.05" inputmode="decimal" placeholder="0.00">
-          <div class="quick" id="fFareQuick"><button type="button" data-fare="usual" id="fFareUsual" hidden>Usual</button><button type="button" data-fare="0">No bus</button></div>
-        </div>
-        <div class="field">
-          <label for="fNotes">Notes <span class="hint">optional</span></label>
-          <textarea id="fNotes"></textarea>
-        </div>
-        <div class="preview"><span>This shift pays</span><span class="num" id="fPreview">£0.00</span></div>
-        <p class="hint" id="fBreakNote" style="margin:-8px 0 0" hidden></p>
-        <p class="hint" id="fFareNote" style="margin:-8px 0 0" hidden></p>
-        <div class="banner" id="restWarn" hidden></div>
-        <div class="banner bad" id="formError" hidden></div>
-        <div class="actions">
-          <button type="submit" class="btn" id="saveBtn">Save shift</button>
-          <button type="button" class="btn danger" id="delBtn" hidden>Delete</button>
-        </div>
-        <div class="confirm" id="delConfirm" hidden>
-          <span id="delText">Delete this shift?</span>
-          <div class="actions">
-            <button type="button" class="btn danger" id="delYes">Yes, delete it</button>
-            <button type="button" class="btn secondary" id="delNo">Keep it</button>
-          </div>
-        </div>
-        <p class="hint" style="margin:0">Your shifts and money are private to your account. Nobody else using Shiftbuck can see them.</p>
-      </form>
-    </div>
-  </section>
-
-  <!-- TIMESHEET -->
-  <section class="view" id="view-sheet" hidden>
-    <div class="actions">
-      <button class="btn secondary" id="csvBtn">Download CSV</button>
-      <button class="btn secondary" id="copyBtn">Copy summary for manager</button>
-      <button class="btn secondary" id="backupBtn">Back up all data</button>
-    </div>
-    <div class="tablewrap"><table id="sheet"></table></div>
-    <div class="card">
-      <h2>Pay calculation</h2>
-      <div id="calc"></div>
-    </div>
-    <div class="card" id="acctCard">
-      <h2>Your account</h2>
-      <div class="acct"><span id="acctWho">Signed in</span><button type="button" class="btn secondary" id="signOutBtn" data-signout>Sign out</button></div>
-      <div class="acctpause">
-        <p class="hint" style="margin:0">Taking a break from care work? <b>Pause your account</b>: you'll be signed out and everything is kept until you come back and reactivate it. To remove everything for good, use Privacy → Delete my account.</p>
-        <button type="button" class="btn secondary" id="pauseBtn">Pause my account</button>
-        <div class="confirm" id="pauseConfirm" hidden>
-          <span>Pause your account? You'll be signed out. Sign in any time to reactivate it.</span>
-          <div class="actions"><button type="button" class="btn" id="pauseYes">Yes, pause it</button><button type="button" class="btn secondary" id="pauseNo">Keep it active</button></div>
-          <div class="banner bad" id="pauseErr" hidden></div>
-        </div>
+        <div class="sync" id="sync"><span class="dot"></span><span>Connecting…</span></div>
       </div>
-    </div>
-    <div class="card">
-      <h2>Settings</h2>
-      <form id="setForm" class="settings" novalidate>
-        <div class="field"><label for="sName">Name</label><input type="text" id="sName"></div>
-        <div class="field"><label for="sRole">Role</label><input type="text" id="sRole"></div>
-        <div class="field"><label for="sRate">Hourly rate (£)</label><input type="number" id="sRate" step="0.01" min="0"></div>
-        <div class="field"><label for="sSleep">Sleep-in rate (£/night)</label><input type="number" id="sSleep" step="0.01" min="0"></div>
-        <div class="field"><label for="sStart">Pay period starts on day</label><input type="number" id="sStart" min="1" max="28"></div>
-        <div class="field"><label for="sUsers">Service users <span class="hint">initials or a short code, comma-separated</span></label><input type="text" id="sUsers"></div>
-        <div class="field" style="grid-column:1/-1"><span class="lbl">Rename someone in every shift</span>
-          <div class="row2"><select id="rnFrom" aria-label="Name to change"></select><input type="text" id="rnTo" maxlength="20" autocomplete="off" placeholder="New initials or code, e.g. Zee" aria-label="New name"></div>
-          <div class="actions" style="margin-top:8px"><button type="button" class="btn secondary" id="rnBtn">Rename in all shifts</button></div>
-          <span class="hint">Use initials or a short code, never a full name. Old shifts change too.</span></div>
-        <div class="field"><label for="sFare">Usual bus fare per shift (£) <span class="hint">there and back · 0 if you don't take the bus</span></label><input type="number" id="sFare" step="0.05" min="0" max="200" inputmode="decimal"></div>
-        <div class="actions" style="grid-column:1/-1"><button class="btn" type="submit" id="setSave">Save settings</button></div>
-      </form>
-    </div>
-  </section>
-
-  <!-- MONEY -->
-  <section class="view" id="view-money" hidden>
-    <div class="card hero">
-      <div class="eyebrow">Estimated take-home this period</div>
-      <div class="big" id="mNet">£0.00</div>
-      <div class="split" id="mSplit" aria-hidden="true"></div>
-      <div class="legend" id="mLegend"></div>
-    </div>
-    <div class="kpis" id="mKpis"></div>
-    <div class="card">
-      <div class="charthead"><h2>Where every pound goes</h2><span class="hint">Gross pay → deductions → take-home → your plan</span></div>
-      <div class="chart" id="wf"></div>
-    </div>
-    <div class="card" id="payCard">
-      <div class="charthead"><h2>Payslip check</h2><span class="hint" id="payHint"></span></div>
-      <div id="payBody"></div>
-      <form id="payForm" class="settings" novalidate hidden>
-        <div class="field"><label for="pDate">Pay date</label><input type="date" id="pDate"></div>
-        <div class="field"><label for="pHours">Hours paid</label><input type="number" id="pHours" step="0.25" min="0" inputmode="decimal"></div>
-        <div class="field"><label for="pGross">Total payments (gross £)</label><input type="number" id="pGross" step="0.01" min="0" inputmode="decimal"></div>
-        <div class="field"><label for="pSleep">Sleep-in pay on payslip (£) <span class="hint">0 if none listed</span></label><input type="number" id="pSleep" step="0.01" min="0" inputmode="decimal"></div>
-        <div class="field"><label for="pTax">Income tax (£)</label><input type="number" id="pTax" step="0.01" min="0" inputmode="decimal"></div>
-        <div class="field"><label for="pNi">National Insurance (£)</label><input type="number" id="pNi" step="0.01" min="0" inputmode="decimal"></div>
-        <div class="field"><label for="pPension">Pension (£)</label><input type="number" id="pPension" step="0.01" min="0" inputmode="decimal"></div>
-        <div class="field"><label for="pNet">Net pay (£)</label><input type="number" id="pNet" step="0.01" min="0" inputmode="decimal"></div>
-        <div class="banner bad" id="payErr" style="grid-column:1/-1" hidden></div>
-        <div class="actions" style="grid-column:1/-1"><button class="btn" type="submit" id="paySave">Save payslip</button><button class="btn secondary" type="button" id="payCancel">Cancel</button></div>
-      </form>
-      <div class="actions" style="margin-top:12px"><button class="btn secondary" type="button" id="payEdit">Add the payslip for this period</button></div>
-    </div>
-    <div class="grid2">
-      <div class="card">
-        <h2>From gross pay to take-home</h2>
-        <div class="hbars" id="mSteps"></div>
-        <p class="hint" style="margin:12px 0 0">Estimate for one monthly pay period using 2026/27 rates for England, Wales and Northern Ireland. Your payslip is the final word: tax codes, pension schemes and pay dates can change the exact figures.</p>
+      <div class="period">
+        <button class="arrow" id="prev" aria-label="Previous pay period">‹</button>
+        <div class="label" id="periodLabel">Pay period<small>&nbsp;</small></div>
+        <button class="arrow" id="next" aria-label="Next pay period">›</button>
       </div>
-      <div class="card">
-        <h2>Tax settings</h2>
-        <form id="taxForm" class="settings" novalidate>
-          <div class="field"><label for="tEmp">How you're paid</label>
-            <select id="tEmp"><option value="paye">Employee (PAYE payslip)</option><option value="self">Self-employed (set tax aside)</option></select></div>
-          <div class="field"><label for="tCode">Tax code <span class="hint">as shown on your payslip</span></label>
-            <input type="text" id="tCode" list="taxCodeList" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Type or pick, e.g. 1257L">
-            <datalist id="taxCodeList">
-              <option value="1257L">Standard code, one job</option>
-              <option value="BR">Second job: all pay at 20%</option>
-              <option value="D0">All pay at 40%</option>
-              <option value="D1">All pay at 45%</option>
-              <option value="0T">No tax-free allowance</option>
-              <option value="NT">No tax taken</option>
-              <option value="1383M">Marriage Allowance received</option>
-              <option value="1131N">Marriage Allowance given</option>
-              <option value="1257L M1">Emergency code (month 1)</option>
-              <option value="K475">K code: amount added to taxable pay</option>
-              <option value="C1257L">Wales</option>
-              <option value="S1257L">Scotland</option>
-            </datalist>
-            <span class="hint" id="tCodeHelp"></span></div>
-          <div class="field"><label for="tPension">Pension you pay (%) <span class="hint">usually 4%</span></label><input type="number" id="tPension" min="0" max="50" step="0.5"></div>
-          <div class="field"><label for="tLoan">Student loan</label>
-            <select id="tLoan"><option value="none">None</option><option value="p1">Plan 1</option><option value="p2">Plan 2</option><option value="p4">Plan 4</option><option value="p5">Plan 5</option><option value="pg">Postgraduate</option></select></div>
+      <nav class="tabs" role="tablist">
+        <button class="tab" role="tab" data-view="overview" aria-selected="true">Overview</button>
+        <button class="tab" role="tab" data-view="log" aria-selected="false">Log shift</button>
+        <button class="tab" role="tab" data-view="sheet" aria-selected="false">Timesheet</button>
+        <button class="tab" role="tab" data-view="money" aria-selected="false">Money</button>
+        <button class="tab" role="tab" data-view="forecast" aria-selected="false">Forecast</button>
+        <button class="tab" role="tab" data-view="community" aria-selected="false">Community</button>
+      </nav>
+    </header>
+
+    <!-- SIGN IN: phone or email code, email and password, Google or Apple (src/auth.js) -->
+    <section class="view" id="view-auth" hidden>
+      <div class="card onb" id="authBox"></div>
+    </section>
+
+    <!-- FIRST-TIME SETUP: one question per screen -->
+    <section class="view" id="view-setup" hidden>
+      <div class="card onb">
+        <div class="onbtop" id="obTop">
+          <div class="onbbar" aria-hidden="true"><i id="obBar"></i></div><span class="hint" id="obCount"></span>
+        </div>
+        <form id="setupForm" novalidate>
+          <div class="obstep" data-step="0">
+            <svg class="oblogo" viewBox="0 0 120 120" aria-hidden="true">
+              <rect width="120" height="120" rx="28" fill="#C8102E" />
+              <circle cx="60" cy="65" r="40" fill="#B07800" />
+              <circle cx="60" cy="57" r="40" fill="#F2B705" />
+              <circle cx="60" cy="57" r="37.5" fill="none" stroke="#FFE27A" stroke-width="5"
+                stroke-dasharray="2.6 2.6" />
+              <circle cx="60" cy="57" r="31" fill="#FFD23F" stroke="#C98A00" stroke-width="2.5" />
+              <path d="M60 32v5M60 77v5M35 57h5M80 57h5" stroke="#14213D" stroke-width="4" stroke-linecap="round" />
+              <path d="M60 57V41M60 57l12 8" fill="none" stroke="#14213D" stroke-width="6" stroke-linecap="round"
+                stroke-linejoin="round" />
+              <circle cx="60" cy="57" r="4.5" fill="#C8102E" stroke="#14213D" stroke-width="2.5" />
+              <path d="M36 45a27 27 0 0 1 11-12" fill="none" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round"
+                opacity=".9" />
+            </svg>
+            <h2 class="obh">Know your pay before payday</h2>
+            <ul class="obwhy">
+              <li><b>See what every shift pays</b>, including sleep-ins, as you log it.</li>
+              <li><b>Check your payslip</b> and your take-home after tax.</li>
+              <li><b>Get a warning</b> when you're not getting enough rest.</li>
+            </ul>
+            <p class="obpriv">Your shifts and pay are private to you. Your employer can't see them. <a href="#privacy"
+                data-info="privacy">How your data is kept</a></p>
+            <p class="obpriv">By continuing you agree to the <a href="#terms" data-info="terms">Terms of use</a>.</p>
+          </div>
+          <div class="obstep" data-step="1" hidden>
+            <h2 class="obh">What's your first name?</h2>
+            <div class="field"><label for="uName">First name</label><input type="text" id="uName"
+                autocomplete="given-name" autocapitalize="words"></div>
+            <div class="field"><label for="uRole">Job title <span class="hint">optional</span></label><input type="text"
+                id="uRole" placeholder="Support Worker"></div>
+          </div>
+          <div class="obstep" data-step="2" hidden>
+            <h2 class="obh">A bit about you</h2>
+            <p class="obsub">Only used to understand who uses Shiftbuck. Never shown to other carers or to your
+              employer.</p>
+            <div class="field"><label for="uAge">Age group</label>
+              <select id="uAge">
+                <option value="">Choose…</option>
+                <option value="under18">Under 18</option>
+                <option value="18-24">18–24</option>
+                <option value="25-34">25–34</option>
+                <option value="35-44">35–44</option>
+                <option value="45-54">45–54</option>
+                <option value="55-64">55–64</option>
+                <option value="65+">65 or over</option>
+                <option value="na">Prefer not to say (I'm 18 or over)</option>
+              </select>
+            </div>
+            <div class="field"><label for="uSex">Sex <span class="hint">optional</span></label>
+              <select id="uSex">
+                <option value="">Prefer not to say</option>
+                <option value="female">Female</option>
+                <option value="male">Male</option>
+                <option value="other">I'd rather describe it</option>
+              </select>
+            </div>
+            <div class="field" id="uSexOtherWrap" hidden><label for="uSexOther">In your own words <span
+                  class="hint">optional</span></label><input type="text" id="uSexOther" maxlength="40"></div>
+          </div>
+          <div class="obstep" data-step="3" hidden>
+            <h2 class="obh">Where do you work?</h2>
+            <p class="obsub">Your area puts you in the right carers' group. Your employer is kept private and never
+              shown to anyone.</p>
+            <div class="field"><label for="uArea">Town or county</label><input type="text" id="uArea"
+                placeholder="e.g. Leicester" autocomplete="address-level2"></div>
+            <div class="field"><label for="uEmployer">Employer <span class="hint">optional, private</span></label><input
+                type="text" id="uEmployer" placeholder="e.g. the care company you work for" autocomplete="organization">
+            </div>
+            <div class="field"><label for="uNick">Your nickname in the carers' community</label>
+              <div class="row2" style="grid-template-columns:1fr auto;align-items:center"><input type="text" id="uNick"
+                  maxlength="20" autocapitalize="off" spellcheck="false" placeholder="e.g. NightOwl_Leics"><button
+                  type="button" class="btn secondary" id="uNickGen">Suggest one</button></div>
+              <span class="hint">This is how other carers see you. Don't use your real name.</span>
+            </div>
+          </div>
+          <div class="obstep" data-step="4" hidden>
+            <h2 class="obh">What are you paid?</h2>
+            <p class="obsub">It's on your contract or payslip. You can change it later.</p>
+            <div class="field"><label for="uRate">Hourly rate (£)</label><input type="number" id="uRate" step="0.01"
+                min="0" inputmode="decimal" placeholder="e.g. 13.00"></div>
+            <div class="field"><label for="uSleep">Sleep-in rate (£ a night) <span class="hint">0 if you don't do
+                  sleep-ins</span></label><input type="number" id="uSleep" step="0.01" min="0" inputmode="decimal"
+                placeholder="e.g. 40"></div>
+          </div>
+          <div class="obstep" data-step="5" hidden>
+            <h2 class="obh">When does your pay month start?</h2>
+            <p class="obsub">The first day your payslip counts. For example, if it covers 26 Oct to 25 Nov, pick 26.</p>
+            <div class="obchips" id="obDayChips"><button type="button" data-day="1">1st</button><button type="button"
+                data-day="15">15th</button><button type="button" data-day="25">25th</button><button type="button"
+                data-day="26">26th</button><button type="button" data-day="28">28th</button></div>
+            <div class="field"><label for="uDay">Or type the day (1 to 28)</label><input type="number" id="uDay" min="1"
+                max="28" inputmode="numeric" placeholder="e.g. 26"></div>
+          </div>
+          <div class="obstep" data-step="6" hidden>
+            <h2 class="obh">What are your usual shifts?</h2>
+            <p class="obsub">These become one-tap buttons when you log a shift. Most care shifts are set already.</p>
+            <div class="row2">
+              <div class="field"><label for="obDayStart">Day shift starts</label><input type="time" id="obDayStart"
+                  value="08:00"></div>
+              <div class="field"><label for="obDayHours">Day shift hours</label><input type="number" id="obDayHours"
+                  value="12" min="1" max="24" step="0.5" inputmode="decimal"></div>
+              <div class="field"><label for="obBreak">Unpaid break (hours)</label><input type="number" id="obBreak"
+                  value="2" min="0" max="8" step="0.25" inputmode="decimal"></div>
+              <div class="field"><label for="obSleepStart">Sleep-in starts</label><input type="time" id="obSleepStart"
+                  value="20:00"></div>
+              <div class="field"><label for="obSleepEnd">Sleep-in ends</label><input type="time" id="obSleepEnd"
+                  value="08:00"></div>
+            </div>
+            <p class="obpreview" id="obPatPrev"></p>
+          </div>
+          <div class="obstep" data-step="7" hidden>
+            <h2 class="obh">Who do you support?</h2>
+            <p class="obsub">First names or initials only, separated by commas. You can skip this and add people as you
+              log shifts.</p>
+            <div class="field"><label for="uUsers">Service users <span class="hint">optional</span></label><input
+                type="text" id="uUsers" placeholder="e.g. Alex, S.B."></div>
+          </div>
+          <div class="obstep" data-step="8" hidden>
+            <h2 class="obh">Log your first shift</h2>
+            <p class="obsub">Your last or next shift. You can skip this.</p>
+            <div class="field"><label for="obDate">Date</label><input type="date" id="obDate"></div>
+            <div class="field"><span class="lbl">Shift type</span>
+              <div class="obtypes" id="obTypes" role="group" aria-label="Shift type">
+                <button type="button" data-t="day" aria-pressed="true"></button><button type="button" data-t="sleep"
+                  aria-pressed="false"></button><button type="button" data-t="both"
+                  aria-pressed="false"></button><button type="button" data-t="none" aria-pressed="false">Not
+                  now</button>
+              </div>
+            </div>
+            <div class="obpay" id="obPay"><span>This shift pays</span><b class="num" id="obPayV">£0.00</b></div>
+          </div>
+          <div class="banner bad" id="setupErr" hidden></div>
+          <div class="obnav">
+            <button type="button" class="btn secondary" id="obBack" hidden>Back</button>
+            <button type="button" class="btn" id="obNext">Get started</button>
+            <button type="submit" class="btn" id="setupBtn" hidden>Save and start</button>
+          </div>
         </form>
       </div>
-    </div>
-    <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap">
-        <h2 style="margin:0">Spending plan</h2>
-        <span class="hint" id="mAlloc"></span>
-      </div>
-      <div class="split" id="mPlanBar" style="margin:12px 0 4px;height:16px" aria-hidden="true"></div>
-      <div class="legend" id="mPlanLegend" style="margin-bottom:12px"></div>
-      <div id="planRows" class="planrows"></div>
-      <div class="actions" style="margin-top:14px">
-        <button class="btn secondary" type="button" id="addPot">+ Add a pot</button>
-        <button class="btn secondary" type="button" id="fitPlan" hidden>Fit plan to take-home</button>
-        <button class="btn" type="button" id="savePlan">Save plan</button>
-      </div>
-      <p class="hint" style="margin:10px 0 0">Plan each pot as a % of take-home or a fixed £ amount. Type what you actually spent in each pot as the period goes. That saves on its own for this pay period.</p>
-    </div>
-    <div class="card">
-      <h2>Spending analytics</h2>
-      <div class="burn" id="burn"></div>
-      <div class="kpis" id="sKpis"></div>
-      <div class="banner info" id="sEmpty" style="margin-top:12px" hidden>Type what you've spent into the "Spent £" boxes in your spending plan. The charts below fill in as you go.</div>
-      <div class="grid2" style="margin-top:16px">
-        <div>
-          <div class="eyebrow" style="margin-bottom:10px">Plan vs spent, by pot</div>
-          <div class="hbars" id="sPots"></div>
-          <div class="legend" style="margin-top:10px"><span><span class="sw" style="background:var(--sunk);border:1px solid var(--line)"></span>Planned</span><span><span class="sw" style="background:var(--day)"></span>Spent</span><span><span class="sw" style="background:var(--amber)"></span>Over plan</span></div>
-        </div>
-        <div>
-          <div class="eyebrow" style="margin-bottom:10px">Where your money went</div>
-          <div class="split" id="sKindBar" style="height:16px" aria-hidden="true"></div>
-          <div class="legend" id="sKindLegend" style="margin-top:8px"></div>
-          <div class="eyebrow" style="margin:18px 0 10px">What stands out</div>
-          <ul class="insights" id="sInsights"></ul>
-        </div>
-      </div>
-      <div id="sTrendWrap" style="margin-top:18px" hidden>
-        <div class="eyebrow" style="margin-bottom:10px">Spent vs take-home, by pay period</div>
-        <div class="hbars" id="sTrend"></div>
-      </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- COMMUNITY: carers talk under nicknames -->
-  <section class="view" id="view-community" hidden>
-    <div class="card cmhead">
-      <div class="charthead"><h2>Carers' community</h2><span class="hint" id="cmMe"></span></div>
-      <p class="cmlede">Talk to other carers about shifts, pay, rest and meeting up. Everyone shows as a nickname: nobody sees your name or where you work.</p>
-      <details class="cmrules"><summary>House rules</summary>
-        <ul>
-          <li><b>Never name or describe the people you support.</b> No names, initials, addresses or health details. That's their private information.</li>
-          <li><b>Don't name managers or colleagues.</b> Talk about situations, not people.</li>
-          <li>No phone numbers, emails or home addresses, yours or anyone else's.</li>
-          <li>Be kind. No abuse, bullying or discrimination. Posts that break the rules are removed.</li>
-          <li>Meet-ups: meet in public places, tell someone where you're going, and don't share your home address.</li>
-        </ul>
-      </details>
-      <p class="cmspeak"><b>Worried about care or safety at work?</b> A post here won't fix it. Raise it with your manager or your company's whistleblowing line, <a href="https://www.cqc.org.uk/contact-us/report-concern/share-your-experience-whistleblowing" target="_blank" rel="noopener">tell the CQC</a>, or get free, confidential advice from <a href="https://protect-advice.org.uk/" target="_blank" rel="noopener">Protect</a>. If someone is in danger, call 999.</p>
-    </div>
-    <div class="card" id="cmJoin" hidden>
-      <h2>Choose your nickname</h2>
-      <p class="cmlede">This is the only thing other carers see. Don't use your real name.</p>
-      <form id="cmJoinForm" class="settings" novalidate>
-        <div class="field"><label for="cmNick">Nickname</label><div class="row2" style="grid-template-columns:1fr auto;align-items:center"><input type="text" id="cmNick" maxlength="20" autocapitalize="off" spellcheck="false" placeholder="e.g. NightOwl_Leics"><button type="button" class="btn secondary" id="cmNickGen">Suggest one</button></div></div>
-        <div class="field"><label for="cmArea">Town or county</label><input type="text" id="cmArea" placeholder="e.g. Leicester"></div>
-        <div class="field"><label for="cmAge">Age group</label><select id="cmAge"><option value="">Choose…</option><option value="under18">Under 18</option><option value="18-24">18–24</option><option value="25-34">25–34</option><option value="35-44">35–44</option><option value="45-54">45–54</option><option value="55-64">55–64</option><option value="65+">65 or over</option><option value="na">Prefer not to say (I'm 18 or over)</option></select></div>
-        <div class="banner bad" id="cmJoinErr" style="grid-column:1/-1" hidden></div>
-        <div class="actions" style="grid-column:1/-1"><button class="btn" type="submit">Join the community</button></div>
-      </form>
-    </div>
-    <div id="cmMain" hidden>
-      <div class="card cmann" id="cmAnn" hidden><h2>From the Shiftbuck team</h2><div id="cmAnnList"></div></div>
-      <div class="card" id="cmMsgs">
-        <div class="charthead"><h2>Messages</h2><span class="hint" id="cmMsgHint"></span></div>
-        <div id="cmMsgHome"><div class="cmrows" id="cmMsgList"></div></div>
-        <div id="cmThread" hidden>
-          <button type="button" class="linkinline" id="cmThreadBack">‹ All messages</button>
-          <div class="cmthreadhead"><div><b id="cmThreadName"></b><div class="hint" id="cmThreadSub"></div></div><div class="cmacts" id="cmThreadActs"></div></div>
-          <div class="cmbubbles" id="cmBubbles" aria-live="polite"></div>
-          <form id="cmMsgForm" novalidate>
-            <label for="cmMsgText" class="lbl" id="cmMsgLbl">Your message</label>
-            <textarea id="cmMsgText" maxlength="1000"></textarea>
-            <div class="banner bad" id="cmMsgErr" hidden></div>
-            <div class="actions"><button class="btn" type="submit" id="cmMsgSend">Send</button></div>
+    <!-- OVERVIEW -->
+    <section class="view" id="view-overview">
+      <div class="card hero">
+        <div class="eyebrow">Gross pay this period</div>
+        <div class="big" id="gross">£0.00</div>
+        <div class="legend" id="grossNet"></div>
+        <div class="split" id="split" aria-hidden="true"></div>
+        <div class="legend" id="splitLegend"></div>
+      </div>
+      <div class="kpis" id="kpis"></div>
+      <div class="card">
+        <div class="charthead">
+          <h2>Earnings build-up</h2><span class="hint" id="cumNote"></span>
+        </div>
+        <div class="chart" id="cum"></div>
+        <div class="legend" style="margin-top:8px">
+          <span><span class="ln" style="border-top:2px solid var(--day)"></span>Earned</span>
+          <span><span class="ln" style="border-top:2px dashed var(--day)"></span>Rostered</span>
+          <span id="cumPrevKey"><span class="ln" style="border-top:2px solid var(--faint)"></span>Last period</span>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="card">
+          <h2>Weekly earnings</h2>
+          <div id="weekly"></div>
+          <div class="legend" style="margin-top:8px"><span><span class="sw" style="background:var(--day)"></span>Hourly
+              pay</span><span><span class="sw" style="background:var(--night)"></span>Sleep-in pay</span></div>
+        </div>
+        <div class="card">
+          <h2>What stands out</h2>
+          <ul class="insights" id="insights"></ul>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="card">
+          <h2>Shift calendar</h2>
+          <div class="cal" id="cal"></div>
+          <div class="legend" style="margin-top:10px">
+            <span><span class="sw" style="background:var(--day-soft)"></span>Day shift</span>
+            <span><span class="sw" style="background:var(--night-soft)"></span>Sleep-in</span>
+            <span><span class="sw"
+                style="background:linear-gradient(135deg,var(--day-soft) 50%,var(--night-soft) 50%)"></span>Both</span>
+            <span><span class="sw" style="border:1px dashed var(--faint)"></span>Rostered</span>
+            <span><span class="sw" style="box-shadow:inset 0 0 0 2px var(--bad)"></span>Not resting enough</span>
+          </div>
+        </div>
+        <div class="card">
+          <h2>Shifts by service user</h2>
+          <div class="hbars" id="users"></div>
+          <p class="hint" style="margin:10px 0 0">Shifts with several people count once for each person.</p>
+        </div>
+      </div>
+      <div class="card restcard" id="restCard">
+        <div class="charthead">
+          <h2>Rest check</h2><span class="rpill ok" id="restPill">Checking…</span>
+        </div>
+        <p class="resthead" id="restHead"></p>
+        <div class="reststrip" id="restStrip" role="img" aria-label="Rest status for each day of the pay period"></div>
+        <div class="stripax" id="restAx"></div>
+        <div class="legend" style="margin:10px 0 14px">
+          <span><span class="sw" style="background:var(--good-soft);border:1px solid var(--good)"></span>Day off</span>
+          <span><span class="sw" style="background:var(--sunk);border:1px solid var(--line)"></span>Worked,
+            rested</span>
+          <span><span class="sw" style="background:var(--night)"></span>Watch</span>
+          <span><span class="sw" style="background:var(--bad)"></span>Not resting enough</span>
+        </div>
+        <div class="kpis" id="restKpis"></div>
+        <p class="hint" style="margin:12px 0 0">A guide based on UK working time rules: at least 24 hours off in every 7
+          days, rest between shifts, and no more than 48 hours of work a week on average. It's not legal advice, and
+          some contracts or opt-outs differ.</p>
+      </div>
+      <div class="grid2">
+        <div class="card">
+          <h2>Earnings by day of the week</h2>
+          <div class="chart" id="dow"></div>
+          <div class="legend" style="margin-top:8px"><span><span class="sw" style="background:var(--day)"></span>Hourly
+              pay</span><span><span class="sw" style="background:var(--night)"></span>Sleep-in pay</span></div>
+        </div>
+        <div class="card" id="trendCard" hidden>
+          <h2>Gross pay by period</h2>
+          <div id="trend"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FORECAST -->
+    <section class="view" id="view-forecast" hidden>
+      <div class="card hero">
+        <div class="eyebrow" id="fcRange">Next 7 days</div>
+        <div class="big" id="fcPay">£0.00</div>
+        <div class="legend" id="fcLegend"></div>
+      </div>
+      <div class="card restcard" id="fcRestCard">
+        <div class="charthead">
+          <h2>Rest outlook</h2><span class="rpill ok" id="fcRestPill"></span>
+        </div>
+        <p class="resthead" id="fcRestText" style="margin-bottom:0"></p>
+      </div>
+      <div class="card">
+        <div class="charthead">
+          <h2>Predicted rota</h2><span class="hint" id="fcBasis"></span>
+        </div>
+        <div class="fclist" id="fcList"></div>
+        <p class="hint" style="margin:12px 0 0">Predictions come from the days of the week you usually work and the
+          shifts you usually do on them. They're a guide, not your real rota. Tap <b>Add to rota</b> to check a
+          predicted shift and save it.</p>
+      </div>
+    </section>
+
+    <!-- LOG -->
+    <section class="view" id="view-log" hidden>
+      <div class="card">
+        <h2 id="logTitle">Log a shift</h2>
+        <form id="logForm" novalidate>
+          <div class="field">
+            <label for="fDate">Shift date</label>
+            <input type="date" id="fDate" required>
+            <div class="banner info" id="editNote" hidden></div>
+          </div>
+          <div class="field">
+            <span class="lbl">Service user(s)</span>
+            <div class="chips" id="fUsers"></div>
+            <div class="row2" id="addUserRow" hidden>
+              <input type="text" id="fNewUser" placeholder="New name" aria-label="New service user name">
+              <button type="button" class="btn secondary" id="addUserBtn">Add</button>
+            </div>
+          </div>
+          <div class="field">
+            <span class="lbl">Shift type</span>
+            <div class="quick shiftpre" id="fPreset">
+              <button type="button" data-pre="day">Day · 08:00–20:00</button>
+              <button type="button" data-pre="sleep">Sleep-in · 20:00–08:00</button>
+              <button type="button" data-pre="both">Day + sleep-in · 08:00–08:00</button>
+            </div>
+          </div>
+          <div class="field">
+            <span class="lbl">Sleep-in?</span>
+            <div class="seg" id="fSleep">
+              <button type="button" data-v="yes" aria-pressed="false">Yes</button>
+              <button type="button" data-v="no" aria-pressed="true">No</button>
+            </div>
+          </div>
+          <div class="row2">
+            <div class="field">
+              <label for="fHours">Day hours <span class="hint">blank if sleep-in only</span></label>
+              <input type="number" id="fHours" min="0" max="24" step="0.25" inputmode="decimal">
+              <div class="quick"><button type="button" data-h="12">12</button><button type="button"
+                  data-h="8">8</button><button type="button" data-h="4.5">4.5</button></div>
+            </div>
+            <div class="field">
+              <label for="fBreak">Break (hrs)</label>
+              <input type="number" id="fBreak" min="0" max="24" step="0.25" inputmode="decimal">
+              <div class="quick"><button type="button" data-b="2">2</button><button type="button"
+                  data-b="1">1</button><button type="button" data-b="0">0</button></div>
+            </div>
+          </div>
+          <div class="field">
+            <label for="fFare">Bus fare for this shift (£) <span class="hint">there and back · optional</span></label>
+            <input type="number" id="fFare" min="0" max="200" step="0.05" inputmode="decimal" placeholder="0.00">
+            <div class="quick" id="fFareQuick"><button type="button" data-fare="usual" id="fFareUsual"
+                hidden>Usual</button><button type="button" data-fare="0">No bus</button></div>
+          </div>
+          <div class="field">
+            <label for="fNotes">Notes <span class="hint">optional</span></label>
+            <textarea id="fNotes"></textarea>
+          </div>
+          <div class="preview"><span>This shift pays</span><span class="num" id="fPreview">£0.00</span></div>
+          <p class="hint" id="fBreakNote" style="margin:-8px 0 0" hidden></p>
+          <p class="hint" id="fFareNote" style="margin:-8px 0 0" hidden></p>
+          <div class="banner" id="restWarn" hidden></div>
+          <div class="banner bad" id="formError" hidden></div>
+          <div class="actions">
+            <button type="submit" class="btn" id="saveBtn">Save shift</button>
+            <button type="button" class="btn danger" id="delBtn" hidden>Delete</button>
+          </div>
+          <div class="confirm" id="delConfirm" hidden>
+            <span id="delText">Delete this shift?</span>
+            <div class="actions">
+              <button type="button" class="btn danger" id="delYes">Yes, delete it</button>
+              <button type="button" class="btn secondary" id="delNo">Keep it</button>
+            </div>
+          </div>
+          <p class="hint" style="margin:0">Your shifts and money are private to your account. Nobody else using
+            Shiftbuck can see them.</p>
+        </form>
+      </div>
+    </section>
+
+    <!-- TIMESHEET -->
+    <section class="view" id="view-sheet" hidden>
+      <div class="actions">
+        <button class="btn secondary" id="csvBtn">Download CSV</button>
+        <button class="btn secondary" id="copyBtn">Copy summary for manager</button>
+        <button class="btn secondary" id="backupBtn">Back up all data</button>
+      </div>
+      <div class="tablewrap">
+        <table id="sheet"></table>
+      </div>
+      <div class="card">
+        <h2>Pay calculation</h2>
+        <div id="calc"></div>
+      </div>
+      <div class="card" id="acctCard">
+        <h2>Your account</h2>
+        <div class="acct"><span id="acctWho">Signed in</span><button type="button" class="btn secondary" id="signOutBtn"
+            data-signout>Sign out</button></div>
+        <div class="acctpause">
+          <p class="hint" style="margin:0">Taking a break from care work? <b>Pause your account</b>: you'll be signed
+            out and everything is kept until you come back and reactivate it. To remove everything for good, use Privacy
+            → Delete my account.</p>
+          <button type="button" class="btn secondary" id="pauseBtn">Pause my account</button>
+          <div class="confirm" id="pauseConfirm" hidden>
+            <span>Pause your account? You'll be signed out. Sign in any time to reactivate it.</span>
+            <div class="actions"><button type="button" class="btn" id="pauseYes">Yes, pause it</button><button
+                type="button" class="btn secondary" id="pauseNo">Keep it active</button></div>
+            <div class="banner bad" id="pauseErr" hidden></div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Settings</h2>
+        <form id="setForm" class="settings" novalidate>
+          <div class="field"><label for="sName">Name</label><input type="text" id="sName"></div>
+          <div class="field"><label for="sRole">Role</label><input type="text" id="sRole"></div>
+          <div class="field"><label for="sRate">Hourly rate (£)</label><input type="number" id="sRate" step="0.01"
+              min="0"></div>
+          <div class="field"><label for="sSleep">Sleep-in rate (£/night)</label><input type="number" id="sSleep"
+              step="0.01" min="0"></div>
+          <div class="field"><label for="sStart">Pay period starts on day</label><input type="number" id="sStart"
+              min="1" max="28"></div>
+          <div class="field"><label for="sUsers">Service users <span class="hint">initials or a short code,
+                comma-separated</span></label><input type="text" id="sUsers"></div>
+          <div class="field" style="grid-column:1/-1"><span class="lbl">Rename someone in every shift</span>
+            <div class="row2"><select id="rnFrom" aria-label="Name to change"></select><input type="text" id="rnTo"
+                maxlength="20" autocomplete="off" placeholder="New initials or code, e.g. Zee" aria-label="New name">
+            </div>
+            <div class="actions" style="margin-top:8px"><button type="button" class="btn secondary" id="rnBtn">Rename in
+                all shifts</button></div>
+            <span class="hint">Use initials or a short code, never a full name. Old shifts change too.</span>
+          </div>
+          <div class="field"><label for="sFare">Usual bus fare per shift (£) <span class="hint">there and back · 0 if
+                you don't take the bus</span></label><input type="number" id="sFare" step="0.05" min="0" max="200"
+              inputmode="decimal"></div>
+          <div class="actions" style="grid-column:1/-1"><button class="btn" type="submit" id="setSave">Save
+              settings</button></div>
+        </form>
+      </div>
+    </section>
+
+    <!-- MONEY -->
+    <section class="view" id="view-money" hidden>
+      <div class="card hero">
+        <div class="eyebrow">Estimated take-home this period</div>
+        <div class="big" id="mNet">£0.00</div>
+        <div class="split" id="mSplit" aria-hidden="true"></div>
+        <div class="legend" id="mLegend"></div>
+      </div>
+      <div class="kpis" id="mKpis"></div>
+      <div class="card">
+        <div class="charthead">
+          <h2>Where every pound goes</h2><span class="hint">Gross pay → deductions → take-home → your plan</span>
+        </div>
+        <div class="chart" id="wf"></div>
+      </div>
+      <div class="card" id="payCard">
+        <div class="charthead">
+          <h2>Payslip check</h2><span class="hint" id="payHint"></span>
+        </div>
+        <div id="payBody"></div>
+        <form id="payForm" class="settings" novalidate hidden>
+          <div class="field"><label for="pDate">Pay date</label><input type="date" id="pDate"></div>
+          <div class="field"><label for="pHours">Hours paid</label><input type="number" id="pHours" step="0.25" min="0"
+              inputmode="decimal"></div>
+          <div class="field"><label for="pGross">Total payments (gross £)</label><input type="number" id="pGross"
+              step="0.01" min="0" inputmode="decimal"></div>
+          <div class="field"><label for="pSleep">Sleep-in pay on payslip (£) <span class="hint">0 if none
+                listed</span></label><input type="number" id="pSleep" step="0.01" min="0" inputmode="decimal"></div>
+          <div class="field"><label for="pTax">Income tax (£)</label><input type="number" id="pTax" step="0.01" min="0"
+              inputmode="decimal"></div>
+          <div class="field"><label for="pNi">National Insurance (£)</label><input type="number" id="pNi" step="0.01"
+              min="0" inputmode="decimal"></div>
+          <div class="field"><label for="pPension">Pension (£)</label><input type="number" id="pPension" step="0.01"
+              min="0" inputmode="decimal"></div>
+          <div class="field"><label for="pNet">Net pay (£)</label><input type="number" id="pNet" step="0.01" min="0"
+              inputmode="decimal"></div>
+          <div class="banner bad" id="payErr" style="grid-column:1/-1" hidden></div>
+          <div class="actions" style="grid-column:1/-1"><button class="btn" type="submit" id="paySave">Save
+              payslip</button><button class="btn secondary" type="button" id="payCancel">Cancel</button></div>
+        </form>
+        <div class="actions" style="margin-top:12px"><button class="btn secondary" type="button" id="payEdit">Add the
+            payslip for this period</button></div>
+      </div>
+      <div class="grid2">
+        <div class="card">
+          <h2>From gross pay to take-home</h2>
+          <div class="hbars" id="mSteps"></div>
+          <p class="hint" style="margin:12px 0 0">Estimate for one monthly pay period using 2026/27 rates for England,
+            Wales and Northern Ireland. Your payslip is the final word: tax codes, pension schemes and pay dates can
+            change the exact figures.</p>
+        </div>
+        <div class="card">
+          <h2>Tax settings</h2>
+          <form id="taxForm" class="settings" novalidate>
+            <div class="field"><label for="tEmp">How you're paid</label>
+              <select id="tEmp">
+                <option value="paye">Employee (PAYE payslip)</option>
+                <option value="self">Self-employed (set tax aside)</option>
+              </select>
+            </div>
+            <div class="field"><label for="tCode">Tax code <span class="hint">as shown on your payslip</span></label>
+              <input type="text" id="tCode" list="taxCodeList" autocomplete="off" autocapitalize="characters"
+                spellcheck="false" placeholder="Type or pick, e.g. 1257L">
+              <datalist id="taxCodeList">
+                <option value="1257L">Standard code, one job</option>
+                <option value="BR">Second job: all pay at 20%</option>
+                <option value="D0">All pay at 40%</option>
+                <option value="D1">All pay at 45%</option>
+                <option value="0T">No tax-free allowance</option>
+                <option value="NT">No tax taken</option>
+                <option value="1383M">Marriage Allowance received</option>
+                <option value="1131N">Marriage Allowance given</option>
+                <option value="1257L M1">Emergency code (month 1)</option>
+                <option value="K475">K code: amount added to taxable pay</option>
+                <option value="C1257L">Wales</option>
+                <option value="S1257L">Scotland</option>
+              </datalist>
+              <span class="hint" id="tCodeHelp"></span>
+            </div>
+            <div class="field"><label for="tPension">Pension you pay (%) <span class="hint">usually
+                  4%</span></label><input type="number" id="tPension" min="0" max="50" step="0.5"></div>
+            <div class="field"><label for="tLoan">Student loan</label>
+              <select id="tLoan">
+                <option value="none">None</option>
+                <option value="p1">Plan 1</option>
+                <option value="p2">Plan 2</option>
+                <option value="p4">Plan 4</option>
+                <option value="p5">Plan 5</option>
+                <option value="pg">Postgraduate</option>
+              </select>
+            </div>
           </form>
         </div>
-        <form id="cmAnnForm" novalidate hidden>
-          <label for="cmAnnText" class="lbl">Announcement to every carer <span class="hint">team only</span></label>
-          <textarea id="cmAnnText" maxlength="1000" placeholder="e.g. Pilot update: the payslip check now works for weekly pay."></textarea>
-          <div class="actions"><button class="btn secondary" type="submit">Send to everyone</button></div>
-        </form>
       </div>
-      <div class="card" id="cmComposer">
-        <form id="cmForm" novalidate>
-          <div class="cmreplying" id="cmReplying" hidden><span id="cmReplyTxt"></span><button type="button" class="linkinline" id="cmReplyCancel">Cancel reply</button></div>
-          <div class="field" id="cmSpaceWrap"><label for="cmSpace">Post in</label><select id="cmSpace"></select></div>
-          <div class="field"><label for="cmText" id="cmTextLbl">What's on your mind?</label><textarea id="cmText" maxlength="1000" placeholder="e.g. Anyone else not getting paid for sleep-ins this month?"></textarea><span class="hint" id="cmCount">0 / 1000</span></div>
-          <div class="banner bad" id="cmErr" hidden></div>
-          <div class="actions"><button class="btn" type="submit" id="cmPost">Post</button></div>
-        </form>
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap">
+          <h2 style="margin:0">Spending plan</h2>
+          <span class="hint" id="mAlloc"></span>
+        </div>
+        <div class="split" id="mPlanBar" style="margin:12px 0 4px;height:16px" aria-hidden="true"></div>
+        <div class="legend" id="mPlanLegend" style="margin-bottom:12px"></div>
+        <div id="planRows" class="planrows"></div>
+        <div class="actions" style="margin-top:14px">
+          <button class="btn secondary" type="button" id="addPot">+ Add a pot</button>
+          <button class="btn secondary" type="button" id="fitPlan" hidden>Fit plan to take-home</button>
+          <button class="btn" type="button" id="savePlan">Save plan</button>
+        </div>
+        <p class="hint" style="margin:10px 0 0">Plan each pot as a % of take-home or a fixed £ amount. Type what you
+          actually spent in each pot as the period goes. That saves on its own for this pay period.</p>
       </div>
-      <div class="cmchips" id="cmSpaces" role="group" aria-label="Spaces"></div>
-      <div class="cmfeed" id="cmFeed"></div>
-      <div class="cmsheet" id="cmSheet" hidden>
-        <div class="cmsheetbox" role="dialog" aria-modal="true" aria-labelledby="cmSheetNick">
-          <div><div class="big" id="cmSheetNick"></div><div class="hint" id="cmSheetArea"></div></div>
-          <div class="cmstats" id="cmSheetStats"></div>
-          <p class="hint" id="cmSheetNote" style="margin:0"></p>
-          <div class="actions" id="cmSheetActs"></div>
-          <button type="button" class="btn secondary" id="cmSheetClose">Close</button>
+      <div class="card">
+        <h2>Spending analytics</h2>
+        <div class="burn" id="burn"></div>
+        <div class="kpis" id="sKpis"></div>
+        <div class="banner info" id="sEmpty" style="margin-top:12px" hidden>Type what you've spent into the "Spent £"
+          boxes in your spending plan. The charts below fill in as you go.</div>
+        <div class="grid2" style="margin-top:16px">
+          <div>
+            <div class="eyebrow" style="margin-bottom:10px">Plan vs spent, by pot</div>
+            <div class="hbars" id="sPots"></div>
+            <div class="legend" style="margin-top:10px"><span><span class="sw"
+                  style="background:var(--sunk);border:1px solid var(--line)"></span>Planned</span><span><span
+                  class="sw" style="background:var(--day)"></span>Spent</span><span><span class="sw"
+                  style="background:var(--amber)"></span>Over plan</span></div>
+          </div>
+          <div>
+            <div class="eyebrow" style="margin-bottom:10px">Where your money went</div>
+            <div class="split" id="sKindBar" style="height:16px" aria-hidden="true"></div>
+            <div class="legend" id="sKindLegend" style="margin-top:8px"></div>
+            <div class="eyebrow" style="margin:18px 0 10px">What stands out</div>
+            <ul class="insights" id="sInsights"></ul>
+          </div>
+        </div>
+        <div id="sTrendWrap" style="margin-top:18px" hidden>
+          <div class="eyebrow" style="margin-bottom:10px">Spent vs take-home, by pay period</div>
+          <div class="hbars" id="sTrend"></div>
         </div>
       </div>
-      <div class="card" id="cmMod" hidden><h2>Reported posts</h2><p class="cmlede">Only you can see this. Hidden posts disappear for everyone.</p><div class="cmfeed" id="cmModList"></div></div>
-    </div>
-  </section>
+    </section>
 
-  <!-- PRIVACY -->
-  <section class="view" id="view-privacy" hidden>
-    <div class="card info">
-      <button type="button" class="btn secondary backbtn" data-info-back>‹ Back</button>
-      <h2>Privacy</h2>
-      <p class="hint">Last updated 30 October 2026</p>
-      <h3>In short</h3>
-      <p>Shiftbuck keeps your shift, pay and money details so it can work out your pay. We don't sell your data, show ads, track you with cookies or share anything with your employer.</p>
-      <h3>Who we are</h3>
-      <p>Shiftbuck is made by <b>WesTech Innovation</b>, which is responsible for this app. Contact us through <a href="https://westechinnovation.com/" target="_blank" rel="noopener">westechinnovation.com</a>.</p>
-      <h3>What Shiftbuck keeps</h3>
-      <ul>
-        <li>What you enter in setup: your first name, role, hourly and sleep-in rates, pay period start day and usual shift times.</li><li>Your profile: age group, sex (optional), your area, your employer (optional) and your community nickname. Other carers only ever see your nickname. Your employer never sees any of it. Age group and sex are only used, added up across all users, to understand who uses Shiftbuck.</li>
-        <li>How you sign in: your mobile number or email address and, if you choose one, a password. If you continue with Google, Google tells us your email address and name, and nothing else. Your password is only ever kept scrambled (hashed) by Supabase, so nobody at Shiftbuck can read it.</li>
-        <li>Your shifts: dates, hours, breaks, sleep-ins, notes, and the service users you choose to add.</li>
-        <li>Payslip figures you type in, your tax settings, your spending plan and spending amounts.</li>
-        <li>In the community: your public profile (nickname and area only), your posts, and messages you send. Messages to the Shiftbuck team are read only by you and the team.</li>
-      </ul>
-      <p>Shiftbuck does <b>not</b> ask for your bank details, National Insurance number, address or date of birth, and it isn't connected to your bank.</p>
-      <h3>Service users</h3>
-      <p>Please use <b>first names or initials only</b> for the people you support. Don't add health details or other personal information about them in notes.</p>
-      <h3>Where your data is kept and who can see it</h3>
-      <p>When you sign in, your data is kept in Shiftbuck's database, run on <b>Supabase</b>. It's tied to your account and locked so that only you can read or change it. Supabase stores and processes it for us under <a href="https://supabase.com/privacy" target="_blank" rel="noopener">its own privacy policy</a>.</p><p>In demo mode, nothing is sent anywhere: your data stays in this browser on this device.</p><p><b>Nobody else using Shiftbuck can see your data</b>: not other carers and not your employer. The only exceptions are what you choose to share: your posts and profile in the community, private messages (only you and the carer you're talking to can read them, unless one of you reports a message to the moderators), and messages to the Shiftbuck team.</p>
-      <h3>Cookies and storage on your device</h3>
-      <p>Shiftbuck doesn't use cookies for advertising or tracking, and has no analytics. It keeps a few things in your browser: which tab you last had open, so the app opens where you left off. When you're signed in it also keeps your sign-in session, so you stay signed in; in demo mode it keeps all your Shiftbuck data in this browser. Fonts and code come from Shiftbuck's own site, so nothing is requested from Google or other third parties. The only other service Shiftbuck talks to is Supabase, which stores your data.</p>
-      <p>Because nothing is used for tracking, there's no cookie banner. If that ever changes, we'll ask you first.</p>
-      <h3>Why we use it</h3>
-      <p>Only to give you the app: working out your pay, take-home, rest check, charts and money plan. Your information isn't used for anything else.</p>
-      <h3>Your rights</h3>
-      <ul><li>See and download everything: Timesheet → <b>Back up all data</b>.</li><li>Correct anything: edit a shift, payslip or setting at any time.</li><li>Delete a single shift from its edit screen, or everything with the button below.</li></ul>
-      <p>You also have rights under UK data protection law. If you're unhappy with how your data is handled, contact us, or complain to the <a href="https://ico.org.uk/make-a-complaint/" target="_blank" rel="noopener">Information Commissioner's Office</a>.</p>
-      <h3>How long it's kept</h3>
-      <p>Until you delete it. If this version of Shiftbuck closes, you'll be told in advance so you can download your data.</p>
-      <h3>Estimates, not advice</h3>
-      <p>Pay, tax and rest figures are estimates to help you plan. They are not financial, tax or legal advice. Your payslip is the final word.</p>
+    <!-- COMMUNITY: carers talk under nicknames -->
+    <section class="view" id="view-community" hidden>
+      <div class="card cmhead">
+        <div class="charthead">
+          <h2>Carers' community</h2><span class="hint" id="cmMe"></span>
+        </div>
+        <p class="cmlede">Talk to other carers about shifts, pay, rest and meeting up. Everyone shows as a nickname:
+          nobody sees your name or where you work.</p>
+        <details class="cmrules">
+          <summary>House rules</summary>
+          <ul>
+            <li><b>Never name or describe the people you support.</b> No names, initials, addresses or health details.
+              That's their private information.</li>
+            <li><b>Don't name managers or colleagues.</b> Talk about situations, not people.</li>
+            <li>No phone numbers, emails or home addresses, yours or anyone else's.</li>
+            <li>Be kind. No abuse, bullying or discrimination. Posts that break the rules are removed.</li>
+            <li>Meet-ups: meet in public places, tell someone where you're going, and don't share your home address.
+            </li>
+          </ul>
+        </details>
+        <p class="cmspeak"><b>Worried about care or safety at work?</b> A post here won't fix it. Raise it with your
+          manager or your company's whistleblowing line, <a
+            href="https://www.cqc.org.uk/contact-us/report-concern/share-your-experience-whistleblowing" target="_blank"
+            rel="noopener">tell the CQC</a>, or get free, confidential advice from <a
+            href="https://protect-advice.org.uk/" target="_blank" rel="noopener">Protect</a>. If someone is in danger,
+          call 999.</p>
+      </div>
+      <div class="card" id="cmJoin" hidden>
+        <h2>Choose your nickname</h2>
+        <p class="cmlede">This is the only thing other carers see. Don't use your real name.</p>
+        <form id="cmJoinForm" class="settings" novalidate>
+          <div class="field"><label for="cmNick">Nickname</label>
+            <div class="row2" style="grid-template-columns:1fr auto;align-items:center"><input type="text" id="cmNick"
+                maxlength="20" autocapitalize="off" spellcheck="false" placeholder="e.g. NightOwl_Leics"><button
+                type="button" class="btn secondary" id="cmNickGen">Suggest one</button></div>
+          </div>
+          <div class="field"><label for="cmArea">Town or county</label><input type="text" id="cmArea"
+              placeholder="e.g. Leicester"></div>
+          <div class="field"><label for="cmAge">Age group</label><select id="cmAge">
+              <option value="">Choose…</option>
+              <option value="under18">Under 18</option>
+              <option value="18-24">18–24</option>
+              <option value="25-34">25–34</option>
+              <option value="35-44">35–44</option>
+              <option value="45-54">45–54</option>
+              <option value="55-64">55–64</option>
+              <option value="65+">65 or over</option>
+              <option value="na">Prefer not to say (I'm 18 or over)</option>
+            </select></div>
+          <div class="banner bad" id="cmJoinErr" style="grid-column:1/-1" hidden></div>
+          <div class="actions" style="grid-column:1/-1"><button class="btn" type="submit">Join the community</button>
+          </div>
+        </form>
+      </div>
+      <div id="cmMain" hidden>
+        <div class="card cmann" id="cmAnn" hidden>
+          <h2>From the Shiftbuck team</h2>
+          <div id="cmAnnList"></div>
+        </div>
+        <div class="card" id="cmMsgs">
+          <div class="charthead">
+            <h2>Messages</h2><span class="hint" id="cmMsgHint"></span>
+          </div>
+          <div id="cmMsgHome">
+            <div class="cmrows" id="cmMsgList"></div>
+          </div>
+          <div id="cmThread" hidden>
+            <button type="button" class="linkinline" id="cmThreadBack">‹ All messages</button>
+            <div class="cmthreadhead">
+              <div><b id="cmThreadName"></b>
+                <div class="hint" id="cmThreadSub"></div>
+              </div>
+              <div class="cmacts" id="cmThreadActs"></div>
+            </div>
+            <div class="cmbubbles" id="cmBubbles" aria-live="polite"></div>
+            <form id="cmMsgForm" novalidate>
+              <label for="cmMsgText" class="lbl" id="cmMsgLbl">Your message</label>
+              <textarea id="cmMsgText" maxlength="1000"></textarea>
+              <div class="banner bad" id="cmMsgErr" hidden></div>
+              <div class="actions"><button class="btn" type="submit" id="cmMsgSend">Send</button></div>
+            </form>
+          </div>
+          <form id="cmAnnForm" novalidate hidden>
+            <label for="cmAnnText" class="lbl">Announcement to every carer <span class="hint">team only</span></label>
+            <textarea id="cmAnnText" maxlength="1000"
+              placeholder="e.g. Pilot update: the payslip check now works for weekly pay."></textarea>
+            <div class="actions"><button class="btn secondary" type="submit">Send to everyone</button></div>
+          </form>
+        </div>
+        <div class="card" id="cmComposer">
+          <form id="cmForm" novalidate>
+            <div class="cmreplying" id="cmReplying" hidden><span id="cmReplyTxt"></span><button type="button"
+                class="linkinline" id="cmReplyCancel">Cancel reply</button></div>
+            <div class="field" id="cmSpaceWrap"><label for="cmSpace">Post in</label><select id="cmSpace"></select></div>
+            <div class="field"><label for="cmText" id="cmTextLbl">What's on your mind?</label><textarea id="cmText"
+                maxlength="1000"
+                placeholder="e.g. Anyone else not getting paid for sleep-ins this month?"></textarea><span class="hint"
+                id="cmCount">0 / 1000</span></div>
+            <div class="banner bad" id="cmErr" hidden></div>
+            <div class="actions"><button class="btn" type="submit" id="cmPost">Post</button></div>
+          </form>
+        </div>
+        <div class="cmchips" id="cmSpaces" role="group" aria-label="Spaces"></div>
+        <div class="cmfeed" id="cmFeed"></div>
+        <div class="cmsheet" id="cmSheet" hidden>
+          <div class="cmsheetbox" role="dialog" aria-modal="true" aria-labelledby="cmSheetNick">
+            <div>
+              <div class="big" id="cmSheetNick"></div>
+              <div class="hint" id="cmSheetArea"></div>
+            </div>
+            <div class="cmstats" id="cmSheetStats"></div>
+            <p class="hint" id="cmSheetNote" style="margin:0"></p>
+            <div class="actions" id="cmSheetActs"></div>
+            <button type="button" class="btn secondary" id="cmSheetClose">Close</button>
+          </div>
+        </div>
+        <div class="card" id="cmMod" hidden>
+          <h2>Reported posts</h2>
+          <p class="cmlede">Only you can see this. Hidden posts disappear for everyone.</p>
+          <div class="cmfeed" id="cmModList"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PRIVACY -->
+    <section class="view" id="view-privacy" hidden>
+      <div class="card info">
+        <button type="button" class="btn secondary backbtn" data-info-back>‹ Back</button>
+        <h2>Privacy</h2>
+        <p class="hint">Last updated 30 October 2026</p>
+        <h3>In short</h3>
+        <p>Shiftbuck keeps your shift, pay and money details so it can work out your pay. We don't sell your data, show
+          ads, track you with cookies or share anything with your employer.</p>
+        <h3>Who we are</h3>
+        <p>Shiftbuck is made by <b>WesTech Innovation</b>, which is responsible for this app. Contact us through <a
+            href="https://westechinnovation.com/" target="_blank" rel="noopener">westechinnovation.com</a>.</p>
+        <h3>What Shiftbuck keeps</h3>
+        <ul>
+          <li>What you enter in setup: your first name, role, hourly and sleep-in rates, pay period start day and usual
+            shift times.</li>
+          <li>Your profile: age group, sex (optional), your area, your employer (optional) and your community nickname.
+            Other carers only ever see your nickname. Your employer never sees any of it. Age group and sex are only
+            used, added up across all users, to understand who uses Shiftbuck.</li>
+          <li>How you sign in: your mobile number or email address and, if you choose one, a password. If you continue
+            with Google, Google tells us your email address and name, and nothing else. Your password is only ever kept
+            scrambled (hashed) by Supabase, so nobody at Shiftbuck can read it.</li>
+          <li>Your shifts: dates, hours, breaks, sleep-ins, notes, and the service users you choose to add.</li>
+          <li>Payslip figures you type in, your tax settings, your spending plan and spending amounts.</li>
+          <li>In the community: your public profile (nickname and area only), your posts, and messages you send.
+            Messages to the Shiftbuck team are read only by you and the team.</li>
+        </ul>
+        <p>Shiftbuck does <b>not</b> ask for your bank details, National Insurance number, address or date of birth, and
+          it isn't connected to your bank.</p>
+        <h3>Service users</h3>
+        <p>Please use <b>first names or initials only</b> for the people you support. Don't add health details or other
+          personal information about them in notes.</p>
+        <h3>Where your data is kept and who can see it</h3>
+        <p>When you sign in, your data is kept in Shiftbuck's database, run on <b>Supabase</b>. It's tied to your
+          account and locked so that only you can read or change it. Supabase stores and processes it for us under <a
+            href="https://supabase.com/privacy" target="_blank" rel="noopener">its own privacy policy</a>.</p>
+        <p>In demo mode, nothing is sent anywhere: your data stays in this browser on this device.</p>
+        <p><b>Nobody else using Shiftbuck can see your data</b>: not other carers and not your employer. The only
+          exceptions are what you choose to share: your posts and profile in the community, private messages (only you
+          and the carer you're talking to can read them, unless one of you reports a message to the moderators), and
+          messages to the Shiftbuck team.</p>
+        <h3>Cookies and storage on your device</h3>
+        <p>Shiftbuck doesn't use cookies for advertising or tracking, and has no analytics. It keeps a few things in
+          your browser: which tab you last had open, so the app opens where you left off. When you're signed in it also
+          keeps your sign-in session, so you stay signed in; in demo mode it keeps all your Shiftbuck data in this
+          browser. Fonts and code come from Shiftbuck's own site, so nothing is requested from Google or other third
+          parties. The only other service Shiftbuck talks to is Supabase, which stores your data.</p>
+        <p>Because nothing is used for tracking, there's no cookie banner. If that ever changes, we'll ask you first.
+        </p>
+        <h3>Why we use it</h3>
+        <p>Only to give you the app: working out your pay, take-home, rest check, charts and money plan. Your
+          information isn't used for anything else.</p>
+        <h3>Your rights</h3>
+        <ul>
+          <li>See and download everything: Timesheet → <b>Back up all data</b>.</li>
+          <li>Correct anything: edit a shift, payslip or setting at any time.</li>
+          <li>Delete a single shift from its edit screen, or everything with the button below.</li>
+        </ul>
+        <p>You also have rights under UK data protection law. If you're unhappy with how your data is handled, contact
+          us, or complain to the <a href="https://ico.org.uk/make-a-complaint/" target="_blank"
+            rel="noopener">Information Commissioner's Office</a>.</p>
+        <h3>How long it's kept</h3>
+        <p>Until you delete it. If this version of Shiftbuck closes, you'll be told in advance so you can download your
+          data.</p>
+        <h3>Estimates, not advice</h3>
+        <p>Pay, tax and rest figures are estimates to help you plan. They are not financial, tax or legal advice. Your
+          payslip is the final word.</p>
         <h3>Delete my account</h3>
-        <p>This deletes your account and all your shifts, payslips, spending and settings. It can't be undone, so download a backup first if you want one.</p>
+        <p>This deletes your account and all your shifts, payslips, spending and settings. It can't be undone, so
+          download a backup first if you want one.</p>
         <button type="button" class="btn danger" id="delAll">Delete my account</button>
         <div class="confirm" id="delAllConfirm" hidden>
           <span>Delete your account and all your Shiftbuck data? This can't be undone.</span>
-          <div class="actions"><button type="button" class="btn danger" id="delAllYes">Yes, delete everything</button><button type="button" class="btn secondary" id="delAllNo">Keep my data</button></div>
+          <div class="actions"><button type="button" class="btn danger" id="delAllYes">Yes, delete
+              everything</button><button type="button" class="btn secondary" id="delAllNo">Keep my data</button></div>
         </div>
-    </div>
-  </section>
+      </div>
+    </section>
 
-  <!-- TERMS OF USE -->
-  <section class="view" id="view-terms" hidden>
-    <div class="card info">
-      <button type="button" class="btn secondary backbtn" data-info-back>‹ Back</button>
-      <h2>Terms of use</h2>
-      <p class="hint">Last updated 28 October 2026</p>
-      <h3>In short</h3>
-      <p>Shiftbuck is free. Use it to track your own shifts, pay and rest, and be kind and safe in the community. Its figures are estimates, not advice. Never post anything that could identify the people you support.</p>
-      <h3>Who we are</h3>
-      <p>Shiftbuck is made by <b>WesTech Innovation</b> ("we"). Contact us by messaging the Shiftbuck team in the app (Community → Messages) or through <a href="https://westechinnovation.com/" target="_blank" rel="noopener">westechinnovation.com</a>.</p>
-      <h3>Who can use Shiftbuck</h3>
-      <ul>
-        <li>You must be <b>18 or over</b>. Shiftbuck is made for care and support workers in the UK.</li>
-        <li>Your account is for you alone. Keep your sign-in secure and tell us if you think someone else has used it.</li>
-      </ul>
-      <h3>What Shiftbuck does, and what it doesn't</h3>
-      <ul>
-        <li>Pay, tax, take-home, holiday and rest figures are <b>estimates to help you plan</b>. They aren't financial, tax or legal advice. Your payslip and your employer's records are the official figures.</li>
-        <li>The rest check is a guide based on UK working time rules. It doesn't tell you whether your employer has broken the law.</li>
-        <li>A timesheet you download or send from Shiftbuck is your own record. Check it before you send it, because you're responsible for what you send to your employer.</li>
-        <li>Shiftbuck is free and has no adverts. If we ever add paid extras, we'll tell you the price and what you get before anything is charged, and you'll never be charged without agreeing first. The features you already use free won't be taken away and charged for.</li>
-      </ul>
-      <h3>Your data</h3>
-      <p>Your shifts, pay and money details belong to you. How we keep them is set out in the <a href="#privacy" data-info="privacy">privacy notice</a>. You can download or delete them at any time.</p>
-      <h3>The community and messages</h3>
-      <p>When you post or send a message you keep ownership of it, and you let us store it and show it to the people it's meant for so the community can work. Everyone shows as a nickname. You must not:</p>
-      <ul>
-        <li>name or describe the people you support, or share their health or other personal details;</li>
-        <li>name managers or colleagues, or post anything untrue that could damage a person or a care service;</li>
-        <li>post or send anything illegal, including scams, fake job or visa sponsorship offers, threats, harassment, hate, sexual content, or offers to sell medicine or documents;</li>
-        <li>ask other carers for money, bank details or passwords, or pressure anyone to meet up;</li>
-        <li>post anyone's address, phone number or email in public posts, including your own;</li>
-        <li>advertise, spam or pretend to be someone else, including the Shiftbuck team.</li>
-      </ul>
-      <p>If you're worried about care or safety at work, raise it with your employer's whistleblowing process, the <a href="https://www.cqc.org.uk/contact-us/report-concern/share-your-experience-whistleblowing" target="_blank" rel="noopener">CQC</a> or <a href="https://protect-advice.org.uk/" target="_blank" rel="noopener">Protect</a>. If someone is in danger, call 999.</p>
-      <h3>How we keep people safe</h3>
-      <ul>
-        <li>You can <b>report</b> any post or private message, and <b>block</b> anyone so they can't message you. Reports are private: the person you report isn't told who reported them.</li>
-        <li>Our moderators check reports at least once a day. They read a private message only if the person who received it reports it.</li>
-        <li>We may hide or remove content that breaks these terms, stop someone from sending private messages, or warn, pause or close an account. Illegal content is removed and, where the law requires it, reported to the police.</li>
-        <li>Posts that contain phone numbers, emails, postcodes, addresses or the names of the people you support are stopped before they're posted.</li>
-      </ul>
-      <h3>Complaints and appeals</h3>
-      <p>To complain about content, about how we handled a report, or about anything else in Shiftbuck, message the Shiftbuck team in the app. If we hid your post or restricted your account and you think we got it wrong, tell us the same way and a different moderator will look at it again. We aim to reply within <b>5 working days</b> and will tell you what we decided and why.</p>
-      <p>For concerns about your personal data you can also contact the <a href="https://ico.org.uk/make-a-complaint/" target="_blank" rel="noopener">Information Commissioner's Office</a>.</p>
-      <h3>Closing your account</h3>
-      <p>You can delete your account at any time, or pause it in the full app. Deleting it removes your shifts, settings, posts and messages. We may close an account that seriously or repeatedly breaks these terms, and we'll tell you why unless the law or someone's safety stops us.</p>
-      <h3>Changes and availability</h3>
-      <p>Shiftbuck is new and will change. We'll tell you in the app before any important change to these terms. We try to keep Shiftbuck working, but we can't promise it will always be available or free of errors, so keep your payslips and download a backup now and then.</p>
-      <h3>Our responsibility to you</h3>
-      <p>Nothing in these terms takes away your rights as a consumer under UK law. We're responsible for losses that were foreseeable and caused by us not using reasonable care and skill. We aren't responsible for decisions you make using estimates in the app, or for what other carers post or send, although we act on reports.</p>
-      <h3>Law</h3>
-      <p>These terms are governed by the law of England and Wales. If you live in Scotland or Northern Ireland, you can also bring a claim in your local courts.</p>
-    </div>
-  </section>
+    <!-- TERMS OF USE -->
+    <section class="view" id="view-terms" hidden>
+      <div class="card info">
+        <button type="button" class="btn secondary backbtn" data-info-back>‹ Back</button>
+        <h2>Terms of use</h2>
+        <p class="hint">Last updated 28 October 2026</p>
+        <h3>In short</h3>
+        <p>Shiftbuck is free. Use it to track your own shifts, pay and rest, and be kind and safe in the community. Its
+          figures are estimates, not advice. Never post anything that could identify the people you support.</p>
+        <h3>Who we are</h3>
+        <p>Shiftbuck is made by <b>WesTech Innovation</b> ("we"). Contact us by messaging the Shiftbuck team in the app
+          (Community → Messages) or through <a href="https://westechinnovation.com/" target="_blank"
+            rel="noopener">westechinnovation.com</a>.</p>
+        <h3>Who can use Shiftbuck</h3>
+        <ul>
+          <li>You must be <b>18 or over</b>. Shiftbuck is made for care and support workers in the UK.</li>
+          <li>Your account is for you alone. Keep your sign-in secure and tell us if you think someone else has used it.
+          </li>
+        </ul>
+        <h3>What Shiftbuck does, and what it doesn't</h3>
+        <ul>
+          <li>Pay, tax, take-home, holiday and rest figures are <b>estimates to help you plan</b>. They aren't
+            financial, tax or legal advice. Your payslip and your employer's records are the official figures.</li>
+          <li>The rest check is a guide based on UK working time rules. It doesn't tell you whether your employer has
+            broken the law.</li>
+          <li>A timesheet you download or send from Shiftbuck is your own record. Check it before you send it, because
+            you're responsible for what you send to your employer.</li>
+          <li>Shiftbuck is free and has no adverts. If we ever add paid extras, we'll tell you the price and what you
+            get before anything is charged, and you'll never be charged without agreeing first. The features you already
+            use free won't be taken away and charged for.</li>
+        </ul>
+        <h3>Your data</h3>
+        <p>Your shifts, pay and money details belong to you. How we keep them is set out in the <a href="#privacy"
+            data-info="privacy">privacy notice</a>. You can download or delete them at any time.</p>
+        <h3>The community and messages</h3>
+        <p>When you post or send a message you keep ownership of it, and you let us store it and show it to the people
+          it's meant for so the community can work. Everyone shows as a nickname. You must not:</p>
+        <ul>
+          <li>name or describe the people you support, or share their health or other personal details;</li>
+          <li>name managers or colleagues, or post anything untrue that could damage a person or a care service;</li>
+          <li>post or send anything illegal, including scams, fake job or visa sponsorship offers, threats, harassment,
+            hate, sexual content, or offers to sell medicine or documents;</li>
+          <li>ask other carers for money, bank details or passwords, or pressure anyone to meet up;</li>
+          <li>post anyone's address, phone number or email in public posts, including your own;</li>
+          <li>advertise, spam or pretend to be someone else, including the Shiftbuck team.</li>
+        </ul>
+        <p>If you're worried about care or safety at work, raise it with your employer's whistleblowing process, the <a
+            href="https://www.cqc.org.uk/contact-us/report-concern/share-your-experience-whistleblowing" target="_blank"
+            rel="noopener">CQC</a> or <a href="https://protect-advice.org.uk/" target="_blank"
+            rel="noopener">Protect</a>. If someone is in danger, call 999.</p>
+        <h3>How we keep people safe</h3>
+        <ul>
+          <li>You can <b>report</b> any post or private message, and <b>block</b> anyone so they can't message you.
+            Reports are private: the person you report isn't told who reported them.</li>
+          <li>Our moderators check reports at least once a day. They read a private message only if the person who
+            received it reports it.</li>
+          <li>We may hide or remove content that breaks these terms, stop someone from sending private messages, or
+            warn, pause or close an account. Illegal content is removed and, where the law requires it, reported to the
+            police.</li>
+          <li>Posts that contain phone numbers, emails, postcodes, addresses or the names of the people you support are
+            stopped before they're posted.</li>
+        </ul>
+        <h3>Complaints and appeals</h3>
+        <p>To complain about content, about how we handled a report, or about anything else in Shiftbuck, message the
+          Shiftbuck team in the app. If we hid your post or restricted your account and you think we got it wrong, tell
+          us the same way and a different moderator will look at it again. We aim to reply within <b>5 working days</b>
+          and will tell you what we decided and why.</p>
+        <p>For concerns about your personal data you can also contact the <a href="https://ico.org.uk/make-a-complaint/"
+            target="_blank" rel="noopener">Information Commissioner's Office</a>.</p>
+        <h3>Closing your account</h3>
+        <p>You can delete your account at any time, or pause it in the full app. Deleting it removes your shifts,
+          settings, posts and messages. We may close an account that seriously or repeatedly breaks these terms, and
+          we'll tell you why unless the law or someone's safety stops us.</p>
+        <h3>Changes and availability</h3>
+        <p>Shiftbuck is new and will change. We'll tell you in the app before any important change to these terms. We
+          try to keep Shiftbuck working, but we can't promise it will always be available or free of errors, so keep
+          your payslips and download a backup now and then.</p>
+        <h3>Our responsibility to you</h3>
+        <p>Nothing in these terms takes away your rights as a consumer under UK law. We're responsible for losses that
+          were foreseeable and caused by us not using reasonable care and skill. We aren't responsible for decisions you
+          make using estimates in the app, or for what other carers post or send, although we act on reports.</p>
+        <h3>Law</h3>
+        <p>These terms are governed by the law of England and Wales. If you live in Scotland or Northern Ireland, you
+          can also bring a claim in your local courts.</p>
+      </div>
+    </section>
 
-  <!-- FAQ -->
-  <section class="view" id="view-faq" hidden>
-    <div class="card info">
-      <button type="button" class="btn secondary backbtn" data-info-back>‹ Back</button>
-      <h2>Questions and answers</h2>
-        <details class="faq"><summary>What is Shiftbuck?</summary><div>A shift log for care and support workers. Log each shift, including sleep-ins and breaks, and Shiftbuck shows your gross pay, an estimate of your take-home, a check against your payslip, a rest warning and a plan for your money.</div></details>
-        <details class="faq"><summary>How is my pay worked out?</summary><div>For each shift: (day hours − unpaid break) × your hourly rate, plus your sleep-in rate if it was a sleep-in. Your rates come from Settings on the Timesheet tab.</div></details>
-        <details class="faq"><summary>Is my take-home exact?</summary><div>It's an estimate using 2026/27 tax, National Insurance and pension rules for England, Wales and Northern Ireland. Your payslip is the final word. Add your payslip on the Money tab and Shiftbuck compares it line by line.</div></details>
-        <details class="faq"><summary>My payslip doesn't match. What should I do?</summary><div>Check the hours and sleep-ins logged for that pay period first. If the payslip shows no sleep-in pay but you did sleep-ins, or fewer hours than you worked, ask your payroll team. The payslip check shows exactly which line is different.</div></details>
-        <details class="faq"><summary>Why is my Rest check red?</summary><div>Red means you're not getting enough rest: 7 or more days in a row without a day off, more than 48 hours in 7 days, or a day shift, sleep-in and another day shift back to back. It's a guide based on UK working time rules, not legal advice.</div></details>
-        <details class="faq"><summary>What does 'unpaid breaks worth' mean?</summary><div>The hours of unpaid breaks you took, multiplied by your hourly rate. It shows the time you give at work without pay.</div></details>
-        <details class="faq"><summary>How do I change or delete a shift?</summary><div>Tap the day on the calendar or its row on the Timesheet tab. Change the details and tap Save changes, or tap Delete. If you only worked part of a shift, change the hours instead of deleting it.</div></details>
-        <details class="faq"><summary>How do I send my timesheet to my manager?</summary><div>Timesheet tab → Download CSV. The file includes your name, the pay period, every shift and the totals. It opens in Excel or Google Sheets.</div></details>
-        <details class="faq"><summary>Can my employer see my data?</summary><div>No. Your data is private to your account. Your employer, your manager and other carers can't see it. Only what you choose to send, such as a downloaded timesheet, leaves the app.</div></details>
-        <details class="faq"><summary>I forgot my password. What do I do?</summary><div>On the sign-in screen, tap Sign in with email and password, then Forgot your password? We'll email you a link to choose a new one. It works for one hour. You can also sign in with a code sent to your email instead. If you signed up with an email code, the same link lets you add a password.</div></details>
-        <details class="faq"><summary>Can I use Shiftbuck on more than one device?</summary><div>Yes. Sign in with the same phone number, email or password on your phone or computer and you'll see the same data. In demo mode, data stays on one device.</div></details>
-        <details class="faq"><summary>Should I put service users' full names in?</summary><div>No. Use first names or initials only. Shiftbuck only needs to tell your service users apart, and it's kinder to their privacy.</div></details>
-        <details class="faq"><summary>Does it work for weekly pay, Scotland or two jobs?</summary><div>Not yet. Shiftbuck currently supports monthly pay periods, one hourly and one sleep-in rate, and tax rules for England, Wales and Northern Ireland. These are on the roadmap.</div></details>
-        <details class="faq"><summary>Who makes Shiftbuck?</summary><div>WesTech Innovation. Visit <a href="https://westechinnovation.com/" target="_blank" rel="noopener">westechinnovation.com</a> to get in touch.</div></details>
-    </div>
-  </section>
-  <footer class="poweredby"><nav class="footlinks"><a href="#privacy" data-info="privacy">Privacy</a><span aria-hidden="true">·</span><a href="#terms" data-info="terms">Terms</a><span aria-hidden="true">·</span><a href="#faq" data-info="faq">FAQ</a><span aria-hidden="true" class="so">·</span><button type="button" class="footso so" data-signout>Sign out</button></nav>Powered by <a class="poweredlink" href="https://westechinnovation.com/" target="_blank" rel="noopener"><b>WesTech Innovation</b><span class="sr"> (opens westechinnovation.com in a new tab)</span></a></footer>
-</div>
+    <!-- FAQ -->
+    <section class="view" id="view-faq" hidden>
+      <div class="card info">
+        <button type="button" class="btn secondary backbtn" data-info-back>‹ Back</button>
+        <h2>Questions and answers</h2>
+        <details class="faq">
+          <summary>What is Shiftbuck?</summary>
+          <div>A shift log for care and support workers. Log each shift, including sleep-ins and breaks, and Shiftbuck
+            shows your gross pay, an estimate of your take-home, a check against your payslip, a rest warning and a plan
+            for your money.</div>
+        </details>
+        <details class="faq">
+          <summary>How is my pay worked out?</summary>
+          <div>For each shift: (day hours − unpaid break) × your hourly rate, plus your sleep-in rate if it was a
+            sleep-in. Your rates come from Settings on the Timesheet tab.</div>
+        </details>
+        <details class="faq">
+          <summary>Is my take-home exact?</summary>
+          <div>It's an estimate using 2026/27 tax, National Insurance and pension rules for England, Wales and Northern
+            Ireland. Your payslip is the final word. Add your payslip on the Money tab and Shiftbuck compares it line by
+            line.</div>
+        </details>
+        <details class="faq">
+          <summary>My payslip doesn't match. What should I do?</summary>
+          <div>Check the hours and sleep-ins logged for that pay period first. If the payslip shows no sleep-in pay but
+            you did sleep-ins, or fewer hours than you worked, ask your payroll team. The payslip check shows exactly
+            which line is different.</div>
+        </details>
+        <details class="faq">
+          <summary>Why is my Rest check red?</summary>
+          <div>Red means you're not getting enough rest: 7 or more days in a row without a day off, more than 48 hours
+            in 7 days, or a day shift, sleep-in and another day shift back to back. It's a guide based on UK working
+            time rules, not legal advice.</div>
+        </details>
+        <details class="faq">
+          <summary>What does 'unpaid breaks worth' mean?</summary>
+          <div>The hours of unpaid breaks you took, multiplied by your hourly rate. It shows the time you give at work
+            without pay.</div>
+        </details>
+        <details class="faq">
+          <summary>How do I change or delete a shift?</summary>
+          <div>Tap the day on the calendar or its row on the Timesheet tab. Change the details and tap Save changes, or
+            tap Delete. If you only worked part of a shift, change the hours instead of deleting it.</div>
+        </details>
+        <details class="faq">
+          <summary>How do I send my timesheet to my manager?</summary>
+          <div>Timesheet tab → Download CSV. The file includes your name, the pay period, every shift and the totals. It
+            opens in Excel or Google Sheets.</div>
+        </details>
+        <details class="faq">
+          <summary>Can my employer see my data?</summary>
+          <div>No. Your data is private to your account. Your employer, your manager and other carers can't see it. Only
+            what you choose to send, such as a downloaded timesheet, leaves the app.</div>
+        </details>
+        <details class="faq">
+          <summary>I forgot my password. What do I do?</summary>
+          <div>On the sign-in screen, tap Sign in with email and password, then Forgot your password? We'll email you a
+            link to choose a new one. It works for one hour. You can also sign in with a code sent to your email
+            instead. If you signed up with an email code, the same link lets you add a password.</div>
+        </details>
+        <details class="faq">
+          <summary>Can I use Shiftbuck on more than one device?</summary>
+          <div>Yes. Sign in with the same phone number, email or password on your phone or computer and you'll see the
+            same data. In demo mode, data stays on one device.</div>
+        </details>
+        <details class="faq">
+          <summary>Should I put service users' full names in?</summary>
+          <div>No. Use first names or initials only. Shiftbuck only needs to tell your service users apart, and it's
+            kinder to their privacy.</div>
+        </details>
+        <details class="faq">
+          <summary>Does it work for weekly pay, Scotland or two jobs?</summary>
+          <div>Not yet. Shiftbuck currently supports monthly pay periods, one hourly and one sleep-in rate, and tax
+            rules for England, Wales and Northern Ireland. These are on the roadmap.</div>
+        </details>
+        <details class="faq">
+          <summary>Who makes Shiftbuck?</summary>
+          <div>WesTech Innovation. Visit <a href="https://westechinnovation.com/" target="_blank"
+              rel="noopener">westechinnovation.com</a> to get in touch.</div>
+        </details>
+      </div>
+    </section>
+    <footer class="poweredby">
+      <nav class="footlinks"><a href="#privacy" data-info="privacy">Privacy</a><span aria-hidden="true">·</span><a
+          href="#terms" data-info="terms">Terms</a><span aria-hidden="true">·</span><a href="#faq"
+          data-info="faq">FAQ</a><span aria-hidden="true" class="so">·</span><button type="button" class="footso so"
+          data-signout>Sign out</button></nav>Powered by <a class="poweredlink" href="https://westechinnovation.com/"
+        target="_blank" rel="noopener"><b>WesTech Innovation</b><span class="sr"> (opens westechinnovation.com in a new
+          tab)</span></a>
+    </footer>
+  </div>
 
-<nav class="bottombar" role="tablist">
-  <button role="tab" data-view="overview" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Overview</button>
-  <button role="tab" data-view="log" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>Log shift</button>
-  <button role="tab" data-view="sheet" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>Timesheet</button>
-  <button role="tab" data-view="money" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="13" rx="2"/><circle cx="12" cy="12.5" r="2.5"/><path d="M6 6V4h12v2"/></svg>Money</button>
-  <button role="tab" data-view="forecast" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>Forecast</button>
-  <button role="tab" data-view="community" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1.1-4.6A8 8 0 1 1 21 12z"/><path d="M8.5 11h.01M12 11h.01M15.5 11h.01"/></svg>Community</button>
-</nav>
-<div class="toast" id="toast" hidden></div>
-<div id="tip" role="tooltip" hidden></div>
+  <nav class="bottombar" role="tablist">
+    <button role="tab" data-view="overview" aria-selected="true"><svg viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2">
+        <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" />
+      </svg>Overview</button>
+    <button role="tab" data-view="log" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2">
+        <circle cx="12" cy="12" r="9" />
+        <path d="M12 8v8M8 12h8" />
+      </svg>Log shift</button>
+    <button role="tab" data-view="sheet" aria-selected="false"><svg viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2">
+        <rect x="4" y="3" width="16" height="18" rx="2" />
+        <path d="M8 8h8M8 12h8M8 16h5" />
+      </svg>Timesheet</button>
+    <button role="tab" data-view="money" aria-selected="false"><svg viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2">
+        <rect x="2" y="6" width="20" height="13" rx="2" />
+        <circle cx="12" cy="12.5" r="2.5" />
+        <path d="M6 6V4h12v2" />
+      </svg>Money</button>
+    <button role="tab" data-view="forecast" aria-selected="false"><svg viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2">
+        <path d="M3 17l6-6 4 4 8-8" />
+        <path d="M15 7h6v6" />
+      </svg>Forecast</button>
+    <button role="tab" data-view="community" aria-selected="false"><svg viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2">
+        <path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1.1-4.6A8 8 0 1 1 21 12z" />
+        <path d="M8.5 11h.01M12 11h.01M15.5 11h.01" />
+      </svg>Community</button>
+  </nav>
+  <div class="toast" id="toast" hidden></div>
+  <div id="tip" role="tooltip" hidden></div>
 
-<script src="src/vendor/supabase.js"></script>
-<script src="src/config.js"></script>
-<script src="src/auth.js"></script>
-<script src="src/platform.js"></script>
-<script src="src/community-store.js"></script>
-<script src="src/app.js"></script>
+  <script src="src/vendor/supabase.js"></script>
+  <script src="src/config.js"></script>
+  <script src="src/auth.js"></script>
+  <script src="src/platform.js"></script>
+  <script src="src/community-store.js"></script>
+  <script type="module" src="src/app.js"></script>
 </body>
+
 </html>
