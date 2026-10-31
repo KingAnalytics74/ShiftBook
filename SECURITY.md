@@ -1,10 +1,10 @@
 # Security
 
-Shiftbook holds care workers' pay, shifts and private messages. This page covers how it's protected, what the owner has to switch on, and how to report a problem.
+Shiftbuck holds care workers' pay, shifts and private messages. This page covers how it's protected, what the owner has to switch on, and how to report a problem.
 
 ## Reporting a problem
 
-If you think you've found a security problem, **don't open a public GitHub issue**. Message the Shiftbook team in the app (Community → Messages), or contact WesTech Innovation through [westechinnovation.com](https://westechinnovation.com/). Say what you found and how to repeat it. Please don't access or change other people's data while checking.
+If you think you've found a security problem, **don't open a public GitHub issue**. Message the Shiftbuck team in the app (Community → Messages), or contact WesTech Innovation through [westechinnovation.com](https://westechinnovation.com/). Say what you found and how to repeat it. Please don't access or change other people's data while checking.
 
 ## What's built in
 
@@ -23,7 +23,7 @@ If you think you've found a security problem, **don't open a public GitHub issue
 - **Content Security Policy** (in each page's `<head>`): only this site's own scripts can run, and the app can only connect to Supabase. Any injected script is blocked.
 - **No third-party code**: fonts and the Supabase library are served from this site. No analytics, ads or trackers.
 - **Clickjacking guard** (`app/src/guard.js`): the app stays hidden if another site puts it inside a frame.
-- **Referrer policy**: other sites aren't told which Shiftbook page someone came from.
+- **Referrer policy**: other sites aren't told which Shiftbuck page someone came from.
 - Everything people type is escaped before it's shown on a page. Timesheet CSVs neutralise cells starting with `=`, `+`, `-` or `@`, so they can't run as formulas in Excel.
 
 ## What the owner must switch on
@@ -49,7 +49,7 @@ These are settings in Supabase, GitHub and the domain, and can't be done in code
 - [ ] **Settings → Code security:** turn on secret scanning and Dependabot alerts.
 
 **Custom domain (recommended)**
-On `kinganalytics74.github.io`, every GitHub Pages site you ever publish shares one browser storage area with Shiftbook. A custom domain such as `shiftbook.care` gives Shiftbook its own. When you add one, verify it in your GitHub account (**Settings → Pages → Verified domains**), add it to Supabase's URL settings, and update the Google sign-in redirect.
+On `kinganalytics74.github.io`, every GitHub Pages site you ever publish shares one browser storage area with Shiftbuck. A custom domain such as `shiftbook.care` gives Shiftbuck its own. When you add one, verify it in your GitHub account (**Settings → Pages → Verified domains**), add it to Supabase's URL settings, and update the Google sign-in redirect.
 
 ## Demo mode
 

@@ -7,7 +7,7 @@
  * functions in supabase/schema.sql. So:
  *   - other carers only ever see a nickname and an area, never who is behind them;
  *   - a private message can only be read by the two carers in it (and by moderators, only if reported);
- *   - messages to the Shiftbook team are read only by that carer and the team (community_moderators).
+ *   - messages to the Shiftbuck team are read only by that carer and the team (community_moderators).
  * Data refreshes every 20 seconds, and every 8 seconds while a conversation is open.
  */
 (function () {
@@ -51,7 +51,7 @@
         st.people = new Map(people.data.map(p => [p.id, { nick: p.nickname, area: p.area || "", since: p.created_at, me: p.me, dmOpen: p.dm_open, posts: st.posts.filter(x => x.pid === p.id).length }]));
       }
       const tt = team.slice().reverse();
-      st.team = { thread: tt.map(r => ({ id: r.id, text: r.body, at: r.created_at, mine: !r.from_team, who: r.from_team ? "Shiftbook team" : "You" })), unread: tt.filter(r => r.from_team && !r.read_at).length };
+      st.team = { thread: tt.map(r => ({ id: r.id, text: r.body, at: r.created_at, mine: !r.from_team, who: r.from_team ? "Shiftbuck team" : "You" })), unread: tt.filter(r => r.from_team && !r.read_at).length };
       st.announcements = ann.error ? [] : ann.data.map(a => ({ id: a.id, text: a.body, at: a.created_at }));
       st.dms = { threads: threads.map(r => ({ pid: r.pid, nick: r.nickname, area: r.area || "", last: { text: r.last_body, at: r.last_at, mine: r.last_mine }, unread: r.unread })),
                  blocked: new Set(blocked.map(x => (x && typeof x === "object" ? Object.values(x)[0] : x))) };
@@ -95,7 +95,7 @@
         await call("community_upsert_profile", { p_nickname: nick, p_area: area || null });
       },
       setDmOpen: on => call("community_set_dm_open", { p_open: !!on }),
-      // the Shiftbook team
+      // the Shiftbuck team
       sendToTeam: text => call("team_send", { p_body: text }),
       teamReply: (pid, text) => call("team_reply", { p_who: pid, p_body: text }),
       announce: text => call("announce", { p_body: text }),

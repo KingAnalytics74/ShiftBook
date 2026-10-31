@@ -1,4 +1,4 @@
-# Shiftbook data model
+# Shiftbuck data model
 
 All of a user's data lives under `data/users/<userId>/`. Paths alternate collection/document.
 
@@ -48,7 +48,7 @@ All of these tables have row-level security on and no policies: the app reaches 
 | `dm_messages` | private messages between two carers | only the sender and recipient, via `dm_threads()` and `dm_thread(profile)` |
 | `dm_blocks` | who has blocked whom | only the person who blocked, via `dm_blocked()` |
 | `dm_reports` | reports on private messages (recipient only) | moderators, via `dm_reports_list()` |
-| `team_messages` | a carer's conversation with the Shiftbook team | that carer (`team_thread()`) and moderators (`team_inbox()`, `team_thread_for()`) |
+| `team_messages` | a carer's conversation with the Shiftbuck team | that carer (`team_thread()`) and moderators (`team_inbox()`, `team_thread_for()`) |
 | `announcements` | messages from the team to everyone | everyone signed in, via the `announcements_feed` view |
 
 `community_feed` now also returns `author_id` (the author's public profile id) so tapping a nickname opens their profile.

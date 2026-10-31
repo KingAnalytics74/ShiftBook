@@ -4,4 +4,4 @@ dist/
 .env.local
 *.log
 .DS_Store
-Shiftbook_backup_*.json
+Shiftbook_backup_*.jsonShiftbuck_backup_*.json

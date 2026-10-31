@@ -9,7 +9,7 @@ Four starter tasks, in priority order. Copy each into a GitHub issue. Each one i
 **Why:** nothing can launch until carers can sign in with a code on their own phone.
 
 **Do:**
-- Create a Supabase project called `shiftbook-test` (EU or UK region).
+- Create a Supabase project called `shiftbuck-test` (EU or UK region).
 - Run `supabase/schema.sql` in the SQL Editor; run it a second time to check it's safe to re-run.
 - Turn on email sign-in codes; for phone codes, connect the SMS provider Babatope chooses (for example Twilio) using test credentials.
 - Put the test project's URL and anon key in your local `app/src/config.js`.
@@ -26,7 +26,7 @@ Four starter tasks, in priority order. Copy each into a GitHub issue. Each one i
 
 ## 2. Add holiday tracking to the full app
 
-**Why:** holiday nobody explains is one of the hidden costs carers face. The founder's personal Shiftbook already has it, so copy the logic, not invent new rules.
+**Why:** holiday nobody explains is one of the hidden costs carers face. The founder's personal Shiftbuck already has it, so copy the logic, not invent new rules.
 
 **Do:**
 - Holiday year January to December by default, with the start month in settings.

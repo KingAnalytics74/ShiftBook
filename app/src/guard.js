@@ -1,7 +1,7 @@
 /*
- * guard.js — stops Shiftbook being shown inside another website's frame, where a hidden page could
+ * guard.js — stops Shiftbuck being shown inside another website's frame, where a hidden page could
  * trick people into tapping things (clickjacking). GitHub Pages can't send the frame-ancestors header,
- * so index.html hides the page until this confirms Shiftbook is the top window.
+ * so index.html hides the page until this confirms Shiftbuck is the top window.
  * Loaded first, before any other script.
  */
 (function () {

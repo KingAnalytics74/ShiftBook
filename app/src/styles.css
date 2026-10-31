@@ -284,6 +284,7 @@ body::before{background:var(--brand)!important}
 .tab{white-space:nowrap}
 .brandmark{display:flex;align-items:center;gap:10px;min-width:0}
 .brandmark .who{white-space:nowrap}
+.top h1 .wm{color:var(--hero-accent)}
 .logo{width:42px;height:42px;flex:none;border-radius:12px;box-shadow:0 0 0 2px rgba(255,255,255,.92)}
 .footlinks{display:flex;justify-content:center;gap:10px;margin-bottom:8px;font-size:13.5px}
 .footlinks a{color:var(--ink);font-weight:600}

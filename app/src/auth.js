@@ -1,5 +1,5 @@
 /*
- * auth.js — sign-in for Shiftbook. People sign in with a 6-digit code sent to their phone or email,
+ * auth.js — sign-in for Shiftbuck. People sign in with a 6-digit code sent to their phone or email,
  * with an email and password, or with Google / Apple.
  * Passwords: Supabase keeps only a hash. "Forgot your password?" emails a link that brings the person
  * back here to choose a new one (type=recovery in the URL). Someone who signed up with an email code
@@ -48,7 +48,7 @@
   function setBusy(on, btn) { busy = on; root().querySelectorAll("button").forEach(b => b.disabled = on); if (btn) btn.dataset.label ||= btn.textContent, btn.textContent = on ? "Please wait…" : btn.dataset.label; }
   function err(msg) { const e = $("#authErr"); if (!e) return; e.textContent = msg || ""; e.hidden = !msg; }
 
-  // Two clear paths: "Create my Shiftbook" (sign up) and "I already have an account" (sign in).
+  // Two clear paths: "Create my Shiftbuck" (sign up) and "I already have an account" (sign in).
   // Both use a code; signing in with a number or email we don't know offers to create the account instead.
   const ACCOUNTS = "shiftbook:accounts";           // demo mode only: which phones / emails have an account
   const demoHas = id => (store.get(ACCOUNTS) || []).includes(id);
@@ -61,7 +61,7 @@
   function screenWelcome() {
     kind = null; ident = null; clearInterval(timer);
     root().innerHTML = `
-      <svg class="oblogo" viewBox="0 0 120 120" aria-hidden="true"><rect width="120" height="120" rx="28" fill="#C8102E"/><path d="M60 38 C50 32 36 31 24 34 L24 86 C36 83 50 84 60 90 Z" fill="#FFD23F" stroke="#FFFFFF" stroke-width="3.5" stroke-linejoin="round"/><path d="M60 38 C70 32 84 31 96 34 L96 86 C84 83 70 84 60 90 Z" fill="#14213D" stroke="#FFFFFF" stroke-width="3.5" stroke-linejoin="round"/><circle cx="42" cy="60" r="8" fill="#C8102E"/><circle cx="78" cy="58" r="9" fill="#FFD23F"/><circle cx="82.5" cy="54.5" r="8" fill="#14213D"/></svg>
+      <svg class="oblogo" viewBox="0 0 120 120" aria-hidden="true"><rect width="120" height="120" rx="28" fill="#C8102E"/><circle cx="60" cy="65" r="40" fill="#B07800"/><circle cx="60" cy="57" r="40" fill="#F2B705"/><circle cx="60" cy="57" r="37.5" fill="none" stroke="#FFE27A" stroke-width="5" stroke-dasharray="2.6 2.6"/><circle cx="60" cy="57" r="31" fill="#FFD23F" stroke="#C98A00" stroke-width="2.5"/><path d="M60 32v5M60 77v5M35 57h5M80 57h5" stroke="#14213D" stroke-width="4" stroke-linecap="round"/><path d="M60 57V41M60 57l12 8" fill="none" stroke="#14213D" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="60" cy="57" r="4.5" fill="#C8102E" stroke="#14213D" stroke-width="2.5"/><path d="M36 45a27 27 0 0 1 11-12" fill="none" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round" opacity=".9"/></svg>
       <h2 class="obh">Know your pay before payday</h2>
       <ul class="obwhy">
         <li><b>See what every shift pays</b>, including sleep-ins, as you log it.</li>
@@ -69,7 +69,7 @@
         <li><b>Get a warning</b> when you're not getting enough rest.</li>
       </ul>
       <div class="authstack">
-        <button type="button" class="btn authbtn" id="goUp">Create my Shiftbook</button>
+        <button type="button" class="btn authbtn" id="goUp">Create my Shiftbuck</button>
         <button type="button" class="btn secondary authbtn" id="goIn">I already have an account</button>
       </div>
       <p class="obpriv">Free for care workers. Your shifts and pay are private to you; your employer can't see them. <a href="#privacy" data-info="privacy">How your data is kept</a></p>
@@ -90,11 +90,11 @@
     if (WANT.apple) social.push(`<button type="button" class="btn secondary authbtn" data-a="apple">Continue with Apple</button>`);
     root().innerHTML = `
       <button type="button" class="linkback" id="authBack">‹ Back</button>
-      <h2 class="obh">${up() ? "Create your Shiftbook" : "Welcome back"}</h2>
+      <h2 class="obh">${up() ? "Create your Shiftbuck" : "Welcome back"}</h2>
       <p class="obsub">${up() ? (WANT.password ? "Choose a password, or skip it and we'll text or email you a code each time you sign in on a new device." : "No password to remember. We'll text or email you a code each time you sign in on a new device.") : (WANT.password ? "Use the phone number or email you signed up with. We'll send you a code, or you can use your password." : "Use the phone number or email you signed up with. We'll send you a code.")}</p>
       <div class="authstack">${social.length ? `${social.join("")}<div class="author"><span>or</span></div>` : ""}${opts.join("")}</div>
       <div class="banner bad" id="authErr" hidden></div>
-      <p class="obpriv">${up() ? `Already have an account? <button type="button" class="linkinline" id="swap">Sign in</button>` : `New to Shiftbook? <button type="button" class="linkinline" id="swap">Create an account</button>`}</p>`;
+      <p class="obpriv">${up() ? `Already have an account? <button type="button" class="linkinline" id="swap">Sign in</button>` : `New to Shiftbuck? <button type="button" class="linkinline" id="swap">Create an account</button>`}</p>`;
     $("#authBack").onclick = screenWelcome;
     $("#swap").onclick = () => { intent = up() ? "signin" : "signup"; screenChoose(); };
     root().querySelectorAll("[data-a]").forEach(b => b.onclick = () => { const a = b.dataset.a; if (a === "google" || a === "apple") oauth(a); else if (a === "password") screenPassword(); else screenEnter(a); });
@@ -194,7 +194,7 @@
   async function screenCheckEmail(email, resend) {
     root().innerHTML = `
       <h2 class="obh">Check your email</h2>
-      <p class="obsub">We've sent a link to <b>${esc(email)}</b>. Tap it to finish creating your account. It brings you straight back to Shiftbook.</p>
+      <p class="obsub">We've sent a link to <b>${esc(email)}</b>. Tap it to finish creating your account. It brings you straight back to Shiftbuck.</p>
       <p class="obpriv" style="margin:0">Can't see it? Check your spam folder.</p>
       <div class="banner bad" id="authErr" hidden></div>
       <button type="button" class="linkbtn2" id="authResend">Send the link again</button>
@@ -236,7 +236,7 @@
         // same answer whether or not the email has an account, so nobody can use this to check who's signed up
         root().innerHTML = `
           <h2 class="obh">Check your email</h2>
-          <p class="obsub">If there's a Shiftbook account for <b>${esc(email)}</b>, we've sent it a link to choose a new password. The link works for one hour.</p>
+          <p class="obsub">If there's a Shiftbuck account for <b>${esc(email)}</b>, we've sent it a link to choose a new password. The link works for one hour.</p>
           <p class="obpriv" style="margin:0">Can't see it? Check your spam folder.</p>
           <button type="button" class="linkback" id="authBack">‹ Back to sign in</button>`;
         $("#authBack").onclick = () => { intent = "signin"; screenPassword(); };
@@ -318,7 +318,7 @@
     } catch (e) {
       const m = (e && e.message) || "";
       if (e && e.noAccount || /signups not allowed|user not found|not found/i.test(m)) {
-        err(`We couldn't find a Shiftbook account for that ${what(kind)}.`);
+        err(`We couldn't find a Shiftbuck account for that ${what(kind)}.`);
         const box = $("#authErr");
         if (box) { box.insertAdjacentHTML("beforeend", ` <button type="button" class="linkinline" id="makeIt">Create one instead</button>`); $("#makeIt").onclick = () => { intent = "signup"; sendCode($("#authSend")); }; }
       } else err(/rate|security purposes|seconds/i.test(m) ? "Too many codes asked for. Wait a minute and try again." : "We couldn't send a code. Check the number or email and try again.");
@@ -431,7 +431,7 @@
     const since = acct.since ? new Date(acct.since).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }) : "";
     root().innerHTML = `
       <h2 class="obh">Your account is paused</h2>
-      <p class="obsub">You paused Shiftbook${since ? ` on ${esc(since)}` : ""}. All your shifts, payslips and settings are still here, just as you left them.</p>
+      <p class="obsub">You paused Shiftbuck${since ? ` on ${esc(since)}` : ""}. All your shifts, payslips and settings are still here, just as you left them.</p>
       <div class="authstack">
         <button type="button" class="btn authbtn" id="reactBtn">Reactivate my account</button>
         <button type="button" class="btn secondary authbtn" id="pausedOut">Sign out</button>

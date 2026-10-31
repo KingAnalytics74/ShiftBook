@@ -1,6 +1,6 @@
-# Contributing to Shiftbook
+# Contributing to Shiftbuck
 
-Welcome to the team. Shiftbook shows UK care workers what they've earned before payday, checks their payslip and warns them when they aren't resting enough. Read the **Shiftbook Product Overview** and the **Design Brief and App Flow** first (ask Babatope to share them), then this guide.
+Welcome to the team. Shiftbuck shows UK care workers what they've earned before payday, checks their payslip and warns them when they aren't resting enough. Read the **Shiftbuck Product Overview** and the **Design Brief and App Flow** first (ask Babatope to share them), then this guide.
 
 ## Ground rules
 

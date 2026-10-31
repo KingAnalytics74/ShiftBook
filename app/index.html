@@ -8,7 +8,7 @@
 <meta name="referrer" content="same-origin">
 <style id="antiframe">html{display:none!important}</style>
 <script src="src/guard.js"></script>
-<title>Shiftbook</title>
+<title>Shiftbuck</title>
 <meta name="description" content="Shift log, pay, tax and budgeting app for care workers.">
 <link rel="stylesheet" href="src/fonts.css">
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
@@ -22,9 +22,9 @@
   <header class="top">
     <div class="brand">
       <div class="brandmark">
-        <svg class="logo" viewBox="0 0 120 120" role="img" aria-label="Shiftbook logo"><rect width="120" height="120" rx="28" fill="#C8102E"/><path d="M60 38 C50 32 36 31 24 34 L24 86 C36 83 50 84 60 90 Z" fill="#FFD23F" stroke="#FFFFFF" stroke-width="3.5" stroke-linejoin="round"/><path d="M60 38 C70 32 84 31 96 34 L96 86 C84 83 70 84 60 90 Z" fill="#14213D" stroke="#FFFFFF" stroke-width="3.5" stroke-linejoin="round"/><circle cx="42" cy="60" r="8" fill="#C8102E"/><circle cx="78" cy="58" r="9" fill="#FFD23F"/><circle cx="82.5" cy="54.5" r="8" fill="#14213D"/></svg>
+        <svg class="logo" viewBox="0 0 120 120" role="img" aria-label="Shiftbuck logo"><rect width="120" height="120" rx="28" fill="#C8102E"/><circle cx="60" cy="65" r="40" fill="#B07800"/><circle cx="60" cy="57" r="40" fill="#F2B705"/><circle cx="60" cy="57" r="37.5" fill="none" stroke="#FFE27A" stroke-width="5" stroke-dasharray="2.6 2.6"/><circle cx="60" cy="57" r="31" fill="#FFD23F" stroke="#C98A00" stroke-width="2.5"/><path d="M60 32v5M60 77v5M35 57h5M80 57h5" stroke="#14213D" stroke-width="4" stroke-linecap="round"/><path d="M60 57V41M60 57l12 8" fill="none" stroke="#14213D" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="60" cy="57" r="4.5" fill="#C8102E" stroke="#14213D" stroke-width="2.5"/><path d="M36 45a27 27 0 0 1 11-12" fill="none" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round" opacity=".9"/></svg>
         <div>
-          <h1>Shiftbook</h1>
+          <h1>Shift<span class="wm">buck</span></h1>
           <div class="who" id="who">Support Worker</div>
         </div>
       </div>
@@ -56,7 +56,7 @@
       <div class="onbtop" id="obTop"><div class="onbbar" aria-hidden="true"><i id="obBar"></i></div><span class="hint" id="obCount"></span></div>
       <form id="setupForm" novalidate>
         <div class="obstep" data-step="0">
-          <svg class="oblogo" viewBox="0 0 120 120" aria-hidden="true"><rect width="120" height="120" rx="28" fill="#C8102E"/><path d="M60 38 C50 32 36 31 24 34 L24 86 C36 83 50 84 60 90 Z" fill="#FFD23F" stroke="#FFFFFF" stroke-width="3.5" stroke-linejoin="round"/><path d="M60 38 C70 32 84 31 96 34 L96 86 C84 83 70 84 60 90 Z" fill="#14213D" stroke="#FFFFFF" stroke-width="3.5" stroke-linejoin="round"/><circle cx="42" cy="60" r="8" fill="#C8102E"/><circle cx="78" cy="58" r="9" fill="#FFD23F"/><circle cx="82.5" cy="54.5" r="8" fill="#14213D"/></svg>
+          <svg class="oblogo" viewBox="0 0 120 120" aria-hidden="true"><rect width="120" height="120" rx="28" fill="#C8102E"/><circle cx="60" cy="65" r="40" fill="#B07800"/><circle cx="60" cy="57" r="40" fill="#F2B705"/><circle cx="60" cy="57" r="37.5" fill="none" stroke="#FFE27A" stroke-width="5" stroke-dasharray="2.6 2.6"/><circle cx="60" cy="57" r="31" fill="#FFD23F" stroke="#C98A00" stroke-width="2.5"/><path d="M60 32v5M60 77v5M35 57h5M80 57h5" stroke="#14213D" stroke-width="4" stroke-linecap="round"/><path d="M60 57V41M60 57l12 8" fill="none" stroke="#14213D" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="60" cy="57" r="4.5" fill="#C8102E" stroke="#14213D" stroke-width="2.5"/><path d="M36 45a27 27 0 0 1 11-12" fill="none" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round" opacity=".9"/></svg>
           <h2 class="obh">Know your pay before payday</h2>
           <ul class="obwhy">
             <li><b>See what every shift pays</b>, including sleep-ins, as you log it.</li>
@@ -73,7 +73,7 @@
         </div>
         <div class="obstep" data-step="2" hidden>
           <h2 class="obh">A bit about you</h2>
-          <p class="obsub">Only used to understand who uses Shiftbook. Never shown to other carers or to your employer.</p>
+          <p class="obsub">Only used to understand who uses Shiftbuck. Never shown to other carers or to your employer.</p>
           <div class="field"><label for="uAge">Age group</label>
             <select id="uAge"><option value="">Choose…</option><option value="under18">Under 18</option><option value="18-24">18–24</option><option value="25-34">25–34</option><option value="35-44">35–44</option><option value="45-54">45–54</option><option value="55-64">55–64</option><option value="65+">65 or over</option><option value="na">Prefer not to say (I'm 18 or over)</option></select></div>
           <div class="field"><label for="uSex">Sex <span class="hint">optional</span></label>
@@ -301,7 +301,7 @@
             <button type="button" class="btn secondary" id="delNo">Keep it</button>
           </div>
         </div>
-        <p class="hint" style="margin:0">Your shifts and money are private to your account. Nobody else using Shiftbook can see them.</p>
+        <p class="hint" style="margin:0">Your shifts and money are private to your account. Nobody else using Shiftbuck can see them.</p>
       </form>
     </div>
   </section>
@@ -483,7 +483,7 @@
       </form>
     </div>
     <div id="cmMain" hidden>
-      <div class="card cmann" id="cmAnn" hidden><h2>From the Shiftbook team</h2><div id="cmAnnList"></div></div>
+      <div class="card cmann" id="cmAnn" hidden><h2>From the Shiftbuck team</h2><div id="cmAnnList"></div></div>
       <div class="card" id="cmMsgs">
         <div class="charthead"><h2>Messages</h2><span class="hint" id="cmMsgHint"></span></div>
         <div id="cmMsgHome"><div class="cmrows" id="cmMsgList"></div></div>
@@ -535,24 +535,24 @@
       <h2>Privacy</h2>
       <p class="hint">Last updated 30 October 2026</p>
       <h3>In short</h3>
-      <p>Shiftbook keeps your shift, pay and money details so it can work out your pay. We don't sell your data, show ads, track you with cookies or share anything with your employer.</p>
+      <p>Shiftbuck keeps your shift, pay and money details so it can work out your pay. We don't sell your data, show ads, track you with cookies or share anything with your employer.</p>
       <h3>Who we are</h3>
-      <p>Shiftbook is made by <b>WesTech Innovation</b>, which is responsible for this app. Contact us through <a href="https://westechinnovation.com/" target="_blank" rel="noopener">westechinnovation.com</a>.</p>
-      <h3>What Shiftbook keeps</h3>
+      <p>Shiftbuck is made by <b>WesTech Innovation</b>, which is responsible for this app. Contact us through <a href="https://westechinnovation.com/" target="_blank" rel="noopener">westechinnovation.com</a>.</p>
+      <h3>What Shiftbuck keeps</h3>
       <ul>
-        <li>What you enter in setup: your first name, role, hourly and sleep-in rates, pay period start day and usual shift times.</li><li>Your profile: age group, sex (optional), your area, your employer (optional) and your community nickname. Other carers only ever see your nickname. Your employer never sees any of it. Age group and sex are only used, added up across all users, to understand who uses Shiftbook.</li>
-        <li>How you sign in: your mobile number or email address and, if you choose one, a password. If you continue with Google, Google tells us your email address and name, and nothing else. Your password is only ever kept scrambled (hashed) by Supabase, so nobody at Shiftbook can read it.</li>
+        <li>What you enter in setup: your first name, role, hourly and sleep-in rates, pay period start day and usual shift times.</li><li>Your profile: age group, sex (optional), your area, your employer (optional) and your community nickname. Other carers only ever see your nickname. Your employer never sees any of it. Age group and sex are only used, added up across all users, to understand who uses Shiftbuck.</li>
+        <li>How you sign in: your mobile number or email address and, if you choose one, a password. If you continue with Google, Google tells us your email address and name, and nothing else. Your password is only ever kept scrambled (hashed) by Supabase, so nobody at Shiftbuck can read it.</li>
         <li>Your shifts: dates, hours, breaks, sleep-ins, notes, and the service users you choose to add.</li>
         <li>Payslip figures you type in, your tax settings, your spending plan and spending amounts.</li>
-        <li>In the community: your public profile (nickname and area only), your posts, and messages you send. Messages to the Shiftbook team are read only by you and the team.</li>
+        <li>In the community: your public profile (nickname and area only), your posts, and messages you send. Messages to the Shiftbuck team are read only by you and the team.</li>
       </ul>
-      <p>Shiftbook does <b>not</b> ask for your bank details, National Insurance number, address or date of birth, and it isn't connected to your bank.</p>
+      <p>Shiftbuck does <b>not</b> ask for your bank details, National Insurance number, address or date of birth, and it isn't connected to your bank.</p>
       <h3>Service users</h3>
       <p>Please use <b>first names or initials only</b> for the people you support. Don't add health details or other personal information about them in notes.</p>
       <h3>Where your data is kept and who can see it</h3>
-      <p>When you sign in, your data is kept in Shiftbook's database, run on <b>Supabase</b>. It's tied to your account and locked so that only you can read or change it. Supabase stores and processes it for us under <a href="https://supabase.com/privacy" target="_blank" rel="noopener">its own privacy policy</a>.</p><p>In demo mode, nothing is sent anywhere: your data stays in this browser on this device.</p><p><b>Nobody else using Shiftbook can see your data</b>: not other carers and not your employer. The only exceptions are what you choose to share: your posts and profile in the community, private messages (only you and the carer you're talking to can read them, unless one of you reports a message to the moderators), and messages to the Shiftbook team.</p>
+      <p>When you sign in, your data is kept in Shiftbuck's database, run on <b>Supabase</b>. It's tied to your account and locked so that only you can read or change it. Supabase stores and processes it for us under <a href="https://supabase.com/privacy" target="_blank" rel="noopener">its own privacy policy</a>.</p><p>In demo mode, nothing is sent anywhere: your data stays in this browser on this device.</p><p><b>Nobody else using Shiftbuck can see your data</b>: not other carers and not your employer. The only exceptions are what you choose to share: your posts and profile in the community, private messages (only you and the carer you're talking to can read them, unless one of you reports a message to the moderators), and messages to the Shiftbuck team.</p>
       <h3>Cookies and storage on your device</h3>
-      <p>Shiftbook doesn't use cookies for advertising or tracking, and has no analytics. It keeps a few things in your browser: which tab you last had open, so the app opens where you left off. When you're signed in it also keeps your sign-in session, so you stay signed in; in demo mode it keeps all your Shiftbook data in this browser. Fonts and code come from Shiftbook's own site, so nothing is requested from Google or other third parties. The only other service Shiftbook talks to is Supabase, which stores your data.</p>
+      <p>Shiftbuck doesn't use cookies for advertising or tracking, and has no analytics. It keeps a few things in your browser: which tab you last had open, so the app opens where you left off. When you're signed in it also keeps your sign-in session, so you stay signed in; in demo mode it keeps all your Shiftbuck data in this browser. Fonts and code come from Shiftbuck's own site, so nothing is requested from Google or other third parties. The only other service Shiftbuck talks to is Supabase, which stores your data.</p>
       <p>Because nothing is used for tracking, there's no cookie banner. If that ever changes, we'll ask you first.</p>
       <h3>Why we use it</h3>
       <p>Only to give you the app: working out your pay, take-home, rest check, charts and money plan. Your information isn't used for anything else.</p>
@@ -560,14 +560,14 @@
       <ul><li>See and download everything: Timesheet → <b>Back up all data</b>.</li><li>Correct anything: edit a shift, payslip or setting at any time.</li><li>Delete a single shift from its edit screen, or everything with the button below.</li></ul>
       <p>You also have rights under UK data protection law. If you're unhappy with how your data is handled, contact us, or complain to the <a href="https://ico.org.uk/make-a-complaint/" target="_blank" rel="noopener">Information Commissioner's Office</a>.</p>
       <h3>How long it's kept</h3>
-      <p>Until you delete it. If this version of Shiftbook closes, you'll be told in advance so you can download your data.</p>
+      <p>Until you delete it. If this version of Shiftbuck closes, you'll be told in advance so you can download your data.</p>
       <h3>Estimates, not advice</h3>
       <p>Pay, tax and rest figures are estimates to help you plan. They are not financial, tax or legal advice. Your payslip is the final word.</p>
         <h3>Delete my account</h3>
         <p>This deletes your account and all your shifts, payslips, spending and settings. It can't be undone, so download a backup first if you want one.</p>
         <button type="button" class="btn danger" id="delAll">Delete my account</button>
         <div class="confirm" id="delAllConfirm" hidden>
-          <span>Delete your account and all your Shiftbook data? This can't be undone.</span>
+          <span>Delete your account and all your Shiftbuck data? This can't be undone.</span>
           <div class="actions"><button type="button" class="btn danger" id="delAllYes">Yes, delete everything</button><button type="button" class="btn secondary" id="delAllNo">Keep my data</button></div>
         </div>
     </div>
@@ -580,20 +580,20 @@
       <h2>Terms of use</h2>
       <p class="hint">Last updated 28 October 2026</p>
       <h3>In short</h3>
-      <p>Shiftbook is free. Use it to track your own shifts, pay and rest, and be kind and safe in the community. Its figures are estimates, not advice. Never post anything that could identify the people you support.</p>
+      <p>Shiftbuck is free. Use it to track your own shifts, pay and rest, and be kind and safe in the community. Its figures are estimates, not advice. Never post anything that could identify the people you support.</p>
       <h3>Who we are</h3>
-      <p>Shiftbook is made by <b>WesTech Innovation</b> ("we"). Contact us by messaging the Shiftbook team in the app (Community → Messages) or through <a href="https://westechinnovation.com/" target="_blank" rel="noopener">westechinnovation.com</a>.</p>
-      <h3>Who can use Shiftbook</h3>
+      <p>Shiftbuck is made by <b>WesTech Innovation</b> ("we"). Contact us by messaging the Shiftbuck team in the app (Community → Messages) or through <a href="https://westechinnovation.com/" target="_blank" rel="noopener">westechinnovation.com</a>.</p>
+      <h3>Who can use Shiftbuck</h3>
       <ul>
-        <li>You must be <b>18 or over</b>. Shiftbook is made for care and support workers in the UK.</li>
+        <li>You must be <b>18 or over</b>. Shiftbuck is made for care and support workers in the UK.</li>
         <li>Your account is for you alone. Keep your sign-in secure and tell us if you think someone else has used it.</li>
       </ul>
-      <h3>What Shiftbook does, and what it doesn't</h3>
+      <h3>What Shiftbuck does, and what it doesn't</h3>
       <ul>
         <li>Pay, tax, take-home, holiday and rest figures are <b>estimates to help you plan</b>. They aren't financial, tax or legal advice. Your payslip and your employer's records are the official figures.</li>
         <li>The rest check is a guide based on UK working time rules. It doesn't tell you whether your employer has broken the law.</li>
-        <li>A timesheet you download or send from Shiftbook is your own record. Check it before you send it, because you're responsible for what you send to your employer.</li>
-        <li>Shiftbook is free and has no adverts. If we ever add paid extras, we'll tell you the price and what you get before anything is charged, and you'll never be charged without agreeing first. The features you already use free won't be taken away and charged for.</li>
+        <li>A timesheet you download or send from Shiftbuck is your own record. Check it before you send it, because you're responsible for what you send to your employer.</li>
+        <li>Shiftbuck is free and has no adverts. If we ever add paid extras, we'll tell you the price and what you get before anything is charged, and you'll never be charged without agreeing first. The features you already use free won't be taken away and charged for.</li>
       </ul>
       <h3>Your data</h3>
       <p>Your shifts, pay and money details belong to you. How we keep them is set out in the <a href="#privacy" data-info="privacy">privacy notice</a>. You can download or delete them at any time.</p>
@@ -605,7 +605,7 @@
         <li>post or send anything illegal, including scams, fake job or visa sponsorship offers, threats, harassment, hate, sexual content, or offers to sell medicine or documents;</li>
         <li>ask other carers for money, bank details or passwords, or pressure anyone to meet up;</li>
         <li>post anyone's address, phone number or email in public posts, including your own;</li>
-        <li>advertise, spam or pretend to be someone else, including the Shiftbook team.</li>
+        <li>advertise, spam or pretend to be someone else, including the Shiftbuck team.</li>
       </ul>
       <p>If you're worried about care or safety at work, raise it with your employer's whistleblowing process, the <a href="https://www.cqc.org.uk/contact-us/report-concern/share-your-experience-whistleblowing" target="_blank" rel="noopener">CQC</a> or <a href="https://protect-advice.org.uk/" target="_blank" rel="noopener">Protect</a>. If someone is in danger, call 999.</p>
       <h3>How we keep people safe</h3>
@@ -616,12 +616,12 @@
         <li>Posts that contain phone numbers, emails, postcodes, addresses or the names of the people you support are stopped before they're posted.</li>
       </ul>
       <h3>Complaints and appeals</h3>
-      <p>To complain about content, about how we handled a report, or about anything else in Shiftbook, message the Shiftbook team in the app. If we hid your post or restricted your account and you think we got it wrong, tell us the same way and a different moderator will look at it again. We aim to reply within <b>5 working days</b> and will tell you what we decided and why.</p>
+      <p>To complain about content, about how we handled a report, or about anything else in Shiftbuck, message the Shiftbuck team in the app. If we hid your post or restricted your account and you think we got it wrong, tell us the same way and a different moderator will look at it again. We aim to reply within <b>5 working days</b> and will tell you what we decided and why.</p>
       <p>For concerns about your personal data you can also contact the <a href="https://ico.org.uk/make-a-complaint/" target="_blank" rel="noopener">Information Commissioner's Office</a>.</p>
       <h3>Closing your account</h3>
       <p>You can delete your account at any time, or pause it in the full app. Deleting it removes your shifts, settings, posts and messages. We may close an account that seriously or repeatedly breaks these terms, and we'll tell you why unless the law or someone's safety stops us.</p>
       <h3>Changes and availability</h3>
-      <p>Shiftbook is new and will change. We'll tell you in the app before any important change to these terms. We try to keep Shiftbook working, but we can't promise it will always be available or free of errors, so keep your payslips and download a backup now and then.</p>
+      <p>Shiftbuck is new and will change. We'll tell you in the app before any important change to these terms. We try to keep Shiftbuck working, but we can't promise it will always be available or free of errors, so keep your payslips and download a backup now and then.</p>
       <h3>Our responsibility to you</h3>
       <p>Nothing in these terms takes away your rights as a consumer under UK law. We're responsible for losses that were foreseeable and caused by us not using reasonable care and skill. We aren't responsible for decisions you make using estimates in the app, or for what other carers post or send, although we act on reports.</p>
       <h3>Law</h3>
@@ -634,9 +634,9 @@
     <div class="card info">
       <button type="button" class="btn secondary backbtn" data-info-back>‹ Back</button>
       <h2>Questions and answers</h2>
-        <details class="faq"><summary>What is Shiftbook?</summary><div>A shift log for care and support workers. Log each shift, including sleep-ins and breaks, and Shiftbook shows your gross pay, an estimate of your take-home, a check against your payslip, a rest warning and a plan for your money.</div></details>
+        <details class="faq"><summary>What is Shiftbuck?</summary><div>A shift log for care and support workers. Log each shift, including sleep-ins and breaks, and Shiftbuck shows your gross pay, an estimate of your take-home, a check against your payslip, a rest warning and a plan for your money.</div></details>
         <details class="faq"><summary>How is my pay worked out?</summary><div>For each shift: (day hours − unpaid break) × your hourly rate, plus your sleep-in rate if it was a sleep-in. Your rates come from Settings on the Timesheet tab.</div></details>
-        <details class="faq"><summary>Is my take-home exact?</summary><div>It's an estimate using 2026/27 tax, National Insurance and pension rules for England, Wales and Northern Ireland. Your payslip is the final word. Add your payslip on the Money tab and Shiftbook compares it line by line.</div></details>
+        <details class="faq"><summary>Is my take-home exact?</summary><div>It's an estimate using 2026/27 tax, National Insurance and pension rules for England, Wales and Northern Ireland. Your payslip is the final word. Add your payslip on the Money tab and Shiftbuck compares it line by line.</div></details>
         <details class="faq"><summary>My payslip doesn't match. What should I do?</summary><div>Check the hours and sleep-ins logged for that pay period first. If the payslip shows no sleep-in pay but you did sleep-ins, or fewer hours than you worked, ask your payroll team. The payslip check shows exactly which line is different.</div></details>
         <details class="faq"><summary>Why is my Rest check red?</summary><div>Red means you're not getting enough rest: 7 or more days in a row without a day off, more than 48 hours in 7 days, or a day shift, sleep-in and another day shift back to back. It's a guide based on UK working time rules, not legal advice.</div></details>
         <details class="faq"><summary>What does 'unpaid breaks worth' mean?</summary><div>The hours of unpaid breaks you took, multiplied by your hourly rate. It shows the time you give at work without pay.</div></details>
@@ -644,10 +644,10 @@
         <details class="faq"><summary>How do I send my timesheet to my manager?</summary><div>Timesheet tab → Download CSV. The file includes your name, the pay period, every shift and the totals. It opens in Excel or Google Sheets.</div></details>
         <details class="faq"><summary>Can my employer see my data?</summary><div>No. Your data is private to your account. Your employer, your manager and other carers can't see it. Only what you choose to send, such as a downloaded timesheet, leaves the app.</div></details>
         <details class="faq"><summary>I forgot my password. What do I do?</summary><div>On the sign-in screen, tap Sign in with email and password, then Forgot your password? We'll email you a link to choose a new one. It works for one hour. You can also sign in with a code sent to your email instead. If you signed up with an email code, the same link lets you add a password.</div></details>
-        <details class="faq"><summary>Can I use Shiftbook on more than one device?</summary><div>Yes. Sign in with the same phone number, email or password on your phone or computer and you'll see the same data. In demo mode, data stays on one device.</div></details>
-        <details class="faq"><summary>Should I put service users' full names in?</summary><div>No. Use first names or initials only. Shiftbook only needs to tell your service users apart, and it's kinder to their privacy.</div></details>
-        <details class="faq"><summary>Does it work for weekly pay, Scotland or two jobs?</summary><div>Not yet. Shiftbook currently supports monthly pay periods, one hourly and one sleep-in rate, and tax rules for England, Wales and Northern Ireland. These are on the roadmap.</div></details>
-        <details class="faq"><summary>Who makes Shiftbook?</summary><div>WesTech Innovation. Visit <a href="https://westechinnovation.com/" target="_blank" rel="noopener">westechinnovation.com</a> to get in touch.</div></details>
+        <details class="faq"><summary>Can I use Shiftbuck on more than one device?</summary><div>Yes. Sign in with the same phone number, email or password on your phone or computer and you'll see the same data. In demo mode, data stays on one device.</div></details>
+        <details class="faq"><summary>Should I put service users' full names in?</summary><div>No. Use first names or initials only. Shiftbuck only needs to tell your service users apart, and it's kinder to their privacy.</div></details>
+        <details class="faq"><summary>Does it work for weekly pay, Scotland or two jobs?</summary><div>Not yet. Shiftbuck currently supports monthly pay periods, one hourly and one sleep-in rate, and tax rules for England, Wales and Northern Ireland. These are on the roadmap.</div></details>
+        <details class="faq"><summary>Who makes Shiftbuck?</summary><div>WesTech Innovation. Visit <a href="https://westechinnovation.com/" target="_blank" rel="noopener">westechinnovation.com</a> to get in touch.</div></details>
     </div>
   </section>
   <footer class="poweredby"><nav class="footlinks"><a href="#privacy" data-info="privacy">Privacy</a><span aria-hidden="true">·</span><a href="#terms" data-info="terms">Terms</a><span aria-hidden="true">·</span><a href="#faq" data-info="faq">FAQ</a><span aria-hidden="true" class="so">·</span><button type="button" class="footso so" data-signout>Sign out</button></nav>Powered by <a class="poweredlink" href="https://westechinnovation.com/" target="_blank" rel="noopener"><b>WesTech Innovation</b><span class="sr"> (opens westechinnovation.com in a new tab)</span></a></footer>
