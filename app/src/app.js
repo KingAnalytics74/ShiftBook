@@ -1436,7 +1436,12 @@
   });
 
   // ---------- boot ----------
-  try { const v = localStorage.getItem("sb.view"); if (v && v !== "log") show(v); } catch (e) {}
+  // Links such as app/#analytics or app/#money open that tab (404.html turns app/analytics into app/#analytics).
+  // Only known names count, so sign-in links (#access_token=…) are left alone.
+  const VIEW_LINKS = { overview: "overview", analytics: "overview", pay: "overview", home: "overview", log: "log", "log-shift": "log", sheet: "sheet", timesheet: "sheet", money: "money", budget: "money", plan: "money", forecast: "forecast", community: "community" };
+  const linkedView = () => VIEW_LINKS[location.hash.slice(1).toLowerCase()];
+  window.addEventListener("hashchange", () => { const v = linkedView(); if (v) show(v); });
+  try { const v = linkedView() || localStorage.getItem("sb.view"); if (v && (v !== "log" || linkedView())) show(v); } catch (e) {}
   openLog(todayStr); fillSettings(); render();
 
   (async () => {

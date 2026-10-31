@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<!-- GitHub Pages serves this for any address it can't find. Links such as /app/analytics are sent to the matching tab (app/#analytics). -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-DK05dYFYggrMxwcwhDBF8ToE+E5cc2e/qyvGuL/LQfs='; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="same-origin">
+<meta name="robots" content="noindex">
+<title>Page not found · Shiftbuck</title>
+<script>(function () {
+  var p = location.pathname, i = p.indexOf("/app/");
+  if (i < 0) return;
+  var view = p.slice(i + 5).split("/")[0].replace(/[^a-z-]/gi, "").toLowerCase();
+  location.replace(p.slice(0, i + 5) + (view ? "#" + view : ""));
+})();</script>
+<style>body{font:16px/1.5 system-ui,sans-serif;max-width:32rem;margin:15vh auto;padding:0 16px;color:#14213D;background:#fff}a{color:#C8102E}@media (prefers-color-scheme:dark){body{color:#eee;background:#111}a{color:#ff6b7f}}</style>
+</head>
+<body>
+<h1>Page not found</h1>
+<p>There's nothing at this address. <a href="/ShiftBook/app/">Open Shiftbuck</a></p>
+</body>
+</html>
