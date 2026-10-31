@@ -46,6 +46,14 @@ npx serve .
 6. **Moderators:** after you've signed up, find your user id in **Authentication → Users** and run `insert into public.community_moderators (user_id) values ('<your id>');` in the SQL Editor. Moderators see reported posts and can hide or unhide them. They are also **the Shiftbuck team**: they read and answer messages to the team, send announcements, see reported private messages and can stop someone sending private messages. Private messages that nobody has reported stay unreadable to moderators in the app.
 7. **Limit abuse:** in **Authentication → Rate Limits**, keep the limits on codes per hour.
 
+### Deploy on Vercel with shiftbuck.com
+
+1. In Vercel, choose **Add New → Project**, import `KingAnalytics74/ShiftBook` from GitHub, set **Framework Preset** to *Other*, leave the build command empty, and click **Deploy**. There's no build step.
+2. In the project, go to **Settings → Domains** and add `shiftbuck.com` and `www.shiftbuck.com`. If the domain was bought through Vercel it connects by itself. Otherwise Vercel shows the DNS records to add.
+3. In Supabase (**Authentication → URL Configuration**), set *Site URL* to `https://shiftbuck.com` and add `https://shiftbuck.com/app/` to *Redirect URLs*. Add the same address to Google sign-in if it's turned on.
+
+`vercel.json` sends visitors from `/` to `/app/` and adds security headers that GitHub Pages can't send: HTTPS only, no framing by other sites, no camera, microphone or location access, and the Content Security Policy as a real header. Every push to the default branch goes live. Vercel's free Hobby plan is for personal, non-commercial use, so a business app needs the Pro plan.
+
 ### Deploy free on GitHub Pages
 
 This repository is already published at **https://kinganalytics74.github.io/ShiftBook/** from the default branch, `/ (root)`. The root `index.html` forwards to `app/`, so whatever is merged into the default branch goes live a minute or two later. To publish a copy elsewhere: **Settings → Pages → Deploy from a branch**, pick the branch and `/ (root)`.

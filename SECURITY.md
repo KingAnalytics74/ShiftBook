@@ -23,6 +23,7 @@ If you think you've found a security problem, **don't open a public GitHub issue
 - **Content Security Policy** (in each page's `<head>`): only this site's own scripts can run, and the app can only connect to Supabase. Any injected script is blocked.
 - **No third-party code**: fonts and the Supabase library are served from this site. No analytics, ads or trackers.
 - **Clickjacking guard** (`app/src/guard.js`): the app stays hidden if another site puts it inside a frame.
+- **On Vercel** (`vercel.json`): the same Content Security Policy is also sent as a header, with `frame-ancestors 'none'`, plus HTTPS-only (HSTS), `X-Frame-Options: DENY`, `nosniff`, and a Permissions-Policy that turns off camera, microphone and location. If the policy in `app/index.html` changes, change it in `vercel.json` too.
 - **Referrer policy**: other sites aren't told which Shiftbuck page someone came from.
 - Everything people type is escaped before it's shown on a page. Timesheet CSVs neutralise cells starting with `=`, `+`, `-` or `@`, so they can't run as formulas in Excel.
 
