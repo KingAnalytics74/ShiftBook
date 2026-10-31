@@ -64,3 +64,12 @@ The Claude-hosted pilot can't restrict a document to two people, so it has profi
 - `announce/all` `{items[]}` — written by the team; read by everyone
 - `data/users/<id>/inbox` `{teamSeenAt}` — private: when the carer last read the team's replies
 - `main/shifts/<date>.fare` — the bus fare paid for that shift (never on the employer timesheet)
+
+
+## Shift types and shift times (added 31 Oct 2026)
+
+- `main` now also holds `workType` (`care` or `other`) and `shiftTypes[]`: `{name, paid: hours|sleep|both, start, end, hours?, breakHrs, rate?}`.
+- Each shift can hold `type`, `start`, `end` (HH:MM; a finish at or before the start is the next day) and `rate` (its own £/hr, e.g. nights or weekends).
+- Pay: (paid hours − break) × (shift rate or usual rate) + sleep-in rate if a sleep-in.
+- Rest check adds an amber warning when there are under 11 hours between the end of one shift and the start of the next.
+- All of this lives in the user's own `documents` rows; no database change was needed.

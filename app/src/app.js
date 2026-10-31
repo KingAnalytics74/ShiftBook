@@ -4,14 +4,15 @@
  *
  * MULTI-USER EDITION: every path below lives under the viewer's private subtree data/users/<id>/
  * DATA MODEL (artifact db)
- *   main          {name, role, hourlyRate, sleepInRate, periodStartDay, serviceUsers[], busFare}
+ *   main          {name, role, hourlyRate, sleepInRate, periodStartDay, serviceUsers[], busFare, workType, shiftTypes[]}
+ *                 shiftTypes[]: {name, paid: hours|sleep|both, start, end, hours?, breakHrs, rate?}
  *   money         {employment: "paye"|"self", taxCode: "1257L"|"BR", pensionPct, studentLoan, pots[]}
  *                 pot = {id, name, mode: "pct"|"fixed", value, kind: "need"|"want"|"save"}
- *   main/shifts/<YYYY-MM-DD>  {date, users[], sleepIn, dayHours|null, breakHrs|null, fare|null, notes, jotformId?, updatedAt}
+ *   main/shifts/<YYYY-MM-DD>  {date, type?, start?, end?, users[], sleepIn, dayHours|null, breakHrs|null, rate?, fare|null, notes, jotformId?, updatedAt}
  *                 fare = bus fare the carer paid to get to and from that shift (£); never on the employer timesheet
  *   main/spend/<periodStart>  {<potId>: amountSpent, ...}
  *
- * PAY RULES   net hours = day hours − break; pay = net hours × hourlyRate + (sleepIn ? sleepInRate : 0)
+ * PAY RULES   net hours = paid hours − break; pay = net hours × (shift rate or hourlyRate) + (sleepIn ? sleepInRate : 0)
  * PERIODS     run from periodStartDay of one month to the day before it next month
  * TAX         monthly estimate, 2026/27 rUK rates (see R below) — not a payslip
  * SYNC        none in this edition (no Jotform)
@@ -21,6 +22,42 @@
   const DEFAULTS = { name: "", role: "Support Worker", hourlyRate: 13, sleepInRate: 40, periodStartDay: 26, serviceUsers: [], busFare: 0, pattern: { dayStart: "08:00", dayHours: 12, breakHrs: 2, sleepStart: "20:00", sleepEnd: "08:00" } };
   // Shift pattern for the one-tap shift types: day 08:00–20:00 (12 hours, 2 hours unpaid break), sleep-in 20:00–08:00.
   const pat = () => ({ ...DEFAULTS.pattern, ...(state.cfg.pattern || {}) });
+  // Shift types: any start and finish time, including nights past midnight.
+  // paid: "hours" = paid by the hour, "sleep" = sleep-in only (flat rate), "both" = paid hours then a sleep-in.
+  const TYPE_LIB = {
+    care: [
+      { name: "Early", paid: "hours", start: "07:00", end: "15:00", breakHrs: 0.5 },
+      { name: "Late", paid: "hours", start: "14:00", end: "22:00", breakHrs: 0.5 },
+      { name: "Long day", paid: "hours", start: "08:00", end: "20:00", breakHrs: 2 },
+      { name: "Long day 10–22", paid: "hours", start: "10:00", end: "22:00", breakHrs: 1 },
+      { name: "Waking night", paid: "hours", start: "20:00", end: "08:00", breakHrs: 0 },
+      { name: "Sleep-in", paid: "sleep", start: "20:00", end: "08:00", breakHrs: 0 },
+      { name: "Day + sleep-in", paid: "both", start: "08:00", end: "08:00", hours: 12, breakHrs: 2 }
+    ],
+    other: [
+      { name: "Early", paid: "hours", start: "06:00", end: "14:00", breakHrs: 0.5 },
+      { name: "Late", paid: "hours", start: "14:00", end: "22:00", breakHrs: 0.5 },
+      { name: "Night", paid: "hours", start: "22:00", end: "06:00", breakHrs: 0.5 },
+      { name: "Days 7–19", paid: "hours", start: "07:00", end: "19:00", breakHrs: 1 },
+      { name: "Nights 19–7", paid: "hours", start: "19:00", end: "07:00", breakHrs: 1 },
+      { name: "Twilight", paid: "hours", start: "17:00", end: "22:00", breakHrs: 0 }
+    ]
+  };
+  const OB_PICK = { care: ["Long day", "Sleep-in", "Day + sleep-in"], other: ["Early", "Late", "Night"] };
+  const toMin = t => { const [a, b] = String(t || "0:0").split(":").map(Number); return a * 60 + (b || 0); };
+  // hours from start to finish; a finish at or before the start is the next day
+  const spanHrs = (a, b) => { if (!a || !b) return 0; let m = toMin(b) - toMin(a); if (m <= 0) m += 1440; return Math.round(m / 15) / 4; };
+  const typeHours = t => t.paid === "sleep" ? null : t.paid === "both" ? (Number(t.hours) || 0) : spanHrs(t.start, t.end);
+  const isCare = () => (state.cfg.workType || "care") === "care";
+  function shiftTypes() {
+    if (Array.isArray(state.cfg.shiftTypes) && state.cfg.shiftTypes.length) return state.cfg.shiftTypes;
+    const P = pat();
+    return [
+      { name: "Day", paid: "hours", start: P.dayStart, end: addHrs(P.dayStart, P.dayHours), breakHrs: P.breakHrs },
+      { name: "Sleep-in", paid: "sleep", start: P.sleepStart, end: P.sleepEnd, breakHrs: 0 },
+      { name: "Day + sleep-in", paid: "both", start: P.dayStart, end: P.sleepEnd, hours: P.dayHours, breakHrs: P.breakHrs }
+    ];
+  }
   const addHrs = (hhmm, h) => { const [a, b] = hhmm.split(":").map(Number), m = ((a * 60 + b + Math.round(h * 60)) % 1440 + 1440) % 1440; return pad(Math.floor(m / 60)) + ":" + pad(m % 60); };
   const $ = s => document.querySelector(s);
   const gbp = n => "£" + (Math.round(n * 100) / 100).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -33,7 +70,7 @@
   const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const todayStr = ymd(new Date());
 
-  const state = { cfg: { ...DEFAULTS }, shifts: new Map(), loaded: false, offset: 0, view: "overview", db: null, mcp: null, downloads: null, canWrite: true, editing: null, form: { users: new Set(), sleep: false } };
+  const state = { cfg: { ...DEFAULTS }, shifts: new Map(), loaded: false, offset: 0, view: "overview", db: null, mcp: null, downloads: null, canWrite: true, editing: null, form: { users: new Set(), sleep: false, type: null } };
 
   // ---------- periods ----------
   function periodFor(d, k = 0) {
@@ -52,7 +89,7 @@
   function calc(s) {
     const day = Number(s.dayHours) || 0, brk = Number(s.breakHrs) || 0;
     const net = s.dayHours == null || s.dayHours === "" ? 0 : Math.max(0, day - brk);
-    const hourly = net * state.cfg.hourlyRate;
+    const hourly = net * (Number(s.rate) > 0 ? Number(s.rate) : state.cfg.hourlyRate);
     const sleep = s.sleepIn ? state.cfg.sleepInRate : 0;
     return { net, hourly, sleep, total: hourly + sleep, status: s.date > todayStr ? "Rostered" : "Worked" };
   }
@@ -130,7 +167,7 @@
     for (let i = 0; i < lead; i++) cal += `<div class="pad"></div>`;
     sm.rows.forEach(r => {
       let cls = "";
-      if (r.s) cls = r.s.sleepIn && r.c.net ? "both" : r.s.sleepIn ? "night" : "day";
+      if (r.s) cls = r.s.sleepIn && r.c.net ? "both" : r.s.sleepIn || isNight(r.s) ? "night" : "day";
       if (r.key > todayStr) cls += " future";
       if (r.key === todayStr) cls += " today";
       const rx = restDay(r.key); if (rx.level === "red") cls += " rest-red"; else if (rx.level === "amber") cls += " rest-amber";
@@ -158,7 +195,15 @@
   // ---------- rest check ----------
   // Day-level guide based on UK Working Time Regulations: 24h off in every 7 days,
   // rest between shifts, 48h a week. Shifts carry no clock times, so these are approximations.
-  const REST = { amberRun: 6, redRun: 7, amberHrs: 40, redHrs: 48 };
+  const REST = { amberRun: 6, redRun: 7, amberHrs: 40, redHrs: 48, gap: 11 };
+  // the clock span of a shift that has start and finish times; finishing at or before the start means the next day
+  function spanOf(s) {
+    if (!s || !s.start || !s.end || !s.date) return null;
+    const st = parse(s.date).getTime() + toMin(s.start) * 6e4; let en = parse(s.date).getTime() + toMin(s.end) * 6e4;
+    if (en <= st) en += 864e5;
+    return { st, en };
+  }
+  const isNight = s => !!(s && s.start && s.end && (toMin(s.start) >= 18 * 60 || toMin(s.end) <= toMin(s.start)) && !(s.sleepIn));
   const hasDayHrs = s => !!s && s.dayHours != null && s.dayHours !== "" && Number(s.dayHours) > 0;
   function worked(s) { return !!s && (!!s.sleepIn || hasDayHrs(s)); }
   function hours7(d, m) {
@@ -179,6 +224,9 @@
     else if (hrs > REST.amberHrs) { up("amber"); reasons.push(`${hrs} hours worked in the last 7 days`); }
     if (prev && prev.sleepIn && hasDayHrs(prev) && hasDayHrs(s)) { up("red"); reasons.push("day shift, sleep-in, then another day shift: about 36 hours on duty"); }
     else if (prev && prev.sleepIn && hasDayHrs(s)) { up("amber"); reasons.push("straight from a sleep-in onto a day shift"); }
+    else { const a = spanOf(prev), b = spanOf(s);
+      if (a && b) { const gap = (b.st - a.en) / 36e5;
+        if (gap >= 0 && gap < REST.gap) { up("amber"); reasons.push(`only ${String(Math.round(gap * 4) / 4)} hours off between shifts, under the 11-hour minimum`); } } }
     return { level, run, hrs7: hrs, reasons };
   }
   function renderRest(p, sm) {
@@ -334,14 +382,14 @@
 
   function renderSheet(p, sm) {
     const t = sm.t;
-    let h = `<thead><tr><th>Date</th><th>Day</th><th>Service user(s)</th><th>Sleep-in</th><th>Day hrs</th><th>Break</th><th>Net hrs</th><th>Hourly £</th><th>Sleep-in £</th><th>Total £</th><th>Status</th></tr></thead><tbody>`;
+    let h = `<thead><tr><th>Date</th><th>Day</th><th>Time</th><th>Service user(s)</th><th>Sleep-in</th><th>Paid hrs</th><th>Break</th><th>Net hrs</th><th>Hourly £</th><th>Sleep-in £</th><th>Total £</th><th>Status</th></tr></thead><tbody>`;
     sm.rows.forEach(r => {
       const wk = r.date.getDay() === 0 || r.date.getDay() === 6;
-      if (!r.s) { h += `<tr class="off clickable${wk ? " wkend" : ""}" data-date="${r.key}"><td>${fmt(r.date, { day: "2-digit", month: "short" })}</td><td>${fmt(r.date, { weekday: "short" })}</td><td>Day off</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>`; return; }
+      if (!r.s) { h += `<tr class="off clickable${wk ? " wkend" : ""}" data-date="${r.key}"><td>${fmt(r.date, { day: "2-digit", month: "short" })}</td><td>${fmt(r.date, { weekday: "short" })}</td><td></td><td>Day off</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>`; return; }
       const s = r.s, c = r.c;
-      h += `<tr class="clickable${wk ? " wkend" : ""}" data-date="${r.key}"><td>${fmt(r.date, { day: "2-digit", month: "short" })}</td><td>${fmt(r.date, { weekday: "short" })}</td><td>${esc((s.users || []).join(", "))}</td><td>${s.sleepIn ? '<span class="pill sleep">Yes</span>' : "No"}</td><td class="num">${s.dayHours == null || s.dayHours === "" ? "" : hrs(s.dayHours)}</td><td class="num">${s.breakHrs ? hrs(s.breakHrs) : ""}</td><td class="num">${c.net ? hrs(c.net) : ""}</td><td class="num">${c.hourly ? gbp(c.hourly) : ""}</td><td class="num">${c.sleep ? gbp(c.sleep) : ""}</td><td class="num"><b>${gbp(c.total)}</b></td><td><span class="pill ${c.status.toLowerCase()}">${c.status}</span></td></tr>`;
+      h += `<tr class="clickable${wk ? " wkend" : ""}" data-date="${r.key}"><td>${fmt(r.date, { day: "2-digit", month: "short" })}</td><td>${fmt(r.date, { weekday: "short" })}</td><td>${s.start && s.end ? `${esc(s.start)}–${esc(s.end)}` : ""}${s.type ? `<br><small>${esc(s.type)}</small>` : ""}</td><td>${esc((s.users || []).join(", "))}</td><td>${s.sleepIn ? '<span class="pill sleep">Yes</span>' : "No"}</td><td class="num">${s.dayHours == null || s.dayHours === "" ? "" : hrs(s.dayHours)}</td><td class="num">${s.breakHrs ? hrs(s.breakHrs) : ""}</td><td class="num">${c.net ? hrs(c.net) : ""}</td><td class="num">${c.hourly ? gbp(c.hourly) : ""}</td><td class="num">${c.sleep ? gbp(c.sleep) : ""}</td><td class="num"><b>${gbp(c.total)}</b></td><td><span class="pill ${c.status.toLowerCase()}">${c.status}</span></td></tr>`;
     });
-    h += `</tbody><tfoot><tr><td colspan="3">Total · ${t.shifts} shifts</td><td>${t.sleepIns}</td><td class="num">${hrs(t.dayHours)}</td><td class="num">${hrs(t.breaks)}</td><td class="num">${hrs(t.net)}</td><td class="num">${gbp(t.hourly)}</td><td class="num">${gbp(t.sleep)}</td><td class="num">${gbp(t.gross)}</td><td></td></tr></tfoot>`;
+    h += `</tbody><tfoot><tr><td colspan="4">Total · ${t.shifts} shifts</td><td>${t.sleepIns}</td><td class="num">${hrs(t.dayHours)}</td><td class="num">${hrs(t.breaks)}</td><td class="num">${hrs(t.net)}</td><td class="num">${gbp(t.hourly)}</td><td class="num">${gbp(t.sleep)}</td><td class="num">${gbp(t.gross)}</td><td></td></tr></tfoot>`;
     $("#sheet").innerHTML = h;
     $("#calc").innerHTML = `<div class="hbars">
       <div class="preview"><span>${hrs(t.net)} net hrs × ${gbp(state.cfg.hourlyRate)}</span><span class="num">${gbp(t.hourly)}</span></div>
@@ -383,15 +431,28 @@
   $("#addUserBtn").onclick = () => { const v = $("#fNewUser").value.trim(); if (!v) return; state.form.users.add(v); $("#fNewUser").value = ""; $("#addUserRow").hidden = true; renderUserChips(); };
   $("#fNewUser").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); $("#addUserBtn").click(); } });
   function renderPresets() {
-    const P = pat(), end = addHrs(P.dayStart, P.dayHours);
-    const lab = { day: `Day · ${P.dayStart}–${end}`, sleep: `Sleep-in · ${P.sleepStart}–${P.sleepEnd}`, both: `Day + sleep-in · ${P.dayStart}–${P.sleepEnd}` };
-    $("#fPreset").querySelectorAll("[data-pre]").forEach(b => { b.textContent = lab[b.dataset.pre]; });
+    $("#fPreset").innerHTML = shiftTypes().map((t, i) => `<button type="button" data-pre="${i}" aria-pressed="${state.form.type === t.name}">${esc(t.name)} · ${esc(t.start)}–${esc(t.end)}</button>`).join("");
+    $("#fUsersField").hidden = !isCare();
+    $("#fRateHint").textContent = `blank = your usual ${gbp(Number(state.cfg.hourlyRate) || 0)}`;
+  }
+  function applyType(t) {
+    state.form.type = t.name;
+    $("#fStart").value = t.start || ""; $("#fEnd").value = t.end || "";
+    const h = typeHours(t);
+    $("#fHours").value = h == null ? "" : h; $("#fBreak").value = h == null ? "" : (t.breakHrs ?? "");
+    $("#fRate").value = Number(t.rate) > 0 ? t.rate : "";
+    setSleep(t.paid !== "hours"); renderPresets();
   }
   $("#fPreset").addEventListener("click", e => {
-    const b = e.target.closest("[data-pre]"); if (!b) return; const P = pat(), k = b.dataset.pre;
-    if (k === "sleep") { $("#fHours").value = ""; $("#fBreak").value = ""; } else { $("#fHours").value = P.dayHours; $("#fBreak").value = P.breakHrs; }
-    setSleep(k !== "day");
+    const b = e.target.closest("[data-pre]"); if (!b) return;
+    const t = shiftTypes()[Number(b.dataset.pre)]; if (t) applyType(t);
   });
+  // changing the times works out the paid hours (not for sleep-ins, where the hours are separate)
+  ["#fStart", "#fEnd"].forEach(id => $(id).addEventListener("change", () => {
+    if (!state.form.sleep && $("#fStart").value && $("#fEnd").value) $("#fHours").value = spanHrs($("#fStart").value, $("#fEnd").value);
+    preview();
+  }));
+  $("#fRate").addEventListener("input", preview);
   function setSleep(v) { state.form.sleep = v; $("#fSleep").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String((b.dataset.v === "yes") === v))); preview(); }
   $("#fSleep").addEventListener("click", e => { const b = e.target.closest("button"); if (b) setSleep(b.dataset.v === "yes"); });
   document.querySelectorAll("[data-h]").forEach(b => b.onclick = () => { $("#fHours").value = b.dataset.h; if (b.dataset.h === "12" && $("#fBreak").value === "") $("#fBreak").value = 2; preview(); });
@@ -407,14 +468,15 @@
   }
   function formShift() {
     const h = $("#fHours").value, b = $("#fBreak").value;
-    return { date: $("#fDate").value, users: [...state.form.users], sleepIn: state.form.sleep, dayHours: h === "" ? null : Number(h), breakHrs: b === "" ? null : Number(b), fare: $("#fFare").value === "" ? null : Math.round(Number($("#fFare").value) * 100) / 100, notes: $("#fNotes").value.trim() };
+    const st = $("#fStart").value, en = $("#fEnd").value, rt = $("#fRate").value;
+    return { date: $("#fDate").value, type: state.form.type || null, start: st || null, end: en || null, users: [...state.form.users], sleepIn: state.form.sleep, dayHours: h === "" ? null : Number(h), breakHrs: b === "" ? null : Number(b), rate: rt === "" || !(Number(rt) > 0) ? null : Math.round(Number(rt) * 100) / 100, fare: $("#fFare").value === "" ? null : Math.round(Number($("#fFare").value) * 100) / 100, notes: $("#fNotes").value.trim() };
   }
   function preview() {
     const f = formShift();
     $("#fPreview").textContent = gbp(calc(f).total);
     const bk = f.dayHours != null ? Number(f.breakHrs) || 0 : 0;
     $("#fBreakNote").hidden = !bk;
-    if (bk) $("#fBreakNote").textContent = `Unpaid break: ${hrs(bk)} hrs, worth ${gbp(bk * state.cfg.hourlyRate)} at your rate.`;
+    if (bk) $("#fBreakNote").textContent = `Unpaid break: ${hrs(bk)} hrs, worth ${gbp(bk * (Number(f.rate) > 0 ? f.rate : state.cfg.hourlyRate))} at this shift's rate.`;
     const fare = Number(f.fare) || 0, pay = calc(f).total;
     $("#fFareNote").hidden = !(fare > 0 && pay > 0);
     if (fare > 0 && pay > 0) $("#fFareNote").textContent = `After your ${gbp(fare)} bus fare, this shift leaves you ${gbp(pay - fare)} before tax.`;
@@ -435,6 +497,9 @@
     state.form.users = new Set(s?.users || []);
     $("#fHours").value = s?.dayHours ?? "";
     $("#fBreak").value = s?.breakHrs ?? "";
+    state.form.type = s?.type || null;
+    $("#fStart").value = s?.start || ""; $("#fEnd").value = s?.end || "";
+    $("#fRate").value = s?.rate ?? "";
     $("#fNotes").value = s?.notes || "";
     $("#fFare").value = s ? (s.fare ?? "") : (Number(state.cfg.busFare) || "");
     fareUsualUI();
@@ -444,15 +509,19 @@
     if (s) $("#editNote").textContent = `There is already a shift on ${fmt(parse(date), { weekday: "long", day: "numeric", month: "long" })}. Saving replaces it.`;
     $("#delBtn").hidden = !s; $("#delConfirm").hidden = true; $("#formError").hidden = true;
     $("#saveBtn").textContent = s ? "Save changes" : "Save shift";
-    renderUserChips(); preview();
+    renderUserChips();
+    if (!s && shiftTypes().length) { const fare = $("#fFare").value; applyType(shiftTypes()[0]); $("#fFare").value = fare; }
+    renderPresets(); preview();
   }
 
   function validate(s) {
     if (!s.date) return "Pick the shift date.";
-    if (!s.users.length) return "Pick at least one service user.";
-    if (s.dayHours == null && !s.sleepIn) return "Add day hours, or mark it as a sleep-in.";
-    if (s.dayHours != null && (s.dayHours < 0 || s.dayHours > 24)) return "Day hours must be between 0 and 24.";
-    if (s.breakHrs != null && s.dayHours == null) return "A break needs day hours too.";
+    if (isCare() && !s.users.length) return "Pick at least one service user.";
+    if (s.dayHours == null && !s.sleepIn) return "Add paid hours, or mark it as a sleep-in.";
+    if (s.dayHours != null && (s.dayHours < 0 || s.dayHours > 24)) return "Paid hours must be between 0 and 24.";
+    if (s.breakHrs != null && s.dayHours == null) return "A break needs paid hours too.";
+    if ((s.start && !s.end) || (!s.start && s.end)) return "Add both the start and finish times, or neither.";
+    if (s.rate != null && s.rate > 200) return "Check the hourly rate for this shift.";
     if (s.breakHrs != null && s.breakHrs >= s.dayHours) return "The break is as long as the shift. Check the hours.";
     if (s.fare != null && (!(s.fare >= 0) || s.fare > 200)) return "The bus fare should be between £0 and £200.";
     return "";
@@ -461,6 +530,7 @@
   async function syncJotform(s) {
     if (!state.mcp) { setSync("ok", "Saved · private to you"); return; }
     const qa = [{ question_text: "Shift date", answer: s.date }, { question_text: "Service user(s)", answer: s.users.join(", ") }, { question_text: "Sleep-in?", answer: s.sleepIn ? "Yes" : "No" }];
+    if (s.start && s.end) qa.push({ question_text: "Shift times", answer: `${s.type ? s.type + " " : ""}${s.start}–${s.end}` });
     if (s.dayHours != null) qa.push({ question_text: "Day hours", answer: String(s.dayHours) });
     if (s.breakHrs != null) qa.push({ question_text: "Break (hours)", answer: String(s.breakHrs) });
     if (s.notes) qa.push({ question_text: "Notes", answer: s.notes });
@@ -510,9 +580,9 @@
     const name = (state.cfg.name || "").trim();
     const head = [["Employee", q(name || "Not set")], ["Role", q(state.cfg.role || "")],
       ["Pay period", `${ymd(p.start)} to ${ymd(p.end)}`], ["Hourly rate", state.cfg.hourlyRate], ["Sleep-in rate", state.cfg.sleepInRate], []].map(r => r.join(","));
-    const lines = [...head, ["Date", "Day", "Service user(s)", "Sleep-in", "Day hours", "Break", "Net hours", "Hourly pay", "Sleep-in pay", "Total", "Notes"].join(",")];
-    sm.rows.forEach(r => { const s = r.s, c = r.c; lines.push([r.key, fmt(r.date, { weekday: "short" }), s ? `"${(s.users || []).join(", ")}"` : "Day off", s ? (s.sleepIn ? "Y" : "N") : "", s?.dayHours ?? "", s?.breakHrs ?? "", c ? c.net : "", c ? c.hourly.toFixed(2) : "", c ? c.sleep.toFixed(2) : "", c ? c.total.toFixed(2) : "", s?.notes ? `"${s.notes.replace(/"/g, '""')}"` : ""].join(",")); });
-    lines.push(["TOTAL", "", "", sm.t.sleepIns, sm.t.dayHours, sm.t.breaks, sm.t.net, sm.t.hourly.toFixed(2), sm.t.sleep.toFixed(2), sm.t.gross.toFixed(2), ""].join(","));
+    const lines = [...head, ["Date", "Day", "Shift", "Start", "Finish", "Service user(s)", "Sleep-in", "Paid hours", "Break", "Net hours", "Hourly pay", "Sleep-in pay", "Total", "Notes"].join(",")];
+    sm.rows.forEach(r => { const s = r.s, c = r.c; lines.push([r.key, fmt(r.date, { weekday: "short" }), s?.type ? q(s.type) : "", s?.start || "", s?.end || "", s ? `"${(s.users || []).join(", ")}"` : "Day off", s ? (s.sleepIn ? "Y" : "N") : "", s?.dayHours ?? "", s?.breakHrs ?? "", c ? c.net : "", c ? c.hourly.toFixed(2) : "", c ? c.sleep.toFixed(2) : "", c ? c.total.toFixed(2) : "", s?.notes ? `"${s.notes.replace(/"/g, '""')}"` : ""].join(",")); });
+    lines.push(["TOTAL", "", "", "", "", "", sm.t.sleepIns, sm.t.dayHours, sm.t.breaks, sm.t.net, sm.t.hourly.toFixed(2), sm.t.sleep.toFixed(2), sm.t.gross.toFixed(2), ""].join(","));
     return { text: lines.join("\n"), name: `Timesheet_${(name || "worker").replace(/[^A-Za-z0-9]+/g, "_").replace(/^_|_$/g, "")}_${ymd(p.start)}_to_${ymd(p.end)}.csv` };
   }
   $("#csvBtn").onclick = async () => {
@@ -534,8 +604,45 @@
   };
 
   // ---------- settings ----------
+  // ---------- shift types editor (Settings) ----------
+  let stDraft = null;
+  const stClean = t => ({ name: String(t.name || "").trim().slice(0, 30) || "Shift", paid: ["hours", "sleep", "both"].includes(t.paid) ? t.paid : "hours",
+    start: t.start || "08:00", end: t.end || "20:00", hours: t.paid === "both" ? (Number(t.hours) || 0) : null,
+    breakHrs: t.paid === "sleep" ? 0 : Math.max(0, Number(t.breakHrs) || 0), rate: Number(t.rate) > 0 ? Math.round(Number(t.rate) * 100) / 100 : null });
+  function renderStList() {
+    if (!stDraft) stDraft = shiftTypes().map(t => ({ ...t }));
+    $("#stList").innerHTML = stDraft.length ? stDraft.map((t, i) => `<div class="strow" data-i="${i}">
+      <label>Name<input type="text" data-k="name" maxlength="30" value="${esc(t.name)}"></label>
+      <label>Starts<input type="time" data-k="start" value="${esc(t.start)}"></label>
+      <label>Finishes<input type="time" data-k="end" value="${esc(t.end)}"></label>
+      <label>Paid as<select data-k="paid"><option value="hours"${t.paid === "hours" ? " selected" : ""}>By the hour</option><option value="sleep"${t.paid === "sleep" ? " selected" : ""}>Sleep-in only</option><option value="both"${t.paid === "both" ? " selected" : ""}>Hours + sleep-in</option></select></label>
+      ${t.paid === "both" ? `<label>Paid hours<input type="number" data-k="hours" min="0" max="24" step="0.25" value="${t.hours ?? ""}"></label>` : ""}
+      ${t.paid !== "sleep" ? `<label>Unpaid break (hrs)<input type="number" data-k="breakHrs" min="0" max="8" step="0.25" value="${t.breakHrs ?? 0}"></label>` : ""}
+      ${t.paid !== "sleep" ? `<label>Own rate £/hr<input type="number" data-k="rate" min="0" step="0.01" placeholder="Usual" value="${t.rate ?? ""}"></label>` : ""}
+      <button type="button" class="btn secondary strm" data-rm="${i}" aria-label="Remove ${esc(t.name)}">Remove</button></div>`).join("") : `<p class="hint">No shift types yet. Add one below.</p>`;
+    const have = new Set(stDraft.map(t => t.name.toLowerCase() + t.start + t.end));
+    const lib = [...TYPE_LIB[$("#sWork").value || "care"], ...TYPE_LIB[$("#sWork").value === "other" ? "care" : "other"]];
+    $("#stLib").innerHTML = lib.filter((t, i, a) => !have.has(t.name.toLowerCase() + t.start + t.end) && a.findIndex(x => x.name === t.name && x.start === t.start) === i)
+      .map(t => `<button type="button" data-lib="${esc(t.name)}|${t.start}">+ ${esc(t.name)} · ${t.start}–${t.end}</button>`).join("");
+  }
+  $("#stList").addEventListener("input", e => {
+    const row = e.target.closest(".strow"), k = e.target.dataset.k; if (!row || !k) return;
+    stDraft[Number(row.dataset.i)][k] = e.target.value;
+    if (k === "paid") renderStList();
+  });
+  $("#stList").addEventListener("change", e => { if (e.target.dataset.k === "paid") { stDraft[Number(e.target.closest(".strow").dataset.i)].paid = e.target.value; renderStList(); } });
+  $("#stList").addEventListener("click", e => { const b = e.target.closest("[data-rm]"); if (!b) return; stDraft.splice(Number(b.dataset.rm), 1); renderStList(); });
+  $("#stAdd").onclick = () => { stDraft.push({ name: "My shift", paid: "hours", start: "09:00", end: "17:00", breakHrs: 0.5 }); renderStList(); const r = $("#stList").lastElementChild?.querySelector("input"); if (r) r.focus(); };
+  $("#stLib").addEventListener("click", e => {
+    const b = e.target.closest("[data-lib]"); if (!b) return; const [n, st] = b.dataset.lib.split("|");
+    const t = [...TYPE_LIB.care, ...TYPE_LIB.other].find(x => x.name === n && x.start === st); if (t) { stDraft.push({ ...t }); renderStList(); }
+  });
+  $("#sWork").addEventListener("change", renderStList);
+
   function fillSettings() {
     renderPresets();
+    $("#sWork").value = state.cfg.workType || "care";
+    stDraft = null; renderStList();
     $("#sName").value = state.cfg.name || ""; $("#sRole").value = state.cfg.role || "";
     $("#sRate").value = state.cfg.hourlyRate; $("#sSleep").value = state.cfg.sleepInRate;
     $("#sStart").value = state.cfg.periodStartDay; $("#sUsers").value = (state.cfg.serviceUsers || []).join(", ");
@@ -550,7 +657,10 @@
   $("#setForm").addEventListener("submit", async e => {
     e.preventDefault();
     if (!state.db) { toast("Settings can't be saved in this view"); return; }
-    const next = { name: $("#sName").value.trim(), role: $("#sRole").value.trim(), hourlyRate: Number($("#sRate").value) || 0, sleepInRate: Number($("#sSleep").value) || 0, periodStartDay: Math.min(28, Math.max(1, Number($("#sStart").value) || 1)), serviceUsers: $("#sUsers").value.split(",").map(x => x.trim()).filter(Boolean), busFare: Math.max(0, Math.round((Number($("#sFare").value) || 0) * 100) / 100) };
+    const next = { name: $("#sName").value.trim(), role: $("#sRole").value.trim(), hourlyRate: Number($("#sRate").value) || 0, sleepInRate: Number($("#sSleep").value) || 0, periodStartDay: Math.min(28, Math.max(1, Number($("#sStart").value) || 1)), serviceUsers: $("#sUsers").value.split(",").map(x => x.trim()).filter(Boolean), busFare: Math.max(0, Math.round((Number($("#sFare").value) || 0) * 100) / 100),
+      workType: $("#sWork").value || "care", shiftTypes: (stDraft || shiftTypes()).map(stClean) };
+    const bad = next.shiftTypes.find(t => t.paid === "both" && !(t.hours > 0)) || next.shiftTypes.find(t => t.paid !== "sleep" && t.breakHrs >= (typeHours(t) || 0));
+    if (bad) { toast(`Check the hours and break for "${bad.name}"`); return; }
     try { await S.main().set({ ...state.cfg, ...next }); toast("Settings saved"); } catch (e2) { toast("Settings didn't save"); }
   });
 
@@ -917,14 +1027,22 @@
   const profileData = () => ({ ageGroup: $("#uAge").value, sex: $("#uSex").value || null, sexOther: $("#uSex").value === "other" ? obVal("uSexOther") || null : null,
     area: obVal("uArea"), employer: obVal("uEmployer") || null, nickname: obVal("uNick"), createdAt: new Date().toISOString() });
   const OB_LAST = 8, OB_FIRST = window.SBAuth ? 1 : 0;
-  let obStep = 0, obDay = null, obType = "day";
+  let obStep = 0, obDay = null, obType = 0, obWork = "care", obPicked = new Set(OB_PICK.care);
   const obVal = id => $("#" + id).value.trim();
-  const obPat = () => ({ dayStart: $("#obDayStart").value || "08:00", dayHours: Number($("#obDayHours").value) || 12, breakHrs: Math.max(0, Number($("#obBreak").value) || 0), sleepStart: $("#obSleepStart").value || "20:00", sleepEnd: $("#obSleepEnd").value || "08:00" });
-  const obAdd = (hhmm, h) => { const [a, b] = hhmm.split(":").map(Number), m = ((a * 60 + b + Math.round(h * 60)) % 1440 + 1440) % 1440; return String(Math.floor(m / 60)).padStart(2, "0") + ":" + String(m % 60).padStart(2, "0"); };
+  const obTypesChosen = () => TYPE_LIB[obWork].filter(t => obPicked.has(t.name));
+  const obPat = () => obTypesChosen();
   function obShiftPay() {
-    const P = obPat(), rate = Number($("#uRate").value) || 0, sleep = Number($("#uSleep").value) || 0, paid = Math.max(0, P.dayHours - P.breakHrs);
-    return obType === "day" ? paid * rate : obType === "sleep" ? sleep : obType === "both" ? paid * rate + sleep : 0;
+    const t = obTypesChosen()[obType]; if (obType === "none" || !t) return 0;
+    const rate = Number(t.rate) > 0 ? Number(t.rate) : Number($("#uRate").value) || 0, sleep = Number($("#uSleep").value) || 0, h = typeHours(t);
+    return (h == null ? 0 : Math.max(0, h - (Number(t.breakHrs) || 0)) * rate) + (t.paid === "hours" ? 0 : sleep);
   }
+  function obLibRender() {
+    $("#obWork").querySelectorAll("[data-w]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.w === obWork)));
+    $("#obTypeLib").innerHTML = `<div class="obgroup">Tap the shifts you work</div><div class="obchips" role="group" aria-label="Shifts you work">` +
+      TYPE_LIB[obWork].map(t => `<button type="button" data-ot="${esc(t.name)}" aria-pressed="${obPicked.has(t.name)}">${esc(t.name)} · ${t.start}–${t.end}</button>`).join("") + `</div>`;
+  }
+  $("#obWork").addEventListener("click", e => { const b = e.target.closest("[data-w]"); if (!b || b.dataset.w === obWork) return; obWork = b.dataset.w; obPicked = new Set(OB_PICK[obWork]); obType = 0; obRender(); });
+  $("#obTypeLib").addEventListener("click", e => { const b = e.target.closest("[data-ot]"); if (!b) return; const n = b.dataset.ot; obPicked.has(n) ? obPicked.delete(n) : obPicked.add(n); obType = 0; obRender(); });
   function obRender() {
     document.querySelectorAll(".obstep").forEach(el => el.hidden = Number(el.dataset.step) !== obStep);
     $("#obTop").hidden = obStep === 0;
@@ -933,12 +1051,12 @@
     $("#obBack").hidden = obStep <= OB_FIRST;
     $("#obNext").hidden = obStep === OB_LAST; $("#setupBtn").hidden = obStep !== OB_LAST;
     $("#obNext").textContent = obStep === 0 ? "Get started" : obStep === 7 && !obVal("uUsers") ? "Skip" : "Next";
-    const P = obPat(), paid = Math.max(0, P.dayHours - P.breakHrs);
-    $("#obPatPrev").innerHTML = `Day <b>${P.dayStart}–${obAdd(P.dayStart, P.dayHours)}</b>, ${paid} paid hours · Sleep-in <b>${P.sleepStart}–${P.sleepEnd}</b>`;
-    const lab = { day: ["Day", `${P.dayStart}–${obAdd(P.dayStart, P.dayHours)}`], sleep: ["Sleep-in", `${P.sleepStart}–${P.sleepEnd}`], both: ["Day + sleep-in", `${P.dayStart}–${P.sleepEnd}`] };
-    $("#obTypes").querySelectorAll("[data-t]").forEach(b => { if (lab[b.dataset.t]) b.innerHTML = `${lab[b.dataset.t][0]}<small>${lab[b.dataset.t][1]}</small>`; b.setAttribute("aria-pressed", String(b.dataset.t === obType)); });
+    obLibRender();
+    const chosen = obTypesChosen();
+    $("#obPatPrev").innerHTML = chosen.length ? `You picked <b>${chosen.length}</b> shift${chosen.length === 1 ? "" : "s"}: ${chosen.map(t => esc(t.name)).join(", ")}` : "Pick at least one shift.";
+    $("#obTypes").innerHTML = chosen.map((t, i) => `<button type="button" data-t="${i}" aria-pressed="${obType === i}">${esc(t.name)}<small>${t.start}–${t.end}</small></button>`).join("") + `<button type="button" data-t="none" aria-pressed="${obType === "none"}">Not now</button>`;
     $("#obPay").hidden = obType === "none"; $("#obPayV").textContent = gbp(obShiftPay());
-    $("#setupBtn").textContent = obType === "none" ? "Start my Shiftbook" : "Save and start";
+    $("#setupBtn").textContent = obType === "none" || !chosen.length ? "Start my Shiftbook" : "Save and start";
     if (!$("#obDate").value) $("#obDate").value = todayStr;
     $("#setupErr").hidden = true;
   }
@@ -949,34 +1067,35 @@
     if (obStep === 4 && !(Number($("#uRate").value) > 0)) return err("Add your hourly rate, for example 13.00.");
     if (obStep === 4 && !(Number($("#uSleep").value || 0) >= 0)) return err("The sleep-in rate can't be below zero.");
     if (obStep === 5) { const d = Number($("#uDay").value); if (!(d >= 1 && d <= 28)) return err("Pick the day your pay month starts, from 1 to 28."); }
-    if (obStep === 6) { const P = obPat(); if (!(P.dayHours > 0 && P.dayHours <= 24) || P.breakHrs >= P.dayHours) return err("Check the day shift hours and break."); }
+    if (obStep === 6 && !obTypesChosen().length) return err("Pick at least one shift you work. You can change them later.");
     return true;
   }
   const obGo = n => { obStep = Math.max(OB_FIRST, Math.min(OB_LAST, n)); obRender(); const f = document.querySelector(`.obstep[data-step="${obStep}"] input`); if (f && obStep) setTimeout(() => f.focus({ preventScroll: true }), 50); window.scrollTo({ top: 0 }); };
-  $("#obNext").onclick = () => { if (obCheck()) obGo(obStep + 1); };
-  $("#obBack").onclick = () => obGo(obStep - 1);
+  $("#obNext").onclick = () => { if (obCheck()) obGo(obStep + 1 + (obStep === 6 && obWork !== "care" ? 1 : 0)); };
+  $("#obBack").onclick = () => obGo(obStep - 1 - (obStep === 8 && obWork !== "care" ? 1 : 0));
   $("#setupForm").addEventListener("keydown", e => { if (e.key === "Enter" && e.target.tagName === "INPUT" && obStep < OB_LAST) { e.preventDefault(); $("#obNext").click(); } });
   $("#obDayChips").addEventListener("click", e => { const b = e.target.closest("[data-day]"); if (!b) return; $("#uDay").value = b.dataset.day; obSyncChips(); });
   const obSyncChips = () => $("#obDayChips").querySelectorAll("[data-day]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.day === $("#uDay").value)));
   $("#uDay").addEventListener("input", obSyncChips);
-  $("#obTypes").addEventListener("click", e => { const b = e.target.closest("[data-t]"); if (!b) return; obType = b.dataset.t; obRender(); });
-  ["obDayStart", "obDayHours", "obBreak", "obSleepStart", "obSleepEnd", "uName", "uRole", "uRate", "uSleep", "uDay", "uUsers"].forEach(id => $("#" + id).addEventListener("input", obRender));
+  $("#obTypes").addEventListener("click", e => { const b = e.target.closest("[data-t]"); if (!b) return; obType = b.dataset.t === "none" ? "none" : Number(b.dataset.t); obRender(); });
+  ["uName", "uRole", "uRate", "uSleep", "uDay", "uUsers"].forEach(id => $("#" + id).addEventListener("input", obRender));
   $("#setupForm").addEventListener("submit", async e => {
     e.preventDefault();
     if (obStep !== OB_LAST) { $("#obNext").click(); return; }
     const name = obVal("uName"), rate = Number($("#uRate").value), sleep = Number($("#uSleep").value) || 0, day = Number($("#uDay").value);
     if (!name || !(rate > 0) || !(day >= 1 && day <= 28)) { obGo(!name ? 1 : !(rate > 0) ? 4 : 5); obCheck(); return; }
     if (!$("#uAge").value || $("#uAge").value === "under18" || !obVal("uNick")) { obGo(!$("#uAge").value || $("#uAge").value === "under18" ? 2 : 3); obCheck(); return; }
-    const P = obPat(), users = obVal("uUsers").split(",").map(x => x.trim()).filter(Boolean), pay = obShiftPay();
+    const types = obTypesChosen().map(t => ({ ...t })), t0 = types[obType], users = obWork === "care" ? obVal("uUsers").split(",").map(x => x.trim()).filter(Boolean) : [], pay = obShiftPay();
     $("#setupBtn").disabled = true; $("#setupErr").hidden = true;
     try {
       await S.money().set({ ...MONEY_DEFAULTS, pots: STARTER_POTS });
       await S.profile().set(profileData());
       const date = $("#obDate").value;
-      if (obType !== "none" && date) {
-        await S.shifts().doc(date).set({ date, users: [], sleepIn: obType !== "day", dayHours: obType === "sleep" ? null : P.dayHours, breakHrs: obType === "sleep" ? null : P.breakHrs, notes: "", updatedAt: new Date().toISOString() });
+      if (obType !== "none" && t0 && date) {
+        const h = typeHours(t0);
+        await S.shifts().doc(date).set({ date, type: t0.name, start: t0.start, end: t0.end, users: [], sleepIn: t0.paid !== "hours", dayHours: h, breakHrs: h == null ? null : (t0.breakHrs ?? 0), rate: null, notes: "", updatedAt: new Date().toISOString() });
       }
-      await S.main().set({ name, role: obVal("uRole") || "Support Worker", hourlyRate: rate, sleepInRate: sleep, periodStartDay: day, serviceUsers: users, pattern: P });
+      await S.main().set({ name, role: obVal("uRole") || (obWork === "care" ? "Support Worker" : "Shift worker"), hourlyRate: rate, sleepInRate: sleep, periodStartDay: day, serviceUsers: users, workType: obWork, shiftTypes: types });
       state.view = obType === "none" ? "log" : "overview";
       toast(obType === "none" ? `Welcome, ${name}. Log your first shift when you're ready` : `Welcome, ${name}. Your first shift pays ${gbp(pay)}`);
     } catch (e2) {
@@ -991,7 +1110,7 @@
   // Predicts the next 7 days from the last 8 weeks: how often each weekday was worked,
   // the most common shift type on that weekday, and the usual hours, break and service users.
   const FC_WEEKS = 8;
-  const shiftKind = s => s.sleepIn && hasDayHrs(s) ? "Day + sleep-in" : s.sleepIn ? "Sleep-in" : "Day shift";
+  const shiftKind = s => s.type || (s.sleepIn && hasDayHrs(s) ? "Day + sleep-in" : s.sleepIn ? "Sleep-in" : isNight(s) ? "Night" : "Day shift");
   const medianOf = a => { const b = a.slice().sort((x, y) => x - y); return b.length ? b[Math.floor((b.length - 1) / 2)] : null; };
   const modeOf = a => { const m = new Map(); a.forEach(x => m.set(x, (m.get(x) || 0) + 1)); let best = null, n = 0; m.forEach((v, k) => { if (v > n) { n = v; best = k; } }); return best; };
   function forecast() {
@@ -1010,7 +1129,8 @@
       let guess = null;
       if (hits.length) {
         const kind = modeOf(hits.map(shiftKind)), same = hits.filter(s => shiftKind(s) === kind), dayOnes = same.filter(hasDayHrs);
-        guess = { date: key, users: (modeOf(same.map(s => (s.users || []).join("|"))) || "").split("|").filter(Boolean), sleepIn: kind !== "Day shift",
+        const last = same.slice().sort((a, b) => a.date.localeCompare(b.date)).pop() || {};
+        guess = { date: key, type: last.type || null, start: last.start || null, end: last.end || null, rate: last.rate ?? null, users: (modeOf(same.map(s => (s.users || []).join("|"))) || "").split("|").filter(Boolean), sleepIn: !!last.sleepIn,
           dayHours: dayOnes.length ? medianOf(dayOnes.map(s => Number(s.dayHours))) : null, breakHrs: dayOnes.length ? medianOf(dayOnes.map(s => Number(s.breakHrs) || 0)) : null, notes: "" };
       }
       days.push({ d, key, p, existing, guess, pay: existing ? calc(existing).total : guess ? calc(guess).total : 0 });
@@ -1035,7 +1155,7 @@
       const s = x.existing || x.guess, pct = Math.round(x.p * 100);
       const st = x.existing ? ["onrota", "On your rota"] : x.p >= 0.5 ? ["likely", `Likely · ${pct}%`] : x.p >= 0.3 ? ["maybe", `Possible · ${pct}%`] : ["off", `Likely day off · ${100 - pct}%`];
       const shown = !!x.existing || (!!x.guess && x.p >= 0.3);
-      const det = shown && s ? `${shiftKind(s)}${hasDayHrs(s) ? ` · ${hrs(Number(s.dayHours))} hrs, ${hrs(Number(s.breakHrs) || 0)} break` : ""}${(s.users || []).length ? ` · ${esc(s.users.join(", "))}` : ""}` : "Rest day expected";
+      const det = shown && s ? `${esc(shiftKind(s))}${s.start && s.end ? ` ${esc(s.start)}–${esc(s.end)}` : ""}${hasDayHrs(s) ? ` · ${hrs(Number(s.dayHours))} hrs, ${hrs(Number(s.breakHrs) || 0)} break` : ""}${(s.users || []).length ? ` · ${esc(s.users.join(", "))}` : ""}` : "Rest day expected";
       const btn = !x.existing && x.guess && x.p >= 0.3 ? `<button type="button" class="btn secondary fcadd" data-fc="${x.key}">Add to rota</button>` : "";
       return `<div class="fcday ${st[0]}"><div class="fcdate"><b>${fmt(x.d, { weekday: "short" })}</b><span>${fmt(x.d, { day: "numeric", month: "short" })}</span></div><div class="fcbody"><span class="fcpill ${st[0]}">${st[1]}</span><div class="fcdet">${det}</div><div class="fcbar" aria-hidden="true"><i style="width:${x.existing ? 100 : pct}%"></i></div></div><div class="fcpay num">${shown ? gbp(x.pay) : "–"}${btn}</div></div>`;
     }).join("");
@@ -1051,6 +1171,7 @@
     const x = forecast().days.find(y => y.key === b.dataset.fc); if (!x || !x.guess) return;
     openLog(x.key);
     state.form.users = new Set(x.guess.users); $("#fHours").value = x.guess.dayHours ?? ""; $("#fBreak").value = x.guess.breakHrs ?? "";
+    state.form.type = x.guess.type; $("#fStart").value = x.guess.start || ""; $("#fEnd").value = x.guess.end || ""; $("#fRate").value = x.guess.rate ?? "";
     setSleep(!!x.guess.sleepIn); renderUserChips(); preview();
     show("log"); toast("Predicted shift filled in. Check it, then tap Save shift");
   });
@@ -1258,7 +1379,7 @@
     $("#cmReplyTxt").textContent = rp ? `Replying to ${rp.nick}` : "";
     $("#cmTextLbl").textContent = rp ? "Your reply" : "What's on your mind?";
     $("#cmPost").textContent = rp ? "Reply" : "Post";
-    renderMessages(); renderSheet();
+    renderMessages(); cmRenderSheet();
   }
 
   // ---------- messages: the Shiftbook team, and (full app) other carers ----------
@@ -1332,7 +1453,7 @@
     if (cm.store?.openThread) cm.store.openThread(t).catch(() => {});
     renderCommunity(); $("#cmMsgs").scrollIntoView({ block: "start", behavior: "smooth" });
   }
-  function renderSheet() {
+  function cmRenderSheet() {
     const pid = cm.sheet, box = $("#cmSheet");
     if (!pid) { box.hidden = true; return; }
     const f = cm.feed, p = (f.people && f.people.get(pid)) || {};
@@ -1360,9 +1481,9 @@
     const wasHidden = box.hidden; box.hidden = false;
     if (wasHidden) $("#cmSheetClose").focus();
   }
-  function cmCloseSheet() { const pid = cm.sheet; cm.sheet = null; renderSheet(); const back = pid && document.querySelector(`#cmFeed [data-prof="${CSS.escape(pid)}"]`); if (back) back.focus(); }
+  function cmCloseSheet() { const pid = cm.sheet; cm.sheet = null; cmRenderSheet(); const back = pid && document.querySelector(`#cmFeed [data-prof="${CSS.escape(pid)}"]`); if (back) back.focus(); }
   $("#cmSheetClose").onclick = cmCloseSheet;
-  $("#cmMe").addEventListener("click", e => { const b = e.target.closest("[data-prof]"); if (b) { cm.sheet = b.dataset.prof; renderSheet(); } });
+  $("#cmMe").addEventListener("click", e => { const b = e.target.closest("[data-prof]"); if (b) { cm.sheet = b.dataset.prof; cmRenderSheet(); } });
   $("#cmSheet").addEventListener("click", e => { if (e.target === $("#cmSheet")) cmCloseSheet(); });
   document.addEventListener("keydown", e => { if (e.key === "Escape" && cm.sheet) cmCloseSheet(); });
   $("#cmThreadBack").onclick = () => { cm.thread = null; cm.dmReporting = null; if (cm.store?.closeThread) cm.store.closeThread(); renderCommunity(); };
@@ -1402,9 +1523,9 @@
   $("#cmFeed").parentElement.addEventListener("click", async e => {
     const t = e.target.closest("button"); if (!t || !cm.store) return;
     const d = t.dataset;
-    if (d.prof) { cm.sheet = d.prof; renderSheet(); return; }
+    if (d.prof) { cm.sheet = d.prof; cmRenderSheet(); return; }
     if (d.open) { const [k, pid] = d.open.split(":"); cmOpen(k === "team" ? { kind: "team" } : { kind: k, pid }); return; }
-    if (d.msg) { cm.sheet = null; renderSheet(); cmOpen({ kind: "dm", pid: d.msg }); return; }
+    if (d.msg) { cm.sheet = null; cmRenderSheet(); cmOpen({ kind: "dm", pid: d.msg }); return; }
     if (d.block) { try { await cm.store.dmBlock(d.block); toast("Blocked. They can't message you."); } catch (e2) { toast("That didn't work. Try again."); } return; }
     if (d.unblock) { try { await cm.store.dmUnblock(d.unblock); toast("Unblocked"); } catch (e2) { toast("That didn't work. Try again."); } return; }
     if (d.dmopen) { try { await cm.store.setDmOpen(d.dmopen === "on"); toast(d.dmopen === "on" ? "Carers can message you" : "New messages from carers are off"); } catch (e2) { toast("That didn't save. Try again."); } return; }

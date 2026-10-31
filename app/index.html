@@ -97,15 +97,13 @@
           <div class="field"><label for="uDay">Or type the day (1 to 28)</label><input type="number" id="uDay" min="1" max="28" inputmode="numeric" placeholder="e.g. 26"></div>
         </div>
         <div class="obstep" data-step="6" hidden>
-          <h2 class="obh">What are your usual shifts?</h2>
-          <p class="obsub">These become one-tap buttons when you log a shift. Most care shifts are set already.</p>
-          <div class="row2">
-            <div class="field"><label for="obDayStart">Day shift starts</label><input type="time" id="obDayStart" value="08:00"></div>
-            <div class="field"><label for="obDayHours">Day shift hours</label><input type="number" id="obDayHours" value="12" min="1" max="24" step="0.5" inputmode="decimal"></div>
-            <div class="field"><label for="obBreak">Unpaid break (hours)</label><input type="number" id="obBreak" value="2" min="0" max="8" step="0.25" inputmode="decimal"></div>
-            <div class="field"><label for="obSleepStart">Sleep-in starts</label><input type="time" id="obSleepStart" value="20:00"></div>
-            <div class="field"><label for="obSleepEnd">Sleep-in ends</label><input type="time" id="obSleepEnd" value="08:00"></div>
-          </div>
+          <h2 class="obh">What shifts do you work?</h2>
+          <p class="obsub">Pick every shift you do. They become one-tap buttons when you log a shift. You can change the times or add your own later in Settings.</p>
+          <div class="field"><span class="lbl">Your kind of work</span>
+            <div class="obchips" id="obWork" role="group" aria-label="Your kind of work">
+              <button type="button" data-w="care" aria-pressed="true">Care or support work</button><button type="button" data-w="other" aria-pressed="false">Factory, warehouse or other</button>
+            </div></div>
+          <div id="obTypeLib"></div>
           <p class="obpreview" id="obPatPrev"></p>
         </div>
         <div class="obstep" data-step="7" hidden>
@@ -168,8 +166,8 @@
         <h2>Shift calendar</h2>
         <div class="cal" id="cal"></div>
         <div class="legend" style="margin-top:10px">
-          <span><span class="sw" style="background:var(--day-soft)"></span>Day shift</span>
-          <span><span class="sw" style="background:var(--night-soft)"></span>Sleep-in</span>
+          <span><span class="sw" style="background:var(--day-soft)"></span>Day</span>
+          <span><span class="sw" style="background:var(--night-soft)"></span>Night or sleep-in</span>
           <span><span class="sw" style="background:linear-gradient(135deg,var(--day-soft) 50%,var(--night-soft) 50%)"></span>Both</span>
           <span><span class="sw" style="border:1px dashed var(--faint)"></span>Rostered</span>
           <span><span class="sw" style="box-shadow:inset 0 0 0 2px var(--bad)"></span>Not resting enough</span>
@@ -236,7 +234,7 @@
           <input type="date" id="fDate" required>
           <div class="banner info" id="editNote" hidden></div>
         </div>
-        <div class="field">
+        <div class="field" id="fUsersField">
           <span class="lbl">Service user(s)</span>
           <div class="chips" id="fUsers"></div>
           <div class="row2" id="addUserRow" hidden>
@@ -246,11 +244,12 @@
         </div>
         <div class="field">
           <span class="lbl">Shift type</span>
-          <div class="quick shiftpre" id="fPreset">
-            <button type="button" data-pre="day">Day · 08:00–20:00</button>
-            <button type="button" data-pre="sleep">Sleep-in · 20:00–08:00</button>
-            <button type="button" data-pre="both">Day + sleep-in · 08:00–08:00</button>
-          </div>
+          <div class="quick shiftpre" id="fPreset"></div>
+          <span class="hint">Change these or add your own in Settings on the Timesheet tab.</span>
+        </div>
+        <div class="row2">
+          <div class="field"><label for="fStart">Starts</label><input type="time" id="fStart"></div>
+          <div class="field"><label for="fEnd">Finishes <span class="hint">next morning is fine</span></label><input type="time" id="fEnd"></div>
         </div>
         <div class="field">
           <span class="lbl">Sleep-in?</span>
@@ -261,7 +260,7 @@
         </div>
         <div class="row2">
           <div class="field">
-            <label for="fHours">Day hours <span class="hint">blank if sleep-in only</span></label>
+            <label for="fHours">Paid hours <span class="hint">worked out from the times · blank if sleep-in only</span></label>
             <input type="number" id="fHours" min="0" max="24" step="0.25" inputmode="decimal">
             <div class="quick"><button type="button" data-h="12">12</button><button type="button" data-h="8">8</button><button type="button" data-h="4.5">4.5</button></div>
           </div>
@@ -270,6 +269,10 @@
             <input type="number" id="fBreak" min="0" max="24" step="0.25" inputmode="decimal">
             <div class="quick"><button type="button" data-b="2">2</button><button type="button" data-b="1">1</button><button type="button" data-b="0">0</button></div>
           </div>
+        </div>
+        <div class="field">
+          <label for="fRate">Hourly rate for this shift (£) <span class="hint" id="fRateHint">blank = your usual rate</span></label>
+          <input type="number" id="fRate" min="0" max="200" step="0.01" inputmode="decimal" placeholder="Usual rate">
         </div>
         <div class="field">
           <label for="fFare">Bus fare for this shift (£) <span class="hint">there and back · optional</span></label>
@@ -339,6 +342,13 @@
           <div class="row2"><select id="rnFrom" aria-label="Name to change"></select><input type="text" id="rnTo" maxlength="20" autocomplete="off" placeholder="New initials or code, e.g. Zee" aria-label="New name"></div>
           <div class="actions" style="margin-top:8px"><button type="button" class="btn secondary" id="rnBtn">Rename in all shifts</button></div>
           <span class="hint">Use initials or a short code, never a full name. Old shifts change too.</span></div>
+        <div class="field"><label for="sWork">Kind of work</label><select id="sWork"><option value="care">Care or support work</option><option value="other">Factory, warehouse or other</option></select></div>
+        <div class="field" style="grid-column:1/-1"><span class="lbl">Your shift types</span>
+          <span class="hint">Each one becomes a button when you log a shift. Times past midnight are fine, for example 20:00 to 08:00.</span>
+          <div class="stlist" id="stList"></div>
+          <div class="actions"><button type="button" class="btn secondary" id="stAdd">+ Add a shift type</button></div>
+          <span class="lbl" style="margin-top:10px">Add a common shift</span>
+          <div class="obchips" id="stLib"></div></div>
         <div class="field"><label for="sFare">Usual bus fare per shift (£) <span class="hint">there and back · 0 if you don't take the bus</span></label><input type="number" id="sFare" step="0.05" min="0" max="200" inputmode="decimal"></div>
         <div class="actions" style="grid-column:1/-1"><button class="btn" type="submit" id="setSave">Save settings</button></div>
       </form>
@@ -536,7 +546,7 @@
       <h3>What Shiftbook keeps</h3>
       <ul>
         <li>What you enter in setup: your first name, role, hourly and sleep-in rates, pay period start day and usual shift times.</li><li>Your profile: age group, sex (optional), your area, your employer (optional) and your community nickname. Other carers only ever see your nickname. Your employer never sees any of it. Age group and sex are only used, added up across all users, to understand who uses Shiftbook.</li>
-        <li>Your shifts: dates, hours, breaks, sleep-ins, notes, and the service users you choose to add.</li>
+        <li>Your shifts: dates, start and finish times, shift type, hours, breaks, sleep-ins, any shift rate, notes, and the service users you choose to add.</li>
         <li>Payslip figures you type in, your tax settings, your spending plan and spending amounts.</li>
         <li>In the community: your public profile (nickname and area only), your posts, and messages you send. Messages to the Shiftbook team are read only by you and the team.</li>
       </ul>
@@ -629,10 +639,10 @@
       <button type="button" class="btn secondary backbtn" data-info-back>‹ Back</button>
       <h2>Questions and answers</h2>
         <details class="faq"><summary>What is Shiftbook?</summary><div>A shift log for care and support workers. Log each shift, including sleep-ins and breaks, and Shiftbook shows your gross pay, an estimate of your take-home, a check against your payslip, a rest warning and a plan for your money.</div></details>
-        <details class="faq"><summary>How is my pay worked out?</summary><div>For each shift: (day hours − unpaid break) × your hourly rate, plus your sleep-in rate if it was a sleep-in. Your rates come from Settings on the Timesheet tab.</div></details>
+        <details class="faq"><summary>How is my pay worked out?</summary><div>For each shift: (paid hours − unpaid break) × your hourly rate, plus your sleep-in rate if it was a sleep-in. If a shift has its own rate, such as a higher rate for nights or weekends, that rate is used instead. Paid hours are worked out from the start and finish times, including shifts that run past midnight. Your rates and shift types are in Settings on the Timesheet tab.</div></details>
         <details class="faq"><summary>Is my take-home exact?</summary><div>It's an estimate using 2026/27 tax, National Insurance and pension rules for England, Wales and Northern Ireland. Your payslip is the final word. Add your payslip on the Money tab and Shiftbook compares it line by line.</div></details>
         <details class="faq"><summary>My payslip doesn't match. What should I do?</summary><div>Check the hours and sleep-ins logged for that pay period first. If the payslip shows no sleep-in pay but you did sleep-ins, or fewer hours than you worked, ask your payroll team. The payslip check shows exactly which line is different.</div></details>
-        <details class="faq"><summary>Why is my Rest check red?</summary><div>Red means you're not getting enough rest: 7 or more days in a row without a day off, more than 48 hours in 7 days, or a day shift, sleep-in and another day shift back to back. It's a guide based on UK working time rules, not legal advice.</div></details>
+        <details class="faq"><summary>Why is my Rest check red?</summary><div>Red means you're not getting enough rest: 7 or more days in a row without a day off, more than 48 hours in 7 days, or a day shift, sleep-in and another day shift back to back. Amber means watch it, for example less than 11 hours off between the end of one shift and the start of the next. It's a guide based on UK working time rules, not legal advice.</div></details>
         <details class="faq"><summary>What does 'unpaid breaks worth' mean?</summary><div>The hours of unpaid breaks you took, multiplied by your hourly rate. It shows the time you give at work without pay.</div></details>
         <details class="faq"><summary>How do I change or delete a shift?</summary><div>Tap the day on the calendar or its row on the Timesheet tab. Change the details and tap Save changes, or tap Delete. If you only worked part of a shift, change the hours instead of deleting it.</div></details>
         <details class="faq"><summary>How do I send my timesheet to my manager?</summary><div>Timesheet tab → Download CSV. The file includes your name, the pay period, every shift and the totals. It opens in Excel or Google Sheets.</div></details>
