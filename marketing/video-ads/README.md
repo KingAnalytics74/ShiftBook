@@ -8,7 +8,7 @@ Three 15-second vertical ads (1080×1920, 9:16) for TikTok, Instagram Reels and 
 | `shiftbuck-shiftpay-9x16.mp4` | "What does today's shift actually pay?" | Picking a shift type, "This shift pays £175", then the month adding up |
 | `shiftbuck-rest-9x16.mp4` | "7 days in a row without a day off?" | The rest check warning and 70 hours in 7 days, then gross pay |
 
-Each ends on the logo, "Know your pay before payday", "Free for UK care workers" and the web address.
+Each ends on the logo, "Know your pay before payday", "Free for UK care workers" and **shiftbuck.com**.
 
 They're made to work **with the sound off**: every message is on screen. Each file has a silent audio track, so platforms accept it. To add music, pick it inside TikTok or Instagram from their **commercial music library**. Paid ads can't use ordinary trending songs.
 
@@ -31,14 +31,14 @@ Text and app screens stay out of the bottom fifth and the right edge, where TikT
 ## Before you pay to promote them
 
 1. **Connect Supabase first.** Until it's connected the site runs in demo mode: shifts stay in that one browser, don't move between devices, and are lost if the browser is cleared. People who sign up from an ad deserve real accounts.
-2. **Get your own web address.** The ads end on `kinganalytics74.github.io/ShiftBook`. Once you have a Shiftbuck address, re-render them (below).
+2. **Make sure shiftbuck.com opens the app.** The ads send people to shiftbuck.com, so its DNS must point at GitHub Pages and the domain must be set in **Settings → Pages** before the ads run.
 3. **Keep the claims true (UK advertising rules, CAP Code).** The ads show only what the app does, with "Example figures shown" on the end card.
    - Keep "Free for UK care workers" true for as long as these ads run.
    - Don't add claims the app can't back up, such as "never be underpaid again" or "matches every payslip".
    - The rest check is a guide, not legal advice. Don't present it as a legal guarantee.
 4. **Use an account for the business.** Use a TikTok Business account or Meta Business Suite in WesTech Innovation's name, and link the privacy notice (`app/#privacy`) wherever the platform asks for one.
 
-## Re-render them (for example with a new web address)
+## Re-render them (for example with new wording)
 
 Everything is in `source/`. You need Node, Playwright with Chromium, and ffmpeg.
 
