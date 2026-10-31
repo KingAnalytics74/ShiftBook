@@ -59,7 +59,7 @@ This repository is already published at **https://kinganalytics74.github.io/Shif
 
 ## Working on Shiftbook
 
-Engineers: read [CONTRIBUTING.md](CONTRIBUTING.md) before your first change. Starter tasks are in [docs/first-issues.md](docs/first-issues.md).
+Engineers: read [CONTRIBUTING.md](CONTRIBUTING.md) before your first change, and [SECURITY.md](SECURITY.md) for how Shiftbook is protected and the settings to switch on before launch. Starter tasks are in [docs/first-issues.md](docs/first-issues.md).
 
 ## Project structure
 

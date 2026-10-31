@@ -3,6 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<!-- Security: only this site's own scripts run, and the only outside service is Supabase. See SECURITY.md. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://*.supabase.co wss://*.supabase.co; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests">
+<meta name="referrer" content="same-origin">
+<style id="antiframe">html{display:none!important}</style>
+<script src="src/guard.js"></script>
 <title>Shiftbook</title>
 <meta name="description" content="Shift log, pay, tax and budgeting app for care workers.">
 <link rel="stylesheet" href="src/fonts.css">

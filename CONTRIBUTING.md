@@ -21,6 +21,7 @@ app/src/auth.js              sign-up, sign-in, pause, delete account
 app/src/platform.js          storage: Supabase when configured, this browser in demo mode
 app/src/community-store.js   community, profiles, messages on Supabase
 app/src/config.js            Supabase URL and anon key (empty = demo mode)
+app/src/guard.js             keeps the app hidden if another site frames it (loaded first)
 supabase/schema.sql      tables, row-level security and functions
 docs/DATA_MODEL.md       what is stored where and who can read it
 ```
@@ -51,7 +52,8 @@ python3 -m http.server 3000
 - [ ] Works in demo mode and against the test Supabase project
 - [ ] Checked on a phone-sized screen (390px wide) and on desktop
 - [ ] Checked in light and dark mode
-- [ ] No errors in the browser console
+- [ ] No errors in the browser console, including "Refused to load" messages from the Content Security Policy
+- [ ] Text people type is shown with `esc()` or `textContent`, never put into HTML as it is
 - [ ] Pay figures checked by hand for at least one shift (hours × rate + sleep-in)
 - [ ] Nothing a user types can identify a service user in shared places (posts, messages)
 - [ ] `docs/DATA_MODEL.md` updated if you changed what is stored

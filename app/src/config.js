@@ -7,7 +7,7 @@
  * row-level security in supabase/schema.sql stops anyone reading another person's data.
  */
 window.SHIFTBOOK_CONFIG = {
-  supabaseUrl: "",          // e.g. "https://abcdefgh.supabase.co"
+  supabaseUrl: "",          // e.g. "https://abcdefgh.supabase.co" (a custom Supabase domain also needs adding to connect-src in index.html)
   supabaseAnonKey: "",      // the "anon public" key
   signIn: {
     phone: true,            // code by text message (needs an SMS provider such as Twilio set up in Supabase)

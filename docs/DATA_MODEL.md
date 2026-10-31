@@ -36,7 +36,7 @@ Every document above is one row in `public.documents` (see `supabase/schema.sql`
 | `data` | the document itself, as JSON |
 | `updated_at` | last change |
 
-`<id>` in every path is the signed-in user's Supabase id. Row-level security only lets people read and write rows where `user_id = auth.uid()`, and a check stops a row being saved outside `data/users/<their id>/`. `delete_my_account()` removes the person's rows and their sign-in. Sign-in details (phone, email and, if someone chooses one, a password) live in Supabase Auth (`auth.users`), not in `documents`; passwords are stored only as a hash.
+`<id>` in every path is the signed-in user's Supabase id. Row-level security only lets people read and write rows where `user_id = auth.uid()`, and a check stops a row being saved outside `data/users/<their id>/`. `delete_my_account()` removes the person's rows and their sign-in. Each document's `data` is capped at 256 KB. Sign-in details (phone, email and, if someone chooses one, a password) live in Supabase Auth (`auth.users`), not in `documents`; passwords are stored only as a hash.
 
 ## Profiles and messages (Supabase)
 
@@ -52,6 +52,7 @@ All of these tables have row-level security on and no policies: the app reaches 
 | `announcements` | messages from the team to everyone | everyone signed in, via the `announcements_feed` view |
 
 `community_feed` now also returns `author_id` (the author's public profile id) so tapping a nickname opens their profile.
+`community_post` stores the poster's own profile nickname and area (creating the profile on a first post), never a nickname sent by the app.
 Deleting an account removes the person's profile, messages and blocks through the `auth.users` cascade.
 
 ## Profiles and messages (Claude version)

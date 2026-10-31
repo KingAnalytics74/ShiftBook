@@ -506,12 +506,13 @@
   // ---------- timesheet actions ----------
   function csv() {
     const p = curPeriod(), sm = summarise(p);
-    const q = v => `"${String(v ?? "").replace(/"/g, '""')}"`;
+    // quote every text cell; Excel runs a cell starting with = + - or @ as a formula, so those get a leading '
+    const q = v => { let t = String(v ?? ""); if (/^[=+\-@\t\r]/.test(t)) t = "'" + t; return `"${t.replace(/"/g, '""')}"`; };
     const name = (state.cfg.name || "").trim();
     const head = [["Employee", q(name || "Not set")], ["Role", q(state.cfg.role || "")],
       ["Pay period", `${ymd(p.start)} to ${ymd(p.end)}`], ["Hourly rate", state.cfg.hourlyRate], ["Sleep-in rate", state.cfg.sleepInRate], []].map(r => r.join(","));
     const lines = [...head, ["Date", "Day", "Service user(s)", "Sleep-in", "Day hours", "Break", "Net hours", "Hourly pay", "Sleep-in pay", "Total", "Notes"].join(",")];
-    sm.rows.forEach(r => { const s = r.s, c = r.c; lines.push([r.key, fmt(r.date, { weekday: "short" }), s ? `"${(s.users || []).join(", ")}"` : "Day off", s ? (s.sleepIn ? "Y" : "N") : "", s?.dayHours ?? "", s?.breakHrs ?? "", c ? c.net : "", c ? c.hourly.toFixed(2) : "", c ? c.sleep.toFixed(2) : "", c ? c.total.toFixed(2) : "", s?.notes ? `"${s.notes.replace(/"/g, '""')}"` : ""].join(",")); });
+    sm.rows.forEach(r => { const s = r.s, c = r.c; lines.push([r.key, fmt(r.date, { weekday: "short" }), s ? q((s.users || []).join(", ")) : "Day off", s ? (s.sleepIn ? "Y" : "N") : "", s?.dayHours ?? "", s?.breakHrs ?? "", c ? c.net : "", c ? c.hourly.toFixed(2) : "", c ? c.sleep.toFixed(2) : "", c ? c.total.toFixed(2) : "", s?.notes ? q(s.notes) : ""].join(",")); });
     lines.push(["TOTAL", "", "", sm.t.sleepIns, sm.t.dayHours, sm.t.breaks, sm.t.net, sm.t.hourly.toFixed(2), sm.t.sleep.toFixed(2), sm.t.gross.toFixed(2), ""].join(","));
     return { text: lines.join("\n"), name: `Timesheet_${(name || "worker").replace(/[^A-Za-z0-9]+/g, "_").replace(/^_|_$/g, "")}_${ymd(p.start)}_to_${ymd(p.end)}.csv` };
   }

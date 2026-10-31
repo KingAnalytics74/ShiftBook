@@ -15,6 +15,12 @@ create table if not exists public.documents (
   constraint path_belongs_to_owner check (path like 'data/users/' || user_id::text || '/%')
 );
 
+-- Cap each document at 256 KB so one account can't fill the database. Real documents are a few KB.
+do $$ begin
+  alter table public.documents add constraint documents_size_limit check (pg_column_size(data) <= 262144);
+exception when duplicate_object then null;
+end $$;
+
 create index if not exists documents_parent_idx on public.documents (parent, path);
 create index if not exists documents_user_idx   on public.documents (user_id);
 
@@ -123,11 +129,18 @@ create or replace view public.community_feed as
 revoke all on public.community_feed from public, anon;
 grant select on public.community_feed to authenticated;
 
+-- Posts always go out under the poster's own profile. p_nickname and p_area are only used to create that
+-- profile on a first post (which fails if the nickname is someone else's), so nobody can post as another carer.
 create or replace function public.community_post(p_space text, p_body text, p_reply_to uuid, p_nickname text, p_area text)
 returns uuid language plpgsql security definer set search_path = public as $$
-declare new_id uuid; parent_space text;
+declare new_id uuid; parent_space text; me public.community_profiles;
 begin
   if auth.uid() is null then raise exception 'Not signed in'; end if;
+  select * into me from public.community_profiles where user_id = auth.uid();
+  if me.id is null then
+    perform public.community_upsert_profile(p_nickname, p_area);
+    select * into me from public.community_profiles where user_id = auth.uid();
+  end if;
   if (select count(*) from public.community_posts where user_id = auth.uid() and created_at > now() - interval '1 hour') >= 20 then
     raise exception 'Too many posts. Try again later.';
   end if;
@@ -137,7 +150,7 @@ begin
     p_space := parent_space;
   end if;
   insert into public.community_posts (user_id, nickname, area, space, body, reply_to)
-  values (auth.uid(), p_nickname, nullif(trim(p_area), ''), p_space, trim(p_body), p_reply_to)
+  values (auth.uid(), me.nickname, me.area, p_space, trim(p_body), p_reply_to)
   returning id into new_id;
   return new_id;
 end; $$;
