@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<title>Shiftbuck ad</title>
+<style>
+/* Ad stage: 1080x1920 (9:16). Navy ground, white captions with sun-yellow emphasis, real app screens in rounded frames. */
+@font-face{font-family:'Figtree';font-weight:500;src:url(../../../app/fonts/figtree-latin-500-normal.woff2) format('woff2')}
+@font-face{font-family:'Figtree';font-weight:700;src:url(../../../app/fonts/figtree-latin-700-normal.woff2) format('woff2')}
+@font-face{font-family:'Bricolage Grotesque';font-weight:700;src:url(../../../app/fonts/bricolage-grotesque-latin-700-normal.woff2) format('woff2')}
+@font-face{font-family:'IBM Plex Mono';font-weight:600;src:url(../../../app/fonts/ibm-plex-mono-latin-600-normal.woff2) format('woff2')}
+:root{--navy:#14213D;--navy2:#233A6E;--red:#C8102E;--sun:#FFD23F;--white:#FFFFFF;--mist:#C9D3EA;
+  --f-display:'Bricolage Grotesque',system-ui,sans-serif;--f-body:'Figtree',system-ui,sans-serif;--f-num:'IBM Plex Mono',monospace}
+html,body{margin:0;background:#000}
+#stage{position:relative;width:1080px;height:1920px;overflow:hidden;background:radial-gradient(120% 80% at 20% 0%,var(--navy2),var(--navy) 60%);font-family:var(--f-body);color:var(--white)}
+.band{position:absolute;inset:0 0 auto 0;height:12px;background:linear-gradient(90deg,#2563EB 0 33%,var(--sun) 33% 66%,var(--red) 66%)}
+.brand{position:absolute;left:70px;top:80px;display:flex;align-items:center;gap:22px}
+.brand img{width:92px;height:92px;border-radius:24px;box-shadow:0 0 0 4px rgba(255,255,255,.9)}
+.brand b{font-family:var(--f-display);font-size:58px;letter-spacing:-.01em}
+.brand b span,.wm span,em{color:var(--sun);font-style:normal}
+.scene{position:absolute;inset:0;opacity:0}
+.head{position:absolute;left:70px;right:70px;top:250px;font-family:var(--f-display);font-weight:700;font-size:88px;line-height:1.04;letter-spacing:-.015em}
+.sub{position:absolute;left:70px;right:70px;font-size:42px;line-height:1.3;color:var(--mist);font-weight:500}
+.frame{position:absolute;left:70px;width:940px;overflow:hidden;border-radius:44px;background:#EEF2F8;box-shadow:0 30px 80px rgba(0,0,0,.45),0 0 0 6px rgba(255,255,255,.08)}
+.frame img{position:absolute;left:0;top:0;transform-origin:0 0}
+.ring{position:absolute;border:9px solid var(--sun);border-radius:28px;box-shadow:0 0 0 9999px rgba(20,33,61,0);opacity:0}
+.hook .head{top:auto;bottom:640px;font-size:118px}
+.coin{position:absolute;left:70px;top:520px;width:300px;height:300px;border-radius:70px}
+.end{text-align:center}
+.end .logo{position:absolute;left:50%;top:420px;width:360px;height:360px;margin-left:-180px;border-radius:84px;box-shadow:0 0 0 8px rgba(255,255,255,.92),0 40px 90px rgba(0,0,0,.45)}
+.wm{position:absolute;left:0;right:0;top:860px;font-family:var(--f-display);font-size:150px;letter-spacing:-.02em}
+.tag{position:absolute;left:0;right:0;top:1060px;font-size:60px;font-weight:700}
+.chip{position:absolute;left:50%;top:1200px;transform:translateX(-50%);background:var(--sun);color:var(--navy);font-weight:700;font-size:46px;padding:22px 44px;border-radius:999px;white-space:nowrap}
+.url{position:absolute;left:0;right:0;top:1370px;font-family:var(--f-num);font-size:38px;color:var(--white)}
+.small{position:absolute;left:90px;right:90px;top:1460px;font-size:28px;color:var(--mist);text-align:center}
+</style>
+</head>
+<body>
+<div id="stage"><div class="band"></div><div id="scenes"></div></div>
+<script>
+const CTA_URL = "kinganalytics74.github.io/ShiftBook";
+const W = 940;
+// scene kinds: hook (big question), card (caption + app screen), end (logo and call to action)
+// card: img, iw = image width in px, win = [top, bottom] of the image to show, pan = [fromY, toY, t0, t1],
+//       rings = [{x, y, w, h, at}] in image pixels, at = seconds into the ad
+const ADS = {
+  payslip: [
+    { kind: "hook", t: [0, 2.8], head: "Was a sleep-in <em>missing</em> from your payslip?" },
+    { kind: "card", t: [2.8, 8.4], head: "Log every shift.<br><em>Shiftbuck checks your payslip.</em>", sub: "It compares what you worked with what you were paid.",
+      img: "screens/payslip.png", iw: 1074, win: [0, 1060], pan: [0, 400, 4.6, 6.0], rings: [{ x: 50, y: 1198, w: 975, h: 186, at: 6.2 }] },
+    { kind: "card", t: [8.4, 11.8], head: "Know your pay<br><em>before payday.</em>", sub: "Every shift and sleep-in adds up as you go.",
+      img: "screens/hero.png", iw: 1074, win: [0, 678], rings: [{ x: 36, y: 128, w: 590, h: 128, at: 9.4 }] },
+    { kind: "end", t: [11.8, 15] }
+  ],
+  shiftpay: [
+    { kind: "hook", t: [0, 2.8], head: "What does today's shift <em>actually pay?</em>" },
+    { kind: "card", t: [2.8, 6.6], head: "Pick the shift.<br><em>See what it pays.</em>", sub: "Day, sleep-in or both, at your own rates.",
+      img: "screens/logcard.png", iw: 1074, win: [470, 1130], rings: [{ x: 46, y: 1006, w: 724, h: 90, at: 4.4 }] },
+    { kind: "card", t: [6.6, 9.4], head: "<em>£175</em> for a day<br>and a sleep-in.", sub: "Example at £13 an hour and £45 a sleep-in.",
+      img: "screens/logpreview.png", iw: 972, win: [0, 162], top: 900, rings: [{ x: 640, y: 30, w: 310, h: 102, at: 7.5 }] },
+    { kind: "card", t: [9.4, 12.0], head: "Watch your month<br><em>add up.</em>", sub: "Sleep-ins and unpaid breaks included.",
+      img: "screens/chart.png", iw: 1074, win: [0, 525] },
+    { kind: "end", t: [12.0, 15] }
+  ],
+  rest: [
+    { kind: "hook", t: [0, 2.8], head: "7 days in a row <em>without a day off?</em>" },
+    { kind: "card", t: [2.8, 8.0], head: "Get a warning when<br><em>you're not resting enough.</em>", sub: "Based on UK working time rules.",
+      img: "screens/rest.png", iw: 1074, win: [0, 980], pan: [0, 640, 5.4, 6.6], rings: [{ x: 548, y: 54, w: 476, h: 90, at: 4.0, until: 5.3 }, { x: 548, y: 1082, w: 476, h: 304, at: 6.8 }] },
+    { kind: "card", t: [8.0, 11.8], head: "And see what<br><em>every shift pays.</em>", sub: "Your pay, your rest and your payslip in one place.",
+      img: "screens/hero.png", iw: 1074, win: [0, 678], rings: [{ x: 36, y: 128, w: 590, h: 128, at: 9.0 }] },
+    { kind: "end", t: [11.8, 15] }
+  ]
+};
+const ad = ADS[new URLSearchParams(location.search).get("ad") || "payslip"];
+const ease = x => x < 0 ? 0 : x > 1 ? 1 : x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+const out = x => x < 0 ? 0 : x > 1 ? 1 : 1 - Math.pow(1 - x, 3);
+const root = document.getElementById("scenes");
+const els = ad.map(s => {
+  const el = document.createElement("div"); el.className = "scene " + s.kind;
+  if (s.kind === "hook") el.innerHTML = `<div class="brand"><img src="../../../app/favicon.svg" alt=""><b>Shift<span>buck</span></b></div><img class="coin" src="../../../app/favicon.svg" alt=""><div class="head">${s.head}</div>`;
+  if (s.kind === "card") {
+    const sc = W / s.iw, h = Math.round((s.win[1] - s.win[0]) * sc), top = s.top || 760;
+    el.innerHTML = `<div class="brand"><img src="../../../app/favicon.svg" alt=""><b>Shift<span>buck</span></b></div><div class="head">${s.head}</div><div class="sub" style="top:${top - 150}px">${s.sub}</div>
+      <div class="frame" style="top:${top}px;height:${h}px"><img src="${s.img}" style="width:${s.iw}px;transform:scale(${sc})">${(s.rings || []).map(() => `<div class="ring"></div>`).join("")}</div>`;
+    s.sc = sc;
+  }
+  if (s.kind === "end") el.innerHTML = `<img class="logo" src="../../../app/favicon.svg" alt=""><div class="wm">Shift<span>buck</span></div><div class="tag">Know your pay before payday</div>
+    <div class="chip">Free for UK care workers</div><div class="url">${CTA_URL}</div><div class="small">Example figures shown. Your pay depends on your own shifts and rates.</div>`;
+  root.appendChild(el); return el;
+});
+window.DURATION = ad[ad.length - 1].t[1];
+window.renderAt = t => {
+  ad.forEach((s, i) => {
+    const el = els[i], [a, b] = s.t, inT = out((t - a) / .45), outT = i === ad.length - 1 ? 1 : 1 - ease((t - (b - .3)) / .3);
+    const vis = t >= a - .01 && t <= b + .01;
+    el.style.opacity = vis ? Math.min(inT, outT) : 0;
+    if (!vis) return;
+    const head = el.querySelector(".head"); if (head) head.style.transform = `translateY(${(1 - inT) * 50}px)`;
+    if (s.kind === "hook") {
+      const c = el.querySelector(".coin"), k = (t - a);
+      c.style.transform = `scaleX(${Math.cos(Math.min(k, 1.2) / 1.2 * Math.PI * 2)}) translateY(${(1 - out(k / .6)) * 60}px)`;
+    }
+    if (s.kind === "card") {
+      const fr = el.querySelector(".frame"), img = fr.querySelector("img"), sub = el.querySelector(".sub");
+      fr.style.transform = `translateY(${(1 - out((t - a - .1) / .5)) * 120}px)`; fr.style.opacity = out((t - a - .1) / .4);
+      sub.style.opacity = out((t - a - .25) / .4);
+      let y = s.win[0];
+      if (s.pan) y += ease((t - s.pan[2]) / (s.pan[3] - s.pan[2])) * (s.pan[1] - s.pan[0]);
+      img.style.top = `${-y * s.sc}px`;
+      (s.rings || []).forEach((r, j) => {
+        const ring = fr.querySelectorAll(".ring")[j], k = t - r.at, gone = r.until && t > r.until;
+        const pad = 14 / s.sc, pulse = 1 + .04 * Math.sin(Math.max(0, k) * 6) * Math.exp(-Math.max(0, k) * 1.5);
+        ring.style.left = `${(r.x - pad) * s.sc}px`; ring.style.top = `${(r.y - pad - y) * s.sc}px`;
+        ring.style.width = `${(r.w + pad * 2) * s.sc}px`; ring.style.height = `${(r.h + pad * 2) * s.sc}px`;
+        ring.style.opacity = gone ? Math.max(0, 1 - (t - r.until) / .2) : out(k / .25);
+        ring.style.transform = `scale(${k < 0 ? 1.15 : 1.15 - .15 * out(k / .3) * 1 + (pulse - 1)})`;
+      });
+    }
+    if (s.kind === "end") {
+      const k = t - a, logo = el.querySelector(".logo");
+      logo.style.transform = `scale(${.6 + .4 * out(k / .5)}) rotate(${(1 - out(k / .6)) * -20}deg)`;
+      [".wm", ".tag", ".url", ".small"].forEach((sel, n) => { const e = el.querySelector(sel); e.style.opacity = out((k - .25 - n * .15) / .4); e.style.transform = `translateY(${(1 - out((k - .25 - n * .15) / .4)) * 30}px)`; });
+      const chip = el.querySelector(".chip"), kc = out((k - .6) / .4);
+      chip.style.opacity = kc; chip.style.transform = `translateX(-50%) scale(${.85 + .15 * kc + .025 * Math.sin(Math.max(0, k - 1.2) * 5)})`;
+    }
+  });
+};
+function layout() {
+  ad.forEach((s, i) => {
+    if (s.kind !== "card") return;
+    const el = els[i], head = el.querySelector(".head"), sub = el.querySelector(".sub"), fr = el.querySelector(".frame");
+    const subTop = 250 + head.offsetHeight + 34; sub.style.top = subTop + "px";
+    fr.style.top = Math.max(s.top || 0, subTop + sub.offsetHeight + 56) + "px";
+  });
+}
+window.ready = Promise.all([document.fonts.ready, ...[...document.images].map(i => i.decode().catch(() => {}))]).then(() => { layout(); renderAt(0); return true; });
+</script>
+</body>
+</html>
