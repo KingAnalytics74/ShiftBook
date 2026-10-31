@@ -16,6 +16,14 @@
  * TAX         monthly estimate, 2026/27 rUK rates (see R below) — not a payslip
  * SYNC        none in this edition (no Jotform)
  */
+
+import { pad, ymd, parse, addDays } from "./core/dates.js";
+import { periodFor as periodForCore, daysIn } from "./core/periods.js";
+import { calc as calcCore, summarise as summariseCore } from "./core/pay.js";
+import { REST, hasDayHrs, worked, restDay as restDayCore } from "./core/restCheck.js";
+import { parseTaxCode, deductions } from "./core/tax.js";
+import { forecast as forecastCore, shiftKind } from "./core/forecast.js";
+
 (() => {
   if (!document.documentElement.lang) document.documentElement.lang = "en-GB";
   const DEFAULTS = { name: "", role: "Support Worker", hourlyRate: 13, sleepInRate: 40, periodStartDay: 26, serviceUsers: [], busFare: 0, pattern: { dayStart: "08:00", dayHours: 12, breakHrs: 2, sleepStart: "20:00", sleepEnd: "08:00" } };
@@ -25,47 +33,17 @@
   const $ = s => document.querySelector(s);
   const gbp = n => "£" + (Math.round(n * 100) / 100).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const hrs = n => (Math.round(n * 10) / 10).toLocaleString("en-GB", { maximumFractionDigits: 1 });
-  const pad = n => String(n).padStart(2, "0");
-  const ymd = d => d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
-  const parse = s => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
-  const addDays = (d, n) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
   const fmt = (d, o) => d.toLocaleDateString("en-GB", o);
   const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const todayStr = ymd(new Date());
 
   const state = { cfg: { ...DEFAULTS }, shifts: new Map(), loaded: false, offset: 0, view: "overview", db: null, mcp: null, downloads: null, canWrite: true, editing: null, form: { users: new Set(), sleep: false } };
 
-  // ---------- periods ----------
-  function periodFor(d, k = 0) {
-    const sd = state.cfg.periodStartDay || 26;
-    let y = d.getFullYear(), m = d.getMonth();
-    if (d.getDate() < sd) m -= 1;
-    m += k;
-    const start = new Date(y, m, sd);
-    const end = addDays(new Date(y, m + 1, sd), -1);
-    return { start, end };
-  }
+  // ---------- periods & pay (logic lives in ./core/) ----------
+  const periodFor = (d, k = 0) => periodForCore(d, k, state.cfg.periodStartDay);
   const curPeriod = () => periodFor(new Date(), state.offset);
-  function daysIn(p) { const out = []; for (let d = p.start; d <= p.end; d = addDays(d, 1)) out.push(d); return out; }
-
-  // ---------- calc ----------
-  function calc(s) {
-    const day = Number(s.dayHours) || 0, brk = Number(s.breakHrs) || 0;
-    const net = s.dayHours == null || s.dayHours === "" ? 0 : Math.max(0, day - brk);
-    const hourly = net * state.cfg.hourlyRate;
-    const sleep = s.sleepIn ? state.cfg.sleepInRate : 0;
-    return { net, hourly, sleep, total: hourly + sleep, status: s.date > todayStr ? "Rostered" : "Worked" };
-  }
-  function summarise(p) {
-    const rows = daysIn(p).map(d => { const k = ymd(d); const s = state.shifts.get(k); return { date: d, key: k, s, c: s ? calc(s) : null }; });
-    const t = { gross: 0, hourly: 0, sleep: 0, net: 0, sleepIns: 0, shifts: 0, worked: 0, rostered: 0, dayHours: 0, breaks: 0, fares: 0, fareShifts: 0 };
-    rows.forEach(r => { if (!r.c) return; t.shifts++; t.gross += r.c.total; t.hourly += r.c.hourly; t.sleep += r.c.sleep; t.net += r.c.net; t.dayHours += Number(r.s.dayHours) || 0; t.breaks += Number(r.s.breakHrs) || 0; if (Number(r.s.fare) > 0) { t.fares += Number(r.s.fare); t.fareShifts++; } if (r.s.sleepIn) t.sleepIns++; if (r.c.status === "Worked") t.worked += r.c.total; else t.rostered += r.c.total; });
-    const weeks = [];
-    rows.forEach((r, i) => { const w = Math.floor(i / 7); weeks[w] ||= { from: r.date, to: r.date, hourly: 0, sleep: 0, shifts: 0, net: 0 }; weeks[w].to = r.date; if (r.c) { weeks[w].hourly += r.c.hourly; weeks[w].sleep += r.c.sleep; weeks[w].shifts++; weeks[w].net += r.c.net; } });
-    const users = new Map();
-    rows.forEach(r => { if (!r.s) return; (r.s.users || []).forEach(u => { const x = users.get(u) || { shifts: 0, sleeps: 0, net: 0 }; x.shifts++; if (r.s.sleepIn) x.sleeps++; x.net += r.c.net; users.set(u, x); }); });
-    return { rows, t, weeks, users };
-  }
+  const calc = s => calcCore(s, state.cfg, todayStr);
+  const summarise = p => summariseCore(p, state.shifts, state.cfg, todayStr);
 
   // ---------- render ----------
   function render() {
@@ -158,29 +136,8 @@
   // ---------- rest check ----------
   // Day-level guide based on UK Working Time Regulations: 24h off in every 7 days,
   // rest between shifts, 48h a week. Shifts carry no clock times, so these are approximations.
-  const REST = { amberRun: 6, redRun: 7, amberHrs: 40, redHrs: 48 };
-  const hasDayHrs = s => !!s && s.dayHours != null && s.dayHours !== "" && Number(s.dayHours) > 0;
-  function worked(s) { return !!s && (!!s.sleepIn || hasDayHrs(s)); }
-  function hours7(d, m) {
-    let h = 0;
-    for (let i = 0; i < 7; i++) { const s = m.get(ymd(addDays(d, -i))); if (hasDayHrs(s)) h += Math.max(0, Number(s.dayHours) - (Number(s.breakHrs) || 0)); }
-    return Math.round(h * 10) / 10;
-  }
-  function restDay(key, m = state.shifts) {
-    const d = parse(key), s = m.get(key), hrs = hours7(d, m);
-    if (!worked(s)) return { level: "off", run: 0, hrs7: hrs, reasons: [] };
-    let run = 0; for (let k = d; worked(m.get(ymd(k))) && run < 90; k = addDays(k, -1)) run++;
-    const prev = m.get(ymd(addDays(d, -1)));
-    const reasons = []; let level = "ok";
-    const up = l => { if (l === "red" || (l === "amber" && level === "ok")) level = l; };
-    if (run >= REST.redRun) { up("red"); reasons.push(`${run} days in a row without a day off`); }
-    else if (run >= REST.amberRun) { up("amber"); reasons.push(`${run} days in a row, so the next day should be off`); }
-    if (hrs > REST.redHrs) { up("red"); reasons.push(`${hrs} hours worked in the last 7 days, over 48`); }
-    else if (hrs > REST.amberHrs) { up("amber"); reasons.push(`${hrs} hours worked in the last 7 days`); }
-    if (prev && prev.sleepIn && hasDayHrs(prev) && hasDayHrs(s)) { up("red"); reasons.push("day shift, sleep-in, then another day shift: about 36 hours on duty"); }
-    else if (prev && prev.sleepIn && hasDayHrs(s)) { up("amber"); reasons.push("straight from a sleep-in onto a day shift"); }
-    return { level, run, hrs7: hrs, reasons };
-  }
+  const restDay = (key, m = state.shifts) => restDayCore(key, m);
+
   function renderRest(p, sm) {
     const days = sm.rows.map(r => ({ r, x: restDay(r.key) }));
     const red = days.filter(d => d.x.level === "red"), amber = days.filter(d => d.x.level === "amber");
@@ -357,7 +314,7 @@
     ["overview", "log", "sheet", "money", "forecast", "community"].forEach(v => { $("#view-" + v).hidden = v !== view; });
     if (view === "community") renderCommunity();
     document.querySelectorAll("[data-view]").forEach(b => b.setAttribute("aria-selected", String(b.dataset.view === view)));
-    try { localStorage.setItem("sb.view", view); } catch (e) {}
+    try { localStorage.setItem("sb.view", view); } catch (e) { }
     window.scrollTo({ top: 0 });
   }
   document.querySelectorAll("[data-view]").forEach(b => b.addEventListener("click", () => { if (b.dataset.view === "log" && !state.editing) openLog(todayStr); show(b.dataset.view); }));
@@ -468,7 +425,7 @@
     try {
       const res = await state.mcp.callTool("Jotform", "create_submission", { question_answers: qa }, { cache: false });
       const id = res?.payload?.data?.submission_id || null;
-      if (id && state.db) { try { await S.shifts().doc(s.date).update({ jotformId: id }); } catch (e) {} }
+      if (id && state.db) { try { await S.shifts().doc(s.date).update({ jotformId: id }); } catch (e) { } }
       setSync("ok", "Synced to Jotform");
     } catch (e) {
       const msg = { needs_reauth: "Reconnect Jotform in Settings → Connectors", server_not_connected: "Add the Jotform connector to sync", not_in_manifest: "Jotform sync is turned off for this page", approval_required: "Allow Jotform to sync copies", blocked_by_policy: "Jotform is blocked by your organisation" }[e?.code] || "Saved here · Jotform copy did not send";
@@ -487,7 +444,7 @@
     try {
       await S.shifts().doc(s.date).set(body);
       const newOnes = s.users.filter(u => !(state.cfg.serviceUsers || []).includes(u));
-      if (newOnes.length) { state.cfg.serviceUsers = [...(state.cfg.serviceUsers || []), ...newOnes]; try { await S.main().set({ ...state.cfg }); } catch (e) {} }
+      if (newOnes.length) { state.cfg.serviceUsers = [...(state.cfg.serviceUsers || []), ...newOnes]; try { await S.main().set({ ...state.cfg }); } catch (e) { } }
       toast(`Shift saved · ${gbp(calc(s).total)}`);
       state.editing = null; show("overview");
       syncJotform(s);
@@ -510,7 +467,7 @@
     const q = v => { let t = String(v ?? ""); if (/^[=+\-@\t\r]/.test(t)) t = "'" + t; return `"${t.replace(/"/g, '""')}"`; };
     const name = (state.cfg.name || "").trim();
     const head = [["Employee", q(name || "Not set")], ["Role", q(state.cfg.role || "")],
-      ["Pay period", `${ymd(p.start)} to ${ymd(p.end)}`], ["Hourly rate", state.cfg.hourlyRate], ["Sleep-in rate", state.cfg.sleepInRate], []].map(r => r.join(","));
+    ["Pay period", `${ymd(p.start)} to ${ymd(p.end)}`], ["Hourly rate", state.cfg.hourlyRate], ["Sleep-in rate", state.cfg.sleepInRate], []].map(r => r.join(","));
     const lines = [...head, ["Date", "Day", "Service user(s)", "Sleep-in", "Day hours", "Break", "Net hours", "Hourly pay", "Sleep-in pay", "Total", "Notes"].join(",")];
     sm.rows.forEach(r => { const s = r.s, c = r.c; lines.push([r.key, fmt(r.date, { weekday: "short" }), s ? q((s.users || []).join(", ")) : "Day off", s ? (s.sleepIn ? "Y" : "N") : "", s?.dayHours ?? "", s?.breakHrs ?? "", c ? c.net : "", c ? c.hourly.toFixed(2) : "", c ? c.sleep.toFixed(2) : "", c ? c.total.toFixed(2) : "", s?.notes ? q(s.notes) : ""].join(",")); });
     lines.push(["TOTAL", "", "", sm.t.sleepIns, sm.t.dayHours, sm.t.breaks, sm.t.net, sm.t.hourly.toFixed(2), sm.t.sleep.toFixed(2), sm.t.gross.toFixed(2), ""].join(","));
@@ -525,8 +482,10 @@
   $("#backupBtn").onclick = async () => {
     if (!state.downloads) { toast("Downloads aren't available in this view"); return; }
     // app: "Shiftbook" is the backup format's label from before the rename to Shiftbuck; kept so old and new backups match
-    const data = { exportedAt: new Date().toISOString(), app: "Shiftbook", schemaVersion: 1, config: state.cfg, money: state.money,
-      shifts: [...state.shifts.values()].sort((a, b) => a.date.localeCompare(b.date)), spend: Object.fromEntries(state.spend), payslips: Object.fromEntries(state.payslips) };
+    const data = {
+      exportedAt: new Date().toISOString(), app: "Shiftbook", schemaVersion: 1, config: state.cfg, money: state.money,
+      shifts: [...state.shifts.values()].sort((a, b) => a.date.localeCompare(b.date)), spend: Object.fromEntries(state.spend), payslips: Object.fromEntries(state.payslips)
+    };
     try { await state.downloads.save({ filename: `Shiftbuck_backup_${todayStr}.json`, data: JSON.stringify(data, null, 2) }); } catch (e) { if (e?.code !== "cancelled") toast("The backup wasn't saved"); }
   };
   $("#copyBtn").onclick = async () => {
@@ -541,9 +500,11 @@
     $("#sName").value = state.cfg.name || ""; $("#sRole").value = state.cfg.role || "";
     $("#sRate").value = state.cfg.hourlyRate; $("#sSleep").value = state.cfg.sleepInRate;
     $("#sStart").value = state.cfg.periodStartDay; $("#sUsers").value = (state.cfg.serviceUsers || []).join(", ");
-    { const names = [...new Set([...(state.cfg.serviceUsers || []), ...[...state.shifts.values()].flatMap(s => s.users || [])])].sort((a, b) => a.localeCompare(b));
+    {
+      const names = [...new Set([...(state.cfg.serviceUsers || []), ...[...state.shifts.values()].flatMap(s => s.users || [])])].sort((a, b) => a.localeCompare(b));
       const cur = $("#rnFrom").value; $("#rnFrom").innerHTML = names.length ? names.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join("") : `<option value="">No names yet</option>`;
-      if (names.includes(cur)) $("#rnFrom").value = cur; }
+      if (names.includes(cur)) $("#rnFrom").value = cur;
+    }
     $("#sFare").value = state.cfg.busFare || "";
     fareUsualUI();
     // a new shift opened before settings loaded picks up the usual fare
@@ -580,52 +541,11 @@
   };
 
   // ---------- money ----------
-  // 2026/27 rates (England, Wales & NI): personal allowance £12,570; basic rate 20% on next £37,700, 40% above;
-  // employee NI 8% from £1,048/month to £4,189/month, 2% above; self-employed Class 4 6% / 2%;
-  // auto-enrolment qualifying earnings £520–£4,189/month; student loan monthly thresholds below.
-  const R = { FREE_M: 1048.25, ADD_M: 125140 / 12, PA: 12570, BASIC: 37700, PT_M: 1048, UEL_M: 4189, QE_LO_M: 520, QE_HI_M: 4189,
-    SL: { p1: [2241, 0.09], p2: [2448, 0.09], p4: [2816, 0.09], p5: [2083, 0.09], pg: [1750, 0.06] } };
   const MONEY_DEFAULTS = { employment: "paye", taxCode: "1257L", pensionPct: 4, studentLoan: "none", pots: [] };
   const KIND = { need: "Needs", want: "Wants", save: "Savings" };
   state.money = { ...MONEY_DEFAULTS }; state.spend = new Map(); state.planDraft = null; state.builtKey = "";
   let spendTimer;
 
-  // Tax codes: number + L/M/N/T (allowance = number x 10 + 9 a year), K codes (amount added to pay),
-  // BR / D0 / D1 (one flat rate), 0T (no allowance), NT (no tax). S = Scotland, C = Wales; W1/M1/X = emergency.
-  function parseTaxCode(raw) {
-    const c = String(raw || "1257L").toUpperCase().replace(/\s+/g, "").replace(/(W1|M1|X)$/, "");
-    const region = /^S/.test(c) ? "scotland" : /^C/.test(c) ? "wales" : "ruk", body = c.replace(/^[SC](?=\d|K|BR|D0|D1|NT|0T)/, "");
-    if (body === "BR") return { ok: true, kind: "flat", rate: 0.2, region };
-    if (body === "D0") return { ok: true, kind: "flat", rate: 0.4, region };
-    if (body === "D1") return { ok: true, kind: "flat", rate: 0.45, region };
-    if (body === "NT") return { ok: true, kind: "none", region };
-    if (body === "0T") return { ok: true, kind: "std", freeM: 0, region };
-    let m = body.match(/^K(\d{1,4})$/);
-    if (m) return { ok: true, kind: "std", freeM: -(Number(m[1]) * 10 + 9) / 12, k: true, region };
-    m = body.match(/^(\d{1,4})[LMNT]$/);
-    if (m) return { ok: true, kind: "std", freeM: (Number(m[1]) * 10 + 9) / 12, region };
-    return { ok: false, kind: "std", freeM: R.FREE_M, region: "ruk" };
-  }
-  function deductions(g, mc) {
-    const pct = (Number(mc.pensionPct) || 0) / 100;
-    const pension = mc.employment === "paye" ? Math.max(0, Math.min(g, R.QE_HI_M) - R.QE_LO_M) * pct : g * pct;
-    const paM = R.PA / 12, basicM = R.BASIC / 12;
-    let tax;
-    const tc = parseTaxCode(mc.taxCode);
-    if (mc.employment !== "paye") { const t = Math.max(0, g - paM); tax = Math.min(t, basicM) * 0.2 + Math.max(0, t - basicM) * 0.4; }
-    else if (tc.kind === "none") tax = 0;
-    else if (tc.kind === "flat") tax = Math.floor(g) * tc.rate;
-    else {
-      const t = Math.max(0, Math.floor(g - tc.freeM));
-      tax = Math.min(t, basicM) * 0.2 + Math.max(0, Math.min(t, R.ADD_M) - basicM) * 0.4 + Math.max(0, t - R.ADD_M) * 0.45;
-      if (tc.k) tax = Math.min(tax, g * 0.5); // K-code tax can't exceed half of pay
-    }
-    const lo = mc.employment === "paye" ? R.PT_M : paM, rate = mc.employment === "paye" ? 0.08 : 0.06;
-    const ni = Math.max(0, Math.min(g, R.UEL_M) - lo) * rate + Math.max(0, g - R.UEL_M) * 0.02;
-    const L = R.SL[mc.studentLoan];
-    const sl = L ? Math.max(0, g - L[0]) * L[1] : 0;
-    return { tax, ni, pension, sl, net: Math.max(0, g - tax - ni - pension - sl) };
-  }
   const pots = () => state.planDraft || state.money.pots || [];
   const planned = (pot, net) => pot.mode === "fixed" ? Number(pot.value) || 0 : (Number(pot.value) || 0) / 100 * net;
   const spendFor = key => state.spend.get(key) || {};
@@ -916,8 +836,10 @@
     }
     return true;
   }
-  const profileData = () => ({ ageGroup: $("#uAge").value, sex: $("#uSex").value || null, sexOther: $("#uSex").value === "other" ? obVal("uSexOther") || null : null,
-    area: obVal("uArea"), employer: obVal("uEmployer") || null, nickname: obVal("uNick"), createdAt: new Date().toISOString() });
+  const profileData = () => ({
+    ageGroup: $("#uAge").value, sex: $("#uSex").value || null, sexOther: $("#uSex").value === "other" ? obVal("uSexOther") || null : null,
+    area: obVal("uArea"), employer: obVal("uEmployer") || null, nickname: obVal("uNick"), createdAt: new Date().toISOString()
+  });
   const OB_LAST = 8, OB_FIRST = window.SBAuth ? 1 : 0;
   let obStep = 0, obDay = null, obType = "day";
   const obVal = id => $("#" + id).value.trim();
@@ -992,33 +914,8 @@
   // ---------- forecast ----------
   // Predicts the next 7 days from the last 8 weeks: how often each weekday was worked,
   // the most common shift type on that weekday, and the usual hours, break and service users.
-  const FC_WEEKS = 8;
-  const shiftKind = s => s.sleepIn && hasDayHrs(s) ? "Day + sleep-in" : s.sleepIn ? "Sleep-in" : "Day shift";
-  const medianOf = a => { const b = a.slice().sort((x, y) => x - y); return b.length ? b[Math.floor((b.length - 1) / 2)] : null; };
-  const modeOf = a => { const m = new Map(); a.forEach(x => m.set(x, (m.get(x) || 0) + 1)); let best = null, n = 0; m.forEach((v, k) => { if (v > n) { n = v; best = k; } }); return best; };
-  function forecast() {
-    const today = parse(todayStr);
-    const past = [...state.shifts.values()].filter(s => s.date < todayStr && worked(s));
-    if (!past.length) return { days: [], basis: 0, weeks: 0 };
-    const first = parse(past.map(s => s.date).sort()[0]);
-    const from = first > addDays(today, -7 * FC_WEEKS) ? first : addDays(today, -7 * FC_WEEKS);
-    const inWin = past.filter(s => parse(s.date) >= from);
-    const days = [];
-    for (let i = 0; i < 7; i++) {
-      const d = addDays(today, i), key = ymd(d), wd = d.getDay();
-      let seen = 0; for (let x = from; x < today; x = addDays(x, 1)) if (x.getDay() === wd) seen++;
-      const hits = inWin.filter(s => parse(s.date).getDay() === wd);
-      const p = seen ? hits.length / seen : 0, existing = state.shifts.get(key);
-      let guess = null;
-      if (hits.length) {
-        const kind = modeOf(hits.map(shiftKind)), same = hits.filter(s => shiftKind(s) === kind), dayOnes = same.filter(hasDayHrs);
-        guess = { date: key, users: (modeOf(same.map(s => (s.users || []).join("|"))) || "").split("|").filter(Boolean), sleepIn: kind !== "Day shift",
-          dayHours: dayOnes.length ? medianOf(dayOnes.map(s => Number(s.dayHours))) : null, breakHrs: dayOnes.length ? medianOf(dayOnes.map(s => Number(s.breakHrs) || 0)) : null, notes: "" };
-      }
-      days.push({ d, key, p, existing, guess, pay: existing ? calc(existing).total : guess ? calc(guess).total : 0 });
-    }
-    return { days, basis: inWin.length, weeks: Math.max(1, Math.round((today - from) / 6048e5)) };
-  }
+  const forecast = () => forecastCore(state.shifts, todayStr, calc);
+
   function renderForecast() {
     const f = forecast(), f0 = d => fmt(d, { weekday: "short", day: "numeric", month: "short" });
     if (!f.days.length) {
@@ -1087,7 +984,7 @@
         (state.payslips || new Map()).forEach((_, k) => jobs.push(payCol().doc(k).delete()));
         await Promise.all(jobs);
         await S.money().delete(); await S.main().delete();
-        if (window.SBAuth) { try { await SBAuth.deleteAccount(); } catch (e3) {} toast("Your account has been deleted"); setTimeout(() => location.reload(), 1200); return; }
+        if (window.SBAuth) { try { await SBAuth.deleteAccount(); } catch (e3) { } toast("Your account has been deleted"); setTimeout(() => location.reload(), 1200); return; }
         $("#delAllConfirm").hidden = true; toast("All your Shiftbuck data has been deleted");
         closeInfo();
       } catch (e2) { toast("Some data wasn't deleted. Try again."); }
@@ -1139,7 +1036,7 @@
   const cmMsgId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
   function makeClaudeCommunityStore({ db, uid, isMod, isTeam, seenDoc }) {
     let mine = { nick: "", area: "", since: "", posts: [] }, mineExists = false, loaded = false, pendingProfile = null;
-    let posts = [], people = new Map(), hidden = new Set(), reports = [], cb = () => {};
+    let posts = [], people = new Map(), hidden = new Set(), reports = [], cb = () => { };
     let toTeam = [], fromTeam = [], teamSeen = "", ann = [], tTo = new Map(), tFrom = new Map();
     const byAt = (a, b) => a.at.localeCompare(b.at);
     const inbox = () => [...new Set([...tTo.keys(), ...tFrom.keys()])].filter(pid => pid !== uid || (tTo.get(pid) || {}).msgs?.length).map(pid => {
@@ -1150,8 +1047,10 @@
     }).filter(x => x.thread.length).sort((x, y) => (y.last?.at || "").localeCompare(x.last?.at || ""));
     const emit = () => {
       const thread = [...toTeam.map(m => ({ ...m, mine: true, who: "You" })), ...fromTeam.map(m => ({ ...m, mine: false, who: "Shiftbuck team" }))].sort(byAt);
-      cb({ posts: posts.filter(p => isMod || !hidden.has(p.id) || p.mine), hidden, reports, people, canDM: false, isTeam,
-        team: { thread, unread: fromTeam.filter(m => m.at > teamSeen).length }, announcements: ann, inbox: isTeam ? inbox() : [], dms: { threads: [], blocked: new Set() } });
+      cb({
+        posts: posts.filter(p => isMod || !hidden.has(p.id) || p.mine), hidden, reports, people, canDM: false, isTeam,
+        team: { thread, unread: fromTeam.filter(m => m.at > teamSeen).length }, announcements: ann, inbox: isTeam ? inbox() : [], dms: { threads: [], blocked: new Set() }
+      });
     };
     const save = () => { mineExists = true; return db.doc("community/" + uid).set({ nick: mine.nick, area: mine.area, since: mine.since || new Date().toISOString(), posts: mine.posts.slice(-200), updatedAt: new Date().toISOString() }); };
     async function applyProfile(p) {
@@ -1165,24 +1064,26 @@
         cb = onFeed;
         db.collection("community").limit(500).onSnapshot(snap => {
           posts = []; people = new Map();
-          snap.docs.forEach(d => { const x = d.data() || {}; if (d.id === uid) { mine = { nick: x.nick || "", area: x.area || "", since: x.since || "", posts: x.posts || [] }; mineExists = true; }
+          snap.docs.forEach(d => {
+            const x = d.data() || {}; if (d.id === uid) { mine = { nick: x.nick || "", area: x.area || "", since: x.since || "", posts: x.posts || [] }; mineExists = true; }
             const ps = x.posts || [];
             if (x.nick) people.set(d.id, { nick: x.nick, area: x.area || "", since: x.since || (ps[0] && ps[0].at) || "", posts: ps.length, me: d.id === uid, dmOpen: false });
-            ps.forEach(p => posts.push({ ...p, pid: d.id, nick: x.nick, area: x.area, mine: d.id === uid })); });
+            ps.forEach(p => posts.push({ ...p, pid: d.id, nick: x.nick, area: x.area, mine: d.id === uid }));
+          });
           posts.sort((a, b) => b.at.localeCompare(a.at));
-          if (!loaded) { loaded = true; if (pendingProfile) applyProfile(pendingProfile).catch(() => {}); }
+          if (!loaded) { loaded = true; if (pendingProfile) applyProfile(pendingProfile).catch(() => { }); }
           emit();
-        }, () => {});
-        db.doc("toTeam/" + uid).onSnapshot(s => { toTeam = ((s.exists && s.data()) || {}).msgs || []; emit(); }, () => {});
-        db.doc("fromTeam/" + uid).onSnapshot(s => { fromTeam = ((s.exists && s.data()) || {}).msgs || []; emit(); }, () => {});
-        if (seenDoc) seenDoc.onSnapshot(s => { teamSeen = ((s.exists && s.data()) || {}).teamSeenAt || ""; emit(); }, () => {});
-        db.doc("announce/all").onSnapshot(s => { ann = (((s.exists && s.data()) || {}).items || []).slice().sort((a, b) => b.at.localeCompare(a.at)); emit(); }, () => {});
+        }, () => { });
+        db.doc("toTeam/" + uid).onSnapshot(s => { toTeam = ((s.exists && s.data()) || {}).msgs || []; emit(); }, () => { });
+        db.doc("fromTeam/" + uid).onSnapshot(s => { fromTeam = ((s.exists && s.data()) || {}).msgs || []; emit(); }, () => { });
+        if (seenDoc) seenDoc.onSnapshot(s => { teamSeen = ((s.exists && s.data()) || {}).teamSeenAt || ""; emit(); }, () => { });
+        db.doc("announce/all").onSnapshot(s => { ann = (((s.exists && s.data()) || {}).items || []).slice().sort((a, b) => b.at.localeCompare(a.at)); emit(); }, () => { });
         if (isTeam) {
-          db.collection("toTeam").limit(1000).onSnapshot(snap => { tTo = new Map(snap.docs.map(d => [d.id, d.data() || {}])); emit(); }, () => {});
-          db.collection("fromTeam").limit(1000).onSnapshot(snap => { tFrom = new Map(snap.docs.map(d => [d.id, d.data() || {}])); emit(); }, () => {});
+          db.collection("toTeam").limit(1000).onSnapshot(snap => { tTo = new Map(snap.docs.map(d => [d.id, d.data() || {}])); emit(); }, () => { });
+          db.collection("fromTeam").limit(1000).onSnapshot(snap => { tFrom = new Map(snap.docs.map(d => [d.id, d.data() || {}])); emit(); }, () => { });
         }
-        db.doc("moderation/hidden").onSnapshot(s => { hidden = new Set(Object.keys((s.exists && s.data()) || {}).filter(k => (s.data() || {})[k])); emit(); }, () => {});
-        if (isMod) db.collection("reports").limit(500).onSnapshot(snap => { reports = []; snap.docs.forEach(d => Object.entries(d.data() || {}).forEach(([id, r]) => reports.push({ id, ...r }))); emit(); }, () => {});
+        db.doc("moderation/hidden").onSnapshot(s => { hidden = new Set(Object.keys((s.exists && s.data()) || {}).filter(k => (s.data() || {})[k])); emit(); }, () => { });
+        if (isMod) db.collection("reports").limit(500).onSnapshot(snap => { reports = []; snap.docs.forEach(d => Object.entries(d.data() || {}).forEach(([id, r]) => reports.push({ id, ...r }))); emit(); }, () => { });
       },
       async post({ space, text, replyTo, nick, area }) {
         mine.nick = nick; mine.area = area;
@@ -1326,12 +1227,12 @@
       : `<div class="cmempty">${t.kind === "team" ? "Tell us what's working, what isn't, or ask anything about Shiftbuck." : "No messages yet. Say hello."}</div>`;
     if (html !== cm.lastBubbles) { $("#cmBubbles").innerHTML = html; cm.lastBubbles = html; $("#cmBubbles").scrollTop = $("#cmBubbles").scrollHeight; }
     const key = t.kind + ":" + (t.pid || "");
-    if (info.unread && cm.marking !== key && cm.store?.markRead) { cm.marking = key; cm.store.markRead(t).catch(() => {}).finally(() => { setTimeout(() => { if (cm.marking === key) cm.marking = ""; }, 1500); }); }
+    if (info.unread && cm.marking !== key && cm.store?.markRead) { cm.marking = key; cm.store.markRead(t).catch(() => { }).finally(() => { setTimeout(() => { if (cm.marking === key) cm.marking = ""; }, 1500); }); }
   }
   function cmOpen(t) {
     cm.thread = t; cm.lastBubbles = ""; cm.dmReporting = null; cm.sheet = null;
     $("#cmMsgErr").hidden = true; $("#cmMsgText").value = "";
-    if (cm.store?.openThread) cm.store.openThread(t).catch(() => {});
+    if (cm.store?.openThread) cm.store.openThread(t).catch(() => { });
     renderCommunity(); $("#cmMsgs").scrollIntoView({ block: "start", behavior: "smooth" });
   }
   function renderSheet() {
@@ -1436,7 +1337,7 @@
   });
 
   // ---------- boot ----------
-  try { const v = localStorage.getItem("sb.view"); if (v && v !== "log") show(v); } catch (e) {}
+  try { const v = localStorage.getItem("sb.view"); if (v && v !== "log") show(v); } catch (e) { }
   openLog(todayStr); fillSettings(); render();
 
   (async () => {
@@ -1447,11 +1348,13 @@
     if (!db || !uid) { setSync("bad", "Sign in to use Shiftbuck"); state.loaded = true; render(); return; }
     // every viewer's data lives in their own private subtree: data/users/<their id>/...
     const base = "data/users/" + uid;
-    S = { profile: () => db.doc(base + "/profile"), main: () => db.doc(base + "/main"), money: () => db.doc(base + "/money"),
-          shifts: () => db.doc(base + "/main").collection("shifts"), spend: () => db.doc(base + "/main").collection("spend") };
+    S = {
+      profile: () => db.doc(base + "/profile"), main: () => db.doc(base + "/main"), money: () => db.doc(base + "/money"),
+      shifts: () => db.doc(base + "/main").collection("shifts"), spend: () => db.doc(base + "/main").collection("spend")
+    };
     setSync("ok", window.SBAuth && SBAuth.mode === "supabase" ? "Synced · private to you" : "Demo · saved in this browser");
-    const cmSync = () => { const me = cmMe(); if (cm.store && cm.store.syncProfile && me.nick) cm.store.syncProfile(me).catch(() => {}); };
-    S.profile().onSnapshot(snap => { state.profile = snap.exists ? snap.data() : null; cmSync(); renderCommunity(); }, () => {});
+    const cmSync = () => { const me = cmMe(); if (cm.store && cm.store.syncProfile && me.nick) cm.store.syncProfile(me).catch(() => { }); };
+    S.profile().onSnapshot(snap => { state.profile = snap.exists ? snap.data() : null; cmSync(); renderCommunity(); }, () => { });
     try { cm.isMod = !!(user && user.isOwner && await user.isOwner()); } catch (e) { cm.isMod = false; }
     // the Shiftbuck team = people the owner gives edit access (the full app uses its moderators table instead)
     try { cm.isTeam = !window.SBAuth && !!(user && user.canEdit && await user.canEdit()); } catch (e) { cm.isTeam = false; }
@@ -1461,13 +1364,13 @@
     S.main().onSnapshot(snap => {
       state.needsSetup = !snap.exists; setupMode(state.needsSetup);
       state.cfg = { ...DEFAULTS, ...(snap.exists ? snap.data() : {}) }; fillSettings(); if (!state.editing || state.view !== "log") renderUserChips(); render();
-    }, () => {});
-    S.money().onSnapshot(snap => { state.money = { ...MONEY_DEFAULTS, ...(snap.exists ? snap.data() : {}) }; render(); }, () => {});
-    payCol().limit(120).onSnapshot(snap => { state.payslips = new Map(snap.docs.map(d => [d.id, d.data()])); render(); }, () => {});
+    }, () => { });
+    S.money().onSnapshot(snap => { state.money = { ...MONEY_DEFAULTS, ...(snap.exists ? snap.data() : {}) }; render(); }, () => { });
+    payCol().limit(120).onSnapshot(snap => { state.payslips = new Map(snap.docs.map(d => [d.id, d.data()])); render(); }, () => { });
     S.spend().limit(200).onSnapshot(snap => {
       const typingSpend = /^ps-/.test(document.activeElement?.id || "");
       if (!typingSpend) { state.spend = new Map(snap.docs.map(d => [d.id, d.data()])); render(); }
-    }, () => {});
+    }, () => { });
     S.shifts().limit(1000).onSnapshot(snap => {
       state.shifts = new Map(snap.docs.map(d => [d.id, d.data()]));
       state.loaded = true; render();
