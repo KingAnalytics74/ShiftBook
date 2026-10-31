@@ -19,6 +19,7 @@ import { periodFor as periodForCore, daysIn } from "./core/periods.js";
 import { calc as calcCore, summarise as summariseCore } from "./core/pay.js";
 import { REST, worked, restDay as restDayCore } from "./core/restCheck.js";
 import { localDb, localDownloads } from "./data/localAdapter.js";
+import { buildBackup, parseBackup } from "./data/backup.js";
 
 (() => {
   const DEFAULTS = { name: "", role: "Support Worker", hourlyRate: 13, sleepInRate: 40, periodStartDay: 26, serviceUsers: [] };
@@ -464,10 +465,7 @@ import { localDb, localDownloads } from "./data/localAdapter.js";
   // Full JSON backup: every shift, setting, plan and spending record (also the hand-off format for a future GitHub build)
   $("#backupBtn").onclick = async () => {
     if (!state.downloads) { toast("Downloads aren't available in this view"); return; }
-    const data = {
-      exportedAt: new Date().toISOString(), app: "Shiftbook", schemaVersion: 1, config: state.cfg, money: state.money,
-      shifts: [...state.shifts.values()].sort((a, b) => a.date.localeCompare(b.date)), spend: Object.fromEntries(state.spend), payslips: Object.fromEntries(state.payslips)
-    };
+        const data = buildBackup({ cfg: state.cfg, money: state.money, shifts: state.shifts, spend: state.spend, payslips: state.payslips });
     try { await state.downloads.save({ filename: `Shiftbook_backup_${todayStr}.json`, data: JSON.stringify(data, null, 2) }); } catch (e) { if (e?.code !== "cancelled") toast("The backup wasn't saved"); }
   };
   $("#copyBtn").onclick = async () => {
@@ -880,9 +878,8 @@ import { localDb, localDownloads } from "./data/localAdapter.js";
     const file = e.target.files[0]; e.target.value = "";
     if (!file || !S) return;
     try {
-      const b = JSON.parse(await file.text());
-      if (b.app !== "Shiftbook" || !b.config) throw new Error("not a backup");
-      await S.money().set({ ...MONEY_DEFAULTS, ...(b.money || {}) });
+            const b = parseBackup(await file.text());
+            await S.money().set({ ...MONEY_DEFAULTS, ...(b.money || {}) });
       for (const s of b.shifts || []) if (s?.date) await S.shifts().doc(s.date).set(s);
       for (const [k, v] of Object.entries(b.spend || {})) await S.spend().doc(k).set(v);
       for (const [k, v] of Object.entries(b.payslips || {})) await payCol().doc(k).set(v);
