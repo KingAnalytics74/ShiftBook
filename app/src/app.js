@@ -547,8 +547,10 @@ import { forecast as forecastCore, shiftKind } from "./core/forecast.js";
   let spendTimer;
 
   const pots = () => state.planDraft || state.money.pots || [];
-  // rounded to whole pennies, so spending exactly the amount shown (15% of £2,296.64 shows £344.50) isn't "over plan"
-  const planned = (pot, net) => Math.round((pot.mode === "fixed" ? Number(pot.value) || 0 : (Number(pot.value) || 0) / 100 * net) * 100) / 100;
+  const planned = (pot, net) => pot.mode === "fixed" ? Number(pot.value) || 0 : (Number(pot.value) || 0) / 100 * net;
+  // a pot is compared in whole pennies, so spending exactly the amount shown (15% of £2,296.64 shows £344.50)
+  // isn't "over plan"; plan totals keep the exact amounts so % pots still add up to the take-home
+  const pennies = n => Math.round(n * 100) / 100;
   const spendFor = key => state.spend.get(key) || {};
 
   function renderMoney(p, sm) {
@@ -663,9 +665,9 @@ import { forecast as forecastCore, shiftKind } from "./core/forecast.js";
       const el = id => document.getElementById(id + "-" + pt.id);
       if (!el("pp")) return;
       el("pp").textContent = gbp(pl);
-      const r = pl ? s / pl : s ? 1.01 : 0;
+      const plp = pennies(pl), r = plp ? s / plp : s ? 1.01 : 0;
       el("pb").style.width = Math.min(100, r * 100) + "%"; el("pb").className = r > 1 ? "over" : "";
-      el("pl").textContent = s ? (s <= pl ? `${gbp(pl - s)} left` : `${gbp(s - pl)} over plan`) : "Nothing spent yet";
+      el("pl").textContent = s ? (s <= plp ? `${gbp(plp - s)} left` : `${gbp(s - plp)} over plan`) : "Nothing spent yet";
       el("pc").textContent = pt.kind === "save" ? (s ? `${gbp(s)} put away` : "") : (pl && sm_hours(pl) ? `≈ ${sm_hours(pl)} hrs of work` : "");
     });
     const left = net - total;
@@ -700,7 +702,7 @@ import { forecast as forecastCore, shiftKind } from "./core/forecast.js";
 
     const max = Math.max(1, ...rows.map(r => Math.max(r.plan, r.spent)));
     $("#sPots").innerHTML = rows.length ? rows.map(r => {
-      const over = r.spent > r.plan;
+      const over = r.spent > pennies(r.plan);
       return `<div class="pvs"><span class="nm" title="${esc(r.pt.name)}">${esc(r.pt.name)}</span>
         <div class="tr"><div class="pl" style="width:${(r.plan / max) * 100}%"></div><div class="sp${over ? " over" : ""}" style="width:calc(${(r.spent / max) * 100}% - 6px);${r.spent ? "" : "display:none"}"></div></div>
         <span class="fig">${gbp(r.spent)} of ${gbp(r.plan)}${over ? ` · ${gbp(r.spent - r.plan)} over` : ""}</span></div>`;
