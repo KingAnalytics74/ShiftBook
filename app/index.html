@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<!-- Security: only this site's own scripts run, and the only outside service is Supabase. See SECURITY.md. -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://*.supabase.co wss://*.supabase.co; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests">
+<!-- Security: only this site's scripts run, plus Google Analytics after cookie consent; data goes only to Supabase. See SECURITY.md. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.googletagmanager.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.google-analytics.com https://www.googletagmanager.com; font-src 'self'; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests">
 <meta name="referrer" content="same-origin">
 <style id="antiframe">html{display:none!important}</style>
 <script src="src/guard.js"></script>
@@ -533,7 +533,7 @@
     <div class="card info">
       <button type="button" class="btn secondary backbtn" data-info-back>‹ Back</button>
       <h2>Privacy</h2>
-      <p class="hint">Last updated 30 October 2026</p>
+      <p class="hint">Last updated 1 November 2026</p>
       <h3>In short</h3>
       <p>Shiftbuck keeps your shift, pay and money details so it can work out your pay. We don't sell your data, show ads, track you with cookies or share anything with your employer.</p>
       <h3>Who we are</h3>
@@ -552,7 +552,7 @@
       <h3>Where your data is kept and who can see it</h3>
       <p>When you sign in, your data is kept in Shiftbuck's database, run on <b>Supabase</b>. It's tied to your account and locked so that only you can read or change it. Supabase stores and processes it for us under <a href="https://supabase.com/privacy" target="_blank" rel="noopener">its own privacy policy</a>.</p><p>In demo mode, nothing is sent anywhere: your data stays in this browser on this device.</p><p><b>Nobody else using Shiftbuck can see your data</b>: not other carers and not your employer. The only exceptions are what you choose to share: your posts and profile in the community, private messages (only you and the carer you're talking to can read them, unless one of you reports a message to the moderators), and messages to the Shiftbuck team.</p>
       <h3>Cookies and storage on your device</h3>
-      <p>Shiftbuck doesn't use cookies for advertising or tracking, and has no analytics. It keeps a few things in your browser: which tab you last had open, so the app opens where you left off. When you're signed in it also keeps your sign-in session, so you stay signed in; in demo mode it keeps all your Shiftbuck data in this browser. Fonts and code come from Shiftbuck's own site, so nothing is requested from Google or other third parties. The only other service Shiftbuck talks to is Supabase, which stores your data.</p>
+      <p><b>Google Analytics, only if you say yes.</b> When you first visit, Shiftbuck asks whether we can count visits with Google Analytics. If you tap Accept, Google sets cookies that tell us how many people visit, which pages they open and which of our ads brought them. We don't send Google your shifts, pay, payslips, messages, name, email or phone number, and Google's advertising features are turned off. If you tap No thanks, nothing is sent to Google. You can change your mind any time with <b>Cookie settings</b> at the bottom of every screen. Google processes this under <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">its own privacy policy</a>.</p><p>Shiftbuck doesn't use cookies for advertising. It keeps a few things in your browser: which tab you last had open, so the app opens where you left off. When you're signed in it also keeps your sign-in session, so you stay signed in; in demo mode it keeps all your Shiftbuck data in this browser. It also remembers your cookie choice. Fonts and code come from Shiftbuck's own site. Apart from Google Analytics when you've said yes, the only other service Shiftbuck talks to is Supabase, which stores your data.</p>
       <p>Because nothing is used for tracking, there's no cookie banner. If that ever changes, we'll ask you first.</p>
       <h3>Why we use it</h3>
       <p>Only to give you the app: working out your pay, take-home, rest check, charts and money plan. Your information isn't used for anything else.</p>
@@ -650,7 +650,7 @@
         <details class="faq"><summary>Who makes Shiftbuck?</summary><div>WesTech Innovation. Visit <a href="https://westechinnovation.com/" target="_blank" rel="noopener">westechinnovation.com</a> to get in touch.</div></details>
     </div>
   </section>
-  <footer class="poweredby"><nav class="footlinks"><a href="#privacy" data-info="privacy">Privacy</a><span aria-hidden="true">·</span><a href="#terms" data-info="terms">Terms</a><span aria-hidden="true">·</span><a href="#faq" data-info="faq">FAQ</a><span aria-hidden="true" class="so">·</span><button type="button" class="footso so" data-signout>Sign out</button></nav>Powered by <a class="poweredlink" href="https://westechinnovation.com/" target="_blank" rel="noopener"><b>WesTech Innovation</b><span class="sr"> (opens westechinnovation.com in a new tab)</span></a></footer>
+  <footer class="poweredby"><nav class="footlinks"><a href="#privacy" data-info="privacy">Privacy</a><span aria-hidden="true">·</span><a href="#terms" data-info="terms">Terms</a><span aria-hidden="true">·</span><a href="#faq" data-info="faq">FAQ</a><span aria-hidden="true">·</span><button type="button" class="footso" id="cookieSettings">Cookie settings</button><span aria-hidden="true" class="so">·</span><button type="button" class="footso so" data-signout>Sign out</button></nav>Powered by <a class="poweredlink" href="https://westechinnovation.com/" target="_blank" rel="noopener"><b>WesTech Innovation</b><span class="sr"> (opens westechinnovation.com in a new tab)</span></a></footer>
 </div>
 
 <nav class="bottombar" role="tablist">
@@ -662,6 +662,10 @@
   <button role="tab" data-view="community" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1.1-4.6A8 8 0 1 1 21 12z"/><path d="M8.5 11h.01M12 11h.01M15.5 11h.01"/></svg>Community</button>
 </nav>
 <div class="toast" id="toast" hidden></div>
+<div class="consent" id="consent" role="region" aria-label="Cookie choice" hidden>
+  <p><b>Help us improve Shiftbuck?</b> We'd like to count visits with Google Analytics, which sets cookies. We never send your shifts, pay or account details. <a href="#privacy" data-info="privacy">How your data is kept</a></p>
+  <div class="consentbtns"><button type="button" class="btn secondary" id="consentYes">Accept</button><button type="button" class="btn secondary" id="consentNo">No thanks</button></div>
+</div>
 <div id="tip" role="tooltip" hidden></div>
 
 <script src="src/vendor/supabase.js"></script>
@@ -670,5 +674,6 @@
 <script src="src/platform.js"></script>
 <script src="src/community-store.js"></script>
 <script src="src/app.js"></script>
+<script src="src/analytics.js"></script>
 </body>
 </html>

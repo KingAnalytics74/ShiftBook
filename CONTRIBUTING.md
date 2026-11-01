@@ -7,7 +7,7 @@ Welcome to the team. Shiftbuck shows UK care workers what they've earned before 
 1. **Carers' data is never in your hands.** Work only on the **test** Supabase project. Never ask for, copy, export or screenshot data from the live project. Only the founder (or a named lead) holds the live project login and the secret `service_role` key.
 2. **No secrets in the repo.** The public `anon` key in `app/src/config.js` is safe to commit. The `service_role` key, passwords and SMS provider tokens are never committed, pasted in chat or sent by WhatsApp. If one leaks, tell Babatope straight away so it can be rotated.
 3. **Never use real people in test data.** No real carers, service users, addresses or employers. Use made-up names like "Ada" and "Sam".
-4. **No tracking.** Don't add analytics, ad scripts, third-party fonts or CDNs. Everything is served from this site; the only outside service is Supabase. Adding one needs a privacy notice change and a cookie consent decision first.
+4. **No extra tracking.** Google Analytics runs only after cookie consent (`app/src/analytics.js`). Never send it anything about a person's shifts, pay, messages or account. Don't add other analytics, ad scripts, third-party fonts or CDNs; adding one needs a privacy notice change, a consent decision, and a Content Security Policy change first.
 5. **Keep it accessible.** Real `<button>`, `<a>` and labelled `<input>` elements, 44px tap targets, text contrast of at least 4.5:1 in light and dark mode.
 6. **Plain UK English** in everything people read: short sentences, "take-home" not "net pay", no jargon.
 
