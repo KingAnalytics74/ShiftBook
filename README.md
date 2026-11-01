@@ -41,12 +41,15 @@ npx serve .
    - **Phone:** turn on Phone and connect an SMS provider such as Twilio. UK texts cost a few pence each.
    - **Google:** the **Continue with Google** button is already on the sign-up and sign-in screens. To make it work, create an *OAuth client ID* (type *Web application*) in [Google Cloud → APIs & Services → Credentials](https://console.cloud.google.com/apis/credentials). Add `https://<your-project>.supabase.co/auth/v1/callback` as an *Authorised redirect URI*. Then paste the client ID and secret into **Supabase → Authentication → Providers → Google** and turn it on. Until then, the button says Google sign-in isn't switched on yet. In demo mode it asks for a Gmail address so the journey can be tried.
    - **Apple:** optional. Add the client ID from Apple Developer and set `apple: true` in `app/src/config.js`.
-4. **Set the site address** in **Authentication → URL Configuration**: put your GitHub Pages address in *Site URL*, and add the app's address (for example `https://kinganalytics74.github.io/ShiftBook/app/`) to *Redirect URLs*. Email confirmation and password reset links bring people back to that address.
+4. **Set the site address** in **Authentication → URL Configuration**: put `https://shiftbuck.com` in *Site URL*, and add `https://shiftbuck.com/app/` and `https://www.shiftbuck.com/app/` to *Redirect URLs*. Email confirmation and password reset links bring people back to that address.
 5. **Connect the app:** in **Project Settings → API**, copy the *Project URL* and the *anon public* key into `app/src/config.js`. Set `apple` to `true` if you turned it on (`google` is on by default; set it to `false` to hide the button). The anon key is safe to publish; row-level security protects the data.
 6. **Moderators:** after you've signed up, find your user id in **Authentication → Users** and run `insert into public.community_moderators (user_id) values ('<your id>');` in the SQL Editor. Moderators see reported posts and can hide or unhide them. They are also **the Shiftbuck team**: they read and answer messages to the team, send announcements, see reported private messages and can stop someone sending private messages. Private messages that nobody has reported stay unreadable to moderators in the app.
 7. **Limit abuse:** in **Authentication → Rate Limits**, keep the limits on codes per hour.
 
 ### Deploy on Vercel with shiftbuck.com
+
+Shiftbuck is live at **https://shiftbuck.com**, hosted on Vercel.
+
 
 1. In Vercel, choose **Add New → Project**, import `KingAnalytics74/ShiftBook` from GitHub, set **Framework Preset** to *Other*, leave the build command empty, and click **Deploy**. There's no build step.
 2. In the project, go to **Settings → Domains** and add `shiftbuck.com` and `www.shiftbuck.com`. If the domain was bought through Vercel it connects by itself. Otherwise Vercel shows the DNS records to add.
@@ -54,9 +57,9 @@ npx serve .
 
 `vercel.json` sends visitors from `/` to `/app/` and adds security headers that GitHub Pages can't send: HTTPS only, no framing by other sites, no camera, microphone or location access, and the Content Security Policy as a real header. Every push to the default branch goes live. Vercel's free Hobby plan is for personal, non-commercial use, so a business app needs the Pro plan.
 
-### Deploy free on GitHub Pages
+### The old GitHub Pages address
 
-This repository is already published at **https://kinganalytics74.github.io/ShiftBook/** from the default branch, `/ (root)`. The root `index.html` forwards to `app/`, so whatever is merged into the default branch goes live a minute or two later. To publish a copy elsewhere: **Settings → Pages → Deploy from a branch**, pick the branch and `/ (root)`.
+`https://kinganalytics74.github.io/ShiftBook/` still works but only forwards people to shiftbuck.com (`app/src/guard.js`), keeping the page and any sign-in link details. Leave GitHub Pages switched on so old links keep forwarding.
 
 ## Legal pages, cookies and accessibility
 

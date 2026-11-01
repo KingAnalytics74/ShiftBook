@@ -49,8 +49,8 @@ These are settings in Supabase, GitHub and the domain, and can't be done in code
 - [ ] **Settings → Branches:** protect the default branch so changes need a reviewed pull request (see CONTRIBUTING.md).
 - [ ] **Settings → Code security:** turn on secret scanning and Dependabot alerts.
 
-**Custom domain (recommended)**
-On `kinganalytics74.github.io`, every GitHub Pages site you ever publish shares one browser storage area with Shiftbuck. A custom domain such as `shiftbook.care` gives Shiftbuck its own. When you add one, verify it in your GitHub account (**Settings → Pages → Verified domains**), add it to Supabase's URL settings, and update the Google sign-in redirect.
+**Web address**
+Shiftbuck lives at `https://shiftbuck.com` on Vercel, so it has its own browser storage, separate from any other site. The old `kinganalytics74.github.io` address only forwards to it. Keep two-step sign-in on the Vercel account and the domain account: whoever controls them controls where shiftbuck.com points. Supabase's *Site URL* and *Redirect URLs* must list only shiftbuck.com addresses.
 
 ## Demo mode
 

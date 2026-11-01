@@ -37,8 +37,8 @@ Text and app screens stay out of the bottom fifth and the right edge, where TikT
 
 ## Before you pay to promote them
 
-1. **Connect Supabase first.** Until it's connected the site runs in demo mode: shifts stay in that one browser, don't move between devices, and are lost if the browser is cleared. People who sign up from an ad deserve real accounts.
-2. **Make sure shiftbuck.com opens the app.** The ads send people to shiftbuck.com, so its DNS must point at GitHub Pages and the domain must be set in **Settings → Pages** before the ads run.
+1. **Real accounts are on** (Supabase is connected). Sign up once yourself on shiftbuck.com before promoting, to check sign-up and email confirmation work.
+2. **Check shiftbuck.com on a phone before each campaign.** The ads send people there (hosted on Vercel).
 3. **Keep the claims true (UK advertising rules, CAP Code).** The ads show only what the app does, with "Example figures shown" on the end card.
    - Keep "Free for UK care workers" true for as long as these ads run.
    - Don't add claims the app can't back up, such as "never be underpaid again" or "matches every payslip".
