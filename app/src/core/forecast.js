@@ -1,10 +1,11 @@
 import { ymd, parse, addDays } from "./dates.js";
-import { hasDayHrs, worked } from "./restCheck.js";
+import { hasDayHrs, worked, isNight } from "./restCheck.js";
 
 // Predicts the next 7 days from the last 8 weeks: how often each weekday was worked,
 // the most common shift type on that weekday, and the usual hours, break and service users.
 export const FC_WEEKS = 8;
-export const shiftKind = s => s.sleepIn && hasDayHrs(s) ? "Day + sleep-in" : s.sleepIn ? "Sleep-in" : "Day shift";
+// A saved shift type ("Waking night", "Early"...) wins; older shifts without one are grouped by what they were.
+export const shiftKind = s => s.type || (s.sleepIn && hasDayHrs(s) ? "Day + sleep-in" : s.sleepIn ? "Sleep-in" : isNight(s) ? "Night" : "Day shift");
 const medianOf = a => { const b = a.slice().sort((x, y) => x - y); return b.length ? b[Math.floor((b.length - 1) / 2)] : null; };
 const modeOf = a => { const m = new Map(); a.forEach(x => m.set(x, (m.get(x) || 0) + 1)); let best = null, n = 0; m.forEach((v, k) => { if (v > n) { n = v; best = k; } }); return best; };
 
@@ -25,8 +26,10 @@ export function forecast(shifts, todayStr, calcFn) {
         let guess = null;
         if (hits.length) {
             const kind = modeOf(hits.map(shiftKind)), same = hits.filter(s => shiftKind(s) === kind), dayOnes = same.filter(hasDayHrs);
+            const last = same.slice().sort((a, b) => a.date.localeCompare(b.date)).pop() || {};
             guess = {
-                date: key, users: (modeOf(same.map(s => (s.users || []).join("|"))) || "").split("|").filter(Boolean), sleepIn: kind !== "Day shift",
+                date: key, type: last.type || null, start: last.start || null, end: last.end || null, rate: last.rate ?? null,
+                users: (modeOf(same.map(s => (s.users || []).join("|"))) || "").split("|").filter(Boolean), sleepIn: !!last.sleepIn,
                 dayHours: dayOnes.length ? medianOf(dayOnes.map(s => Number(s.dayHours))) : null, breakHrs: dayOnes.length ? medianOf(dayOnes.map(s => Number(s.breakHrs) || 0)) : null, notes: ""
             };
         }

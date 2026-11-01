@@ -144,6 +144,13 @@ textarea{min-height:70px;resize:vertical}
 .row2>*{min-width:0}
 .quick{display:flex;gap:6px;flex-wrap:wrap}
 .shiftpre button{white-space:nowrap}
+.shiftpre{flex-wrap:wrap}
+.stlist{display:grid;gap:10px;margin:6px 0 10px}
+.strow{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;align-items:end;border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--surface)}
+.strow label{font-size:12px;font-weight:600;color:var(--muted);display:grid;gap:4px}
+.strow input,.strow select{min-height:40px}
+.strow .strm{min-height:40px}
+.obgroup{font-size:13px;font-weight:700;color:var(--muted);margin:14px 0 6px}
 .quick button{border:1px solid var(--line);background:transparent;border-radius:8px;padding:4px 10px;font-size:13px;cursor:pointer;font-family:var(--f-num)}
 .preview{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:12px 14px;border-radius:12px;background:var(--sunk)}
 .preview .num{font-size:20px;font-weight:600}
