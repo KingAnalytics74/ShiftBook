@@ -547,7 +547,8 @@ import { forecast as forecastCore, shiftKind } from "./core/forecast.js";
   let spendTimer;
 
   const pots = () => state.planDraft || state.money.pots || [];
-  const planned = (pot, net) => pot.mode === "fixed" ? Number(pot.value) || 0 : (Number(pot.value) || 0) / 100 * net;
+  // rounded to whole pennies, so spending exactly the amount shown (15% of £2,296.64 shows £344.50) isn't "over plan"
+  const planned = (pot, net) => Math.round((pot.mode === "fixed" ? Number(pot.value) || 0 : (Number(pot.value) || 0) / 100 * net) * 100) / 100;
   const spendFor = key => state.spend.get(key) || {};
 
   function renderMoney(p, sm) {
