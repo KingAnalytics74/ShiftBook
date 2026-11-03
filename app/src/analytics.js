@@ -1,5 +1,5 @@
 /*
- * analytics.js — Google Analytics (G-7MZ433YNQC), only after the person says yes.
+ * analytics.js — Google Analytics (G-LKRQBCE20K), only after the person says yes.
  *
  * Nothing is requested from Google until "Accept" is tapped on the cookie banner. The choice is kept in
  * this browser (shiftbuck:analytics = "yes" | "no") and can be changed any time from "Cookie settings"
@@ -11,7 +11,7 @@
  * only ad campaign tags (utm_*, gclid) are kept so you can see which ads bring people in.
  */
 (function () {
-  var ID = "G-7MZ433YNQC", KEY = "shiftbuck:analytics";
+  var ID = "G-LKRQBCE20K", KEY = "shiftbuck:analytics";
   var get = function () { try { return localStorage.getItem(KEY); } catch (e) { return null; } };
   var set = function (v) { try { localStorage.setItem(KEY, v); } catch (e) {} };
   var $ = function (id) { return document.getElementById(id); };
