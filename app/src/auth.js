@@ -45,8 +45,31 @@
   // ---- screens ----
   let kind = null, ident = null, demoCode = null, resendAt = 0, timer = null, busy = false;
   const root = () => $("#authBox");
-  function setBusy(on, btn) { busy = on; root().querySelectorAll("button").forEach(b => b.disabled = on); if (btn) btn.dataset.label ||= btn.textContent, btn.textContent = on ? "Please wait…" : btn.dataset.label; }
-  function err(msg) { const e = $("#authErr"); if (!e) return; e.textContent = msg || ""; e.hidden = !msg; }
+
+  // ---- motion: one small system. Springs for movement, ease-out for fades, nothing when reduced motion is on ----
+  const calm = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const tok = n => getComputedStyle(document.body).getPropertyValue(n).trim();
+  function play(el, frames, opts) {
+    if (!el || !el.animate || calm()) return;
+    try { return el.animate(frames, opts); }
+    catch (e) { try { return el.animate(frames, { ...opts, easing: "cubic-bezier(.22,1,.36,1)" }); } catch (e2) {} }
+  }
+  let navDir = 1;                                   // 1 = going forward, -1 = going back
+  function enter(el, dir) {
+    if (!el) return;
+    play(el, [{ opacity: 0 }, { opacity: 1 }], { duration: 240, easing: "cubic-bezier(.22,1,.36,1)" });
+    play(el, [{ transform: `translate3d(${26 * dir}px,0,0)` }, { transform: "none" }], { duration: 420, easing: tok("--spring") || "cubic-bezier(.22,1,.36,1)" });
+  }
+  function shake(el) {
+    play(el, [{ transform: "translateX(0)" }, { transform: "translateX(-8px)" }, { transform: "translateX(7px)" }, { transform: "translateX(-5px)" }, { transform: "translateX(3px)" }, { transform: "translateX(0)" }], { duration: 420, easing: "cubic-bezier(.36,.07,.19,.97)" });
+  }
+  function watchScreens() {                          // every new screen slides in from the side you're heading towards
+    const r = root(); if (!r || r.dataset.watched) return; r.dataset.watched = "1";
+    r.addEventListener("click", e => { navDir = e.target.closest(".linkback") ? -1 : 1; }, true);
+    new MutationObserver(() => { const w = r.querySelector(".welcome"); if (!(w && !w.classList.contains("again") && !r.dataset.seen)) enter(r, navDir); r.dataset.seen = "1"; }).observe(r, { childList: true });
+  }
+  function setBusy(on, btn) { busy = on; root().querySelectorAll("button").forEach(b => b.disabled = on); if (btn) btn.dataset.label ||= btn.textContent, btn.textContent = on ? "Please wait…" : btn.dataset.label, btn.classList.toggle("busy", on); }
+  function err(msg) { const e = $("#authErr"); if (!e) return; e.textContent = msg || ""; e.hidden = !msg; if (msg) shake(e.closest("form")); }
 
   // Two clear paths: "Create my Shiftbuck" (sign up) and "I already have an account" (sign in).
   // Both use a code; signing in with a number or email we don't know offers to create the account instead.
@@ -58,24 +81,58 @@
   const up = () => intent === "signup";
   const what = k => k === "phone" ? "phone number" : "email";
 
+  let introPlayed = false;
   function screenWelcome() {
     kind = null; ident = null; clearInterval(timer);
+    const again = introPlayed; introPlayed = true;
+    const ico = d => `<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d.replace(/<(path|circle) /g, "<$1 pathLength=\"1\" ")}</svg>`;
     root().innerHTML = `
-      <svg class="oblogo" viewBox="0 0 120 120" aria-hidden="true"><rect width="120" height="120" rx="28" fill="#C8102E"/><circle cx="60" cy="65" r="40" fill="#B07800"/><circle cx="60" cy="57" r="40" fill="#F2B705"/><circle cx="60" cy="57" r="37.5" fill="none" stroke="#FFE27A" stroke-width="5" stroke-dasharray="2.6 2.6"/><circle cx="60" cy="57" r="31" fill="#FFD23F" stroke="#C98A00" stroke-width="2.5"/><path d="M60 32v5M60 77v5M35 57h5M80 57h5" stroke="#14213D" stroke-width="4" stroke-linecap="round"/><path d="M60 57V41M60 57l12 8" fill="none" stroke="#14213D" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="60" cy="57" r="4.5" fill="#C8102E" stroke="#14213D" stroke-width="2.5"/><path d="M36 45a27 27 0 0 1 11-12" fill="none" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round" opacity=".9"/></svg>
-      <h2 class="obh">Know your pay before payday</h2>
-      <ul class="obwhy">
-        <li><b>See what every shift pays</b>, including sleep-ins, as you log it.</li>
-        <li><b>Check your payslip</b> and your take-home after tax.</li>
-        <li><b>Get a warning</b> when you're not getting enough rest.</li>
-      </ul>
-      <div class="authstack">
-        <button type="button" class="btn authbtn" id="goUp">Create my Shiftbuck</button>
-        <button type="button" class="btn secondary authbtn" id="goIn">I already have an account</button>
-      </div>
-      <p class="obpriv">Free for care workers. Your shifts and pay are private to you; your employer can't see them. <a href="#privacy" data-info="privacy">How your data is kept</a></p>
-      ${mode === "demo" ? `<p class="authdemo"><b>Demo mode.</b> No codes are really sent and your data stays in this browser. Add your Supabase details in <code>src/config.js</code> to go live.</p>` : ""}`;
+      <div class="welcome${again ? " again" : ""}">
+        <div class="wbody">
+          <div class="wcard" aria-hidden="true">
+            <div class="wtag">Example shift</div>
+            <div class="wtop"><span class="wdot"></span>Day shift · 08:00 to 20:00</div>
+            <div class="wpay num" id="wPay">£130.00</div>
+            <div class="wmeta">10 paid hours after a 2 hour break</div>
+            <div class="wbar"><i></i></div>
+          </div>
+          <h2 class="obh wh">Know your pay before payday</h2>
+          <p class="wsub">The shift log for care and support workers. Free, and private to you.</p>
+          <ul class="wfeat">
+            <li><span class="wico">${ico('<circle cx="12" cy="12" r="9"/><path d="M14.8 8.6a3 3 0 0 0-2.6-1.4c-1.6 0-2.7 1-2.7 2.4 0 1 .5 1.7 1.3 2.300v1.8c0 1-.5 1.8-1.5 2.400h6M8.8 12.2h4.2"/>')}</span><div><b>See what every shift pays</b><span>Sleep-ins and breaks included, as you log it.</span></div></li>
+            <li><span class="wico">${ico('<path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/>')}</span><div><b>Check your payslip</b><span>See your take-home after tax and compare it.</span></div></li>
+            <li><span class="wico">${ico('<path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z"/>')}</span><div><b>Get a rest warning</b><span>A nudge when you're not getting enough time off.</span></div></li>
+          </ul>
+        </div>
+        <div class="wact">
+          <div class="authstack">
+            <button type="button" class="btn authbtn" id="goUp">Sign up</button>
+            <button type="button" class="btn secondary authbtn" id="goIn">Sign in</button>
+          </div>
+          <p class="obpriv">Your shifts and pay are private. Your employer can't see them. <a href="#privacy" data-info="privacy">How your data is kept</a></p>
+          ${mode === "demo" ? `<p class="authdemo"><b>Demo mode.</b> No codes are really sent and your data stays in this browser. Add your Supabase details in <code>src/config.js</code> to go live.</p>` : ""}
+        </div>
+      </div>`;
     $("#goUp").onclick = () => { intent = "signup"; screenChoose(); };
     $("#goIn").onclick = () => { intent = "signin"; screenChoose(); };
+    if (!again) {
+      countUp($("#wPay"), 130);
+      // the logo is a coin: it turns over once as the page arrives
+      play(document.querySelector(".top .logo"), [{ transform: "perspective(500px) rotateY(0deg)" }, { transform: "perspective(500px) rotateY(360deg)" }], { duration: 900, delay: 120, easing: tok("--spring") || "cubic-bezier(.22,1,.36,1)" });
+    }
+  }
+  // The example shift pay counts up once. With reduced motion it just shows the number.
+  function countUp(el, to) {
+    if (!el) return;
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const t0 = performance.now() + 350, dur = 900;
+    el.textContent = "£0.00";
+    const tick = now => {
+      const k = Math.min(1, Math.max(0, (now - t0) / dur)), e = 1 - Math.pow(1 - k, 3);
+      el.textContent = "£" + (to * e).toFixed(2);
+      if (k < 1 && document.body.contains(el)) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
   }
 
   function screenChoose() {
@@ -141,7 +198,7 @@
         ${pwField("authPw", up() ? "Choose a password" : "Password", up() ? `at least ${PW_MIN} characters` : "", up() ? "new-password" : "current-password")}
         <div class="banner bad" id="authErr" hidden></div>
         <button class="btn authbtn" type="submit" id="authGo">${up() ? "Create my account" : "Sign in"}</button>
-        ${up() ? `<p class="obpriv" style="margin:0">By creating an account you agree to the <a href="#terms" data-info="terms">Terms of use</a> and to how we keep your data in our <a href="#privacy" data-info="privacy">privacy notice</a>.</p>` : `<button type="button" class="linkbtn2" id="pwForgot">Forgot your password?</button>`}
+        ${up() ? `<p class="obpriv" style="margin:0">By creating an account you confirm you're 18 or over and agree to the <a href="#terms" data-info="terms">Terms of use</a> and to how we keep your data in our <a href="#privacy" data-info="privacy">privacy notice</a>.</p>` : `<button type="button" class="linkbtn2" id="pwForgot">Forgot your password?</button>`}
       </form>`;
     $("#authBack").onclick = screenChoose;
     wireShow();
@@ -291,7 +348,7 @@
           <input id="authId" ${k === "phone" ? 'type="tel" inputmode="tel" autocomplete="tel" placeholder="07700 900123"' : 'type="email" inputmode="email" autocomplete="email" autocapitalize="off" placeholder="you@example.com"'}></div>
         <div class="banner bad" id="authErr" hidden></div>
         <button class="btn authbtn" type="submit" id="authSend">Send my code</button>
-        ${up() ? `<p class="obpriv" style="margin:0">By creating an account you agree to the <a href="#terms" data-info="terms">Terms of use</a> and to how we keep your data in our <a href="#privacy" data-info="privacy">privacy notice</a>.</p>` : ""}
+        ${up() ? `<p class="obpriv" style="margin:0">By creating an account you confirm you're 18 or over and agree to the <a href="#terms" data-info="terms">Terms of use</a> and to how we keep your data in our <a href="#privacy" data-info="privacy">privacy notice</a>.</p>` : ""}
       </form>`;
     $("#authBack").onclick = screenChoose;
     setTimeout(() => $("#authId")?.focus(), 50);
@@ -392,7 +449,7 @@
           <input id="authId" type="email" inputmode="email" autocomplete="email" autocapitalize="off" placeholder="you@gmail.com"></div>
         <div class="banner bad" id="authErr" hidden></div>
         <button class="btn secondary authbtn gbtn" type="submit" id="authGo"><svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.8 1.1 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3 0 5.8 1.1 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>Continue</button>
-        ${up() ? `<p class="obpriv" style="margin:0">By creating an account you agree to the <a href="#terms" data-info="terms">Terms of use</a> and to how we keep your data in our <a href="#privacy" data-info="privacy">privacy notice</a>.</p>` : ""}
+        ${up() ? `<p class="obpriv" style="margin:0">By creating an account you confirm you're 18 or over and agree to the <a href="#terms" data-info="terms">Terms of use</a> and to how we keep your data in our <a href="#privacy" data-info="privacy">privacy notice</a>.</p>` : ""}
       </form>`;
     $("#authBack").onclick = screenChoose;
     setTimeout(() => $("#authId")?.focus(), 50);
@@ -419,7 +476,7 @@
   async function signedIn(u) {
     current = u; clearInterval(timer);
     let acct = null; try { acct = await readAcct(u.id); } catch (e) {}
-    if (acct && acct.status === "paused") { screenPaused(acct); return; }
+    if (acct && acct.status === "paused") { screenPaused(acct); if (window.SBReveal) SBReveal(); return; }
     document.body.classList.remove("authing");
     const box = $("#view-auth"); if (box) box.hidden = true;
     fillAccount();
@@ -468,10 +525,12 @@
   // ---- start ----
   function needSignIn() {
     document.body.classList.add("authing");
-    const sy = document.querySelector("#sync span:last-child"); if (sy) sy.textContent = "Not signed in";
+    watchScreens();
+    const tc = document.querySelector('meta[name="theme-color"]'); if (tc) tc.content = "#FFF8E6";
     const box = $("#view-auth"); if (box) box.hidden = false;
     let out = false; try { out = sessionStorage.getItem("shiftbook:signedout") === "1"; sessionStorage.removeItem("shiftbook:signedout"); } catch (e) {}
     screenWelcome();
+    if (window.SBReveal) SBReveal();
     if (out) { const h = root().querySelector(".obh"); if (h) h.insertAdjacentHTML("beforebegin", `<p class="authdemo" style="background:var(--good-soft)">You've signed out. Your data is safe and will be here when you sign back in.</p>`); }
   }
   async function start() {
