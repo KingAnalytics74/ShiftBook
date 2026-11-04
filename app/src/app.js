@@ -918,18 +918,19 @@ import { forecast as forecastCore, shiftKind } from "./core/forecast.js";
     if (on && typeof obGo === "function" && !document.querySelector("#view-setup:not([hidden])")) obGo(OB_FIRST);
     document.querySelectorAll("section.view").forEach(v => { v.hidden = on ? v.id !== "view-setup" : v.id !== "view-" + state.view; });
     document.querySelectorAll(".tabs, .bottombar, .period").forEach(el => { el.hidden = on; });
+    document.body.classList.toggle("onboarding", on);
+    if (window.SBReveal) SBReveal();
+    const tc = document.querySelector('meta[name="theme-color"]'); if (tc) tc.content = on ? "#FFF8E6" : "#C8102E";
   }
   // ---------- first-time setup: one question per screen ----------
   // ---------- profile: age group, sex, area, employer, community nickname ----------
   const NICK_A = ["NightOwl", "SleepIn", "EarlyBird", "KindHands", "TeaBreak", "LongShift", "CalmCarer", "SteadyHand", "QuietHero", "DayShift"];
   const nickFor = area => NICK_A[Math.floor(Math.random() * NICK_A.length)] + "_" + ((area || "").replace(/[^A-Za-z]/g, "").slice(0, 6) || String(Math.floor(10 + Math.random() * 89)));
   $("#uNickGen").onclick = () => { $("#uNick").value = nickFor(obVal("uArea")); obRender(); };
-  $("#uSex").addEventListener("change", () => { $("#uSexOtherWrap").hidden = $("#uSex").value !== "other"; });
-  ["uAge", "uSex", "uArea", "uEmployer", "uNick"].forEach(id => $("#" + id).addEventListener("input", () => { $("#setupErr").hidden = true; }));
+  ["uArea", "uEmployer", "uNick"].forEach(id => $("#" + id).addEventListener("input", () => { $("#setupErr").hidden = true; }));
   function profileCheck() {
     const err = m => { $("#setupErr").textContent = m; $("#setupErr").hidden = false; return false; };
-    if (obStep === 2) { const a = $("#uAge").value; if (!a) return err("Choose your age group."); if (a === "under18") return err("Shiftbuck is for care workers aged 18 and over."); }
-    if (obStep === 3) {
+    if (obStep === 2) {
       if (!obVal("uArea")) return err("Add your town or county, for example Leicester.");
       const n = obVal("uNick"), first = obVal("uName").toLowerCase();
       if (!/^[A-Za-z0-9_]{3,20}$/.test(n)) return err("Pick a nickname of 3 to 20 letters, numbers or _ with no spaces. Tap Suggest one for ideas.");
@@ -938,10 +939,9 @@ import { forecast as forecastCore, shiftKind } from "./core/forecast.js";
     return true;
   }
   const profileData = () => ({
-    ageGroup: $("#uAge").value, sex: $("#uSex").value || null, sexOther: $("#uSex").value === "other" ? obVal("uSexOther") || null : null,
     area: obVal("uArea"), employer: obVal("uEmployer") || null, nickname: obVal("uNick"), createdAt: new Date().toISOString()
   });
-  const OB_LAST = 8, OB_FIRST = window.SBAuth ? 1 : 0;
+  const OB_LAST = 7, OB_FIRST = window.SBAuth ? 1 : 0;
   let obStep = 0, obDay = null, obType = 0, obWork = "care", obPicked = new Set(OB_PICK.care), obEdit = {};
   const obVal = id => $("#" + id).value.trim();
   const obTypesChosen = () => TYPE_LIB[obWork].filter(t => obPicked.has(t.name)).map(t => ({ ...t, ...(obEdit[obWork + "|" + t.name] || {}) }));
@@ -951,6 +951,40 @@ import { forecast as forecastCore, shiftKind } from "./core/forecast.js";
     const rate = Number(t.rate) > 0 ? Number(t.rate) : Number($("#uRate").value) || 0, sleep = Number($("#uSleep").value) || 0, h = typeHours(t);
     return (h == null ? 0 : Math.max(0, h - (Number(t.breakHrs) || 0)) * rate) + (t.paid === "hours" ? 0 : sleep);
   }
+  // ---- setup motion: steps slide in from the direction you're moving; the shift pay rolls to its new value ----
+  const calmMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const springEase = () => getComputedStyle(document.body).getPropertyValue("--spring").trim() || "cubic-bezier(.22,1,.36,1)";
+  function animateSafe(el, frames, opts) { try { return el.animate(frames, opts); } catch (e) { try { return el.animate(frames, { ...opts, easing: "cubic-bezier(.22,1,.36,1)" }); } catch (e2) {} } }
+  function obEnter(dir) {
+    const el = document.querySelector(`.obstep[data-step="${obStep}"]`);
+    if (!el || !el.animate || calmMotion()) return;
+    animateSafe(el, [{ opacity: 0 }, { opacity: 1 }], { duration: 240, easing: "cubic-bezier(.22,1,.36,1)" });
+    animateSafe(el, [{ transform: `translate3d(${26 * dir}px,0,0)` }, { transform: "none" }], { duration: 420, easing: springEase() });
+  }
+  let obPayShown = 0, obPayRaf = 0;
+  function obPayTo(v) {
+    const el = $("#obPayV"); cancelAnimationFrame(obPayRaf);
+    if (calmMotion() || !el.offsetParent || v === obPayShown) { el.textContent = gbp(v); obPayShown = v; return; }
+    const from = obPayShown, t0 = performance.now(), d = 420;
+    const tick = now => { const k = Math.min(1, (now - t0) / d), e = 1 - Math.pow(1 - k, 3); obPayShown = from + (v - from) * e; el.textContent = gbp(obPayShown); if (k < 1) obPayRaf = requestAnimationFrame(tick); else obPayShown = v; };
+    obPayRaf = requestAnimationFrame(tick);
+  }
+  // Time pickers: each <input type="time"> in `box` gets an hour and a minute (5-minute steps) select in a pill.
+  // The real input stays (hidden) as the value holder, so the code that reads it doesn't change.
+  function obTimePickers(box) {
+    const p2 = n => String(n).padStart(2, "0");
+    box.querySelectorAll('input[type="time"]').forEach(inp => {
+      const pill = document.createElement("div"), hh = document.createElement("select"), mm = document.createElement("select"), colon = document.createElement("span");
+      pill.className = "tpick"; pill.setAttribute("role", "group"); pill.setAttribute("aria-label", (inp.closest("label")?.firstChild?.textContent || "Time").trim());
+      hh.setAttribute("aria-label", "Hour"); mm.setAttribute("aria-label", "Minutes"); colon.textContent = ":"; colon.setAttribute("aria-hidden", "true");
+      for (let h = 0; h < 24; h++) hh.add(new Option(p2(h), p2(h)));
+      for (let m = 0; m < 60; m += 5) mm.add(new Option(p2(m), p2(m)));
+      const [h, m] = (inp.value || "00:00").split(":"); hh.value = h; mm.value = p2(Math.round(Number(m) / 5) * 5 % 60);
+      const push = () => { inp.value = hh.value + ":" + mm.value; inp.dispatchEvent(new Event("input", { bubbles: true })); };
+      hh.onchange = mm.onchange = push;
+      pill.append(hh, colon, mm); inp.after(pill); inp.hidden = true;
+    });
+  }
   function obLibRender() {
     $("#obWork").querySelectorAll("[data-w]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.w === obWork)));
     $("#obTypeLib").innerHTML = `<div class="obgroup">Tap the shifts you work</div><div class="obchips" role="group" aria-label="Shifts you work">` +
@@ -959,6 +993,7 @@ import { forecast as forecastCore, shiftKind } from "./core/forecast.js";
         <label>Starts<input type="time" data-k="start" value="${esc(t.start)}"></label><label>Finishes<input type="time" data-k="end" value="${esc(t.end)}"></label>
         ${t.paid === "both" ? `<label>Paid hours<input type="number" data-k="hours" min="0" max="24" step="0.25" inputmode="decimal" value="${t.hours ?? ""}"></label>` : ""}
         ${t.paid !== "sleep" ? `<label>Unpaid break (hrs)<input type="number" data-k="breakHrs" min="0" max="8" step="0.25" inputmode="decimal" value="${t.breakHrs ?? 0}"></label>` : ""}</div>`).join("") + `</div>` : "");
+    obTimePickers($("#obTypeLib"));
   }
   $("#obWork").addEventListener("click", e => { const b = e.target.closest("[data-w]"); if (!b || b.dataset.w === obWork) return; obWork = b.dataset.w; obPicked = new Set(OB_PICK[obWork]); obType = 0; obRender(); });
   $("#obTypeLib").addEventListener("input", e => {
@@ -973,12 +1008,12 @@ import { forecast as forecastCore, shiftKind } from "./core/forecast.js";
     $("#obCount").textContent = obStep ? `Step ${obStep} of ${OB_LAST}` : "";
     $("#obBack").hidden = obStep <= OB_FIRST;
     $("#obNext").hidden = obStep === OB_LAST; $("#setupBtn").hidden = obStep !== OB_LAST;
-    $("#obNext").textContent = obStep === 0 ? "Get started" : obStep === 7 && !obVal("uUsers") ? "Skip" : "Next";
+    $("#obNext").textContent = obStep === 0 ? "Get started" : obStep === 6 && !obVal("uUsers") ? "Skip" : "Next";
     obLibRender();
     const chosen = obTypesChosen();
     $("#obPatPrev").innerHTML = chosen.length ? `You picked <b>${chosen.length}</b> shift${chosen.length === 1 ? "" : "s"}: ${chosen.map(t => esc(t.name)).join(", ")}` : "Pick at least one shift.";
     $("#obTypes").innerHTML = chosen.map((t, i) => `<button type="button" data-t="${i}" aria-pressed="${obType === i}">${esc(t.name)}<small>${t.start}–${t.end}</small></button>`).join("") + `<button type="button" data-t="none" aria-pressed="${obType === "none"}">Not now</button>`;
-    $("#obPay").hidden = obType === "none"; $("#obPayV").textContent = gbp(obShiftPay());
+    $("#obPay").hidden = obType === "none"; obPayTo(obShiftPay());
     $("#setupBtn").textContent = obType === "none" || !chosen.length ? "Start my Shiftbook" : "Save and start";
     if (!$("#obDate").value) $("#obDate").value = todayStr;
     $("#setupErr").hidden = true;
@@ -987,16 +1022,16 @@ import { forecast as forecastCore, shiftKind } from "./core/forecast.js";
     const err = m => { $("#setupErr").textContent = m; $("#setupErr").hidden = false; return false; };
     if (obStep === 1 && !obVal("uName")) return err("Add your first name.");
     if (!profileCheck()) return false;
-    if (obStep === 4 && !(Number($("#uRate").value) > 0)) return err("Add your hourly rate, for example 13.00.");
-    if (obStep === 4 && !(Number($("#uSleep").value || 0) >= 0)) return err("The sleep-in rate can't be below zero.");
-    if (obStep === 5) { const d = Number($("#uDay").value); if (!(d >= 1 && d <= 31 && Number.isInteger(d))) return err("Type the day your pay month starts, from 1 to 31."); }
-    if (obStep === 6 && !obTypesChosen().length) return err("Pick at least one shift you work. You can change them later.");
-    if (obStep === 6) { const bad = obTypesChosen().find(t => !t.start || !t.end || (t.paid === "both" && !(t.hours > 0)) || (t.paid !== "sleep" && (Number(t.breakHrs) || 0) >= (typeHours(t) || 0))); if (bad) return err(`Check the times and break for ${bad.name}.`); }
+    if (obStep === 3 && !(Number($("#uRate").value) > 0)) return err("Add your hourly rate, for example 13.00.");
+    if (obStep === 3 && !(Number($("#uSleep").value || 0) >= 0)) return err("The sleep-in rate can't be below zero.");
+    if (obStep === 4) { const d = Number($("#uDay").value); if (!(d >= 1 && d <= 31 && Number.isInteger(d))) return err("Type the day your pay month starts, from 1 to 31."); }
+    if (obStep === 5 && !obTypesChosen().length) return err("Pick at least one shift you work. You can change them later.");
+    if (obStep === 5) { const bad = obTypesChosen().find(t => !t.start || !t.end || (t.paid === "both" && !(t.hours > 0)) || (t.paid !== "sleep" && (Number(t.breakHrs) || 0) >= (typeHours(t) || 0))); if (bad) return err(`Check the times and break for ${bad.name}.`); }
     return true;
   }
-  const obGo = n => { obStep = Math.max(OB_FIRST, Math.min(OB_LAST, n)); obRender(); const f = document.querySelector(`.obstep[data-step="${obStep}"] input`); if (f && obStep) setTimeout(() => f.focus({ preventScroll: true }), 50); window.scrollTo({ top: 0 }); };
-  $("#obNext").onclick = () => { if (obCheck()) obGo(obStep + 1 + (obStep === 6 && obWork !== "care" ? 1 : 0)); };
-  $("#obBack").onclick = () => obGo(obStep - 1 - (obStep === 8 && obWork !== "care" ? 1 : 0));
+  const obGo = n => { const prev = obStep; obStep = Math.max(OB_FIRST, Math.min(OB_LAST, n)); obRender(); obEnter(obStep >= prev ? 1 : -1); const f = document.querySelector(`.obstep[data-step="${obStep}"] input`); if (f && obStep) setTimeout(() => f.focus({ preventScroll: true }), 50); window.scrollTo({ top: 0 }); };
+  $("#obNext").onclick = () => { if (obCheck()) obGo(obStep + 1 + (obStep === 5 && obWork !== "care" ? 1 : 0)); };
+  $("#obBack").onclick = () => obGo(obStep - 1 - (obStep === 7 && obWork !== "care" ? 1 : 0));
   $("#setupForm").addEventListener("keydown", e => { if (e.key === "Enter" && e.target.tagName === "INPUT" && obStep < OB_LAST) { e.preventDefault(); $("#obNext").click(); } });
   $("#obTypes").addEventListener("click", e => { const b = e.target.closest("[data-t]"); if (!b) return; obType = b.dataset.t === "none" ? "none" : Number(b.dataset.t); obRender(); });
   ["uName", "uRole", "uRate", "uSleep", "uDay", "uUsers"].forEach(id => $("#" + id).addEventListener("input", obRender));
@@ -1004,8 +1039,8 @@ import { forecast as forecastCore, shiftKind } from "./core/forecast.js";
     e.preventDefault();
     if (obStep !== OB_LAST) { $("#obNext").click(); return; }
     const name = obVal("uName"), rate = Number($("#uRate").value), sleep = Number($("#uSleep").value) || 0, day = Number($("#uDay").value);
-    if (!name || !(rate > 0) || !(day >= 1 && day <= 31)) { obGo(!name ? 1 : !(rate > 0) ? 4 : 5); obCheck(); return; }
-    if (!$("#uAge").value || $("#uAge").value === "under18" || !obVal("uNick")) { obGo(!$("#uAge").value || $("#uAge").value === "under18" ? 2 : 3); obCheck(); return; }
+    if (!name || !(rate > 0) || !(day >= 1 && day <= 31)) { obGo(!name ? 1 : !(rate > 0) ? 3 : 4); obCheck(); return; }
+    if (!obVal("uNick")) { obGo(2); obCheck(); return; }
     const types = obTypesChosen().map(t => ({ ...t })), t0 = types[obType], users = obWork === "care" ? obVal("uUsers").split(",").map(x => x.trim()).filter(Boolean) : [], pay = obShiftPay();
     $("#setupBtn").disabled = true; $("#setupErr").hidden = true;
     try {

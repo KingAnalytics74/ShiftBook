@@ -476,3 +476,175 @@ body.authing .so{display:none}
 .acctpause{display:flex;flex-direction:column;gap:10px;margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
 .acctpause .btn{align-self:flex-start}
 .linkinline{border:0;background:transparent;color:var(--day);font:inherit;font-weight:700;cursor:pointer;padding:0;text-decoration:underline}
+
+/* ===== Sign-up theme: light with gold. Only while signing in or setting up; the rest of the app keeps its look. ===== */
+body.authing,body.onboarding{
+  --g-bg:#FFF8E6; --g-card:#FFFFFF; --g-ink:#2B2113; --g-muted:#6B5D43; --g-line:#EBDDB8;
+  --g-gold:#E3A918; --g-gold-hi:#F2C23F; --g-gold-deep:#8A6200; --g-soft:#FBEBBD;
+  --bg:var(--g-bg); --surface:var(--g-card); --sunk:#FBF1D6; --line:var(--g-line);
+  --ink:var(--g-ink); --muted:var(--g-muted); --faint:#9A8A68; --focus:var(--g-gold-deep);
+  --day:var(--g-gold-deep); --day-soft:var(--g-soft); --brand:var(--g-gold); --c4:var(--g-gold);
+  --bad:#A8201A; --bad-soft:#FBE3DF; --night-soft:var(--g-soft); color-scheme:light}
+body.authing::before,body.onboarding::before{background:var(--g-bg)!important}
+
+/* header: same place, light ground, a bigger wordmark, no status text */
+body.authing .top,body.onboarding .top{background:var(--g-bg)!important;box-shadow:0 0 0 100vmax var(--g-bg);color:var(--g-ink);padding-block:18px 16px}
+body.authing .top::after,body.onboarding .top::after{height:3px;background:linear-gradient(90deg,var(--g-gold-hi),var(--g-gold) 50%,var(--g-gold-hi))}
+body.authing .brand .who,body.onboarding .brand .who,body.authing .sync,body.onboarding .sync{display:none!important}
+body.authing .top h1,body.onboarding .top h1{font-size:clamp(30px,8.5vw,38px);line-height:1;color:var(--g-ink)}
+body.authing .top h1 .wm,body.onboarding .top h1 .wm{color:var(--g-gold-deep)}
+body.authing .logo,body.onboarding .logo{width:52px;height:52px;border-radius:15px;box-shadow:0 0 0 2px var(--g-gold),0 4px 12px rgba(138,98,0,.22)}
+body.authing .brandmark,body.onboarding .brandmark{gap:12px}
+@media (min-width:1100px){
+  body.authing .wrap,body.onboarding .wrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));max-width:980px;margin:0 auto}
+  body.authing .top,body.onboarding .top{position:sticky!important;top:env(safe-area-inset-top,0px);left:auto;bottom:auto;width:auto;flex-direction:row!important;align-items:center!important;justify-content:flex-start!important;padding:18px 0 16px;overflow:visible;clip-path:inset(0 -100vmax)}
+  body.authing .top::after,body.onboarding .top::after{inset:auto -100vmax 0;width:auto;height:3px;background:linear-gradient(90deg,var(--g-gold-hi),var(--g-gold) 50%,var(--g-gold-hi))}
+  body.authing .wrap > section.view,body.onboarding .wrap > section.view{max-width:560px;margin-inline:auto}
+}
+
+/* no card chrome on the sign-up screens: the page itself is the screen */
+body.authing .card.onb,body.onboarding .card.onb{background:transparent;border:0;border-top:0;box-shadow:none;padding:0;max-width:520px;margin:0 auto}
+body.authing .card:not(.hero),body.onboarding .card:not(.hero){border-top-width:0}
+body.authing .obh,body.onboarding .obh{color:var(--g-ink);font-weight:700;letter-spacing:-.015em}
+
+/* buttons: gold primary, outlined secondary */
+body.authing .btn,body.onboarding .btn{background:linear-gradient(180deg,var(--g-gold-hi),var(--g-gold));color:var(--g-ink);border:0;box-shadow:0 1px 0 rgba(255,255,255,.55) inset,0 6px 14px rgba(138,98,0,.22);min-height:52px;transition:transform .16s ease-out,box-shadow .16s ease-out}
+body.authing .btn.secondary,body.onboarding .btn.secondary{background:transparent;border:1.5px solid var(--g-gold-deep);color:var(--g-gold-deep);box-shadow:none}
+body.authing .btn:active,body.onboarding .btn:active{transform:scale(.97)}
+@media (hover:hover){
+  body.authing .btn:hover,body.onboarding .btn:hover{box-shadow:0 1px 0 rgba(255,255,255,.55) inset,0 8px 18px rgba(138,98,0,.3)}
+  body.authing .btn.secondary:hover,body.onboarding .btn.secondary:hover{background:var(--g-soft)}
+}
+body.authing .btn:disabled,body.onboarding .btn:disabled{opacity:.55;transform:none}
+
+/* fields */
+body.authing input,body.authing select,body.onboarding input,body.onboarding select{background:var(--g-card);border:1.5px solid var(--g-line);color:var(--g-ink);transition:border-color .15s ease-out,box-shadow .15s ease-out}
+body.authing input:focus,body.authing select:focus,body.onboarding input:focus,body.onboarding select:focus{outline:0;border-color:var(--g-gold);box-shadow:0 0 0 4px rgba(227,169,24,.25)}
+body.authing .field>label,body.onboarding .field>label,body.authing .field>.lbl,body.onboarding .field>.lbl{color:var(--g-ink)}
+body.authing .pwshow{border:1.5px solid var(--g-line);color:var(--g-gold-deep);background:var(--g-card)}
+body.authing .obpriv a,body.authing .linkback,body.authing .linkbtn2,body.authing .linkinline,body.onboarding .obpriv a{color:var(--g-gold-deep)}
+body.authing .author::before,body.authing .author::after{background:var(--g-line)}
+body.authing .authdemo{background:var(--g-soft);border:1px dashed var(--g-gold)}
+body.onboarding .onbbar{background:var(--g-soft)}
+body.onboarding .onbbar i{background:linear-gradient(90deg,var(--g-gold),var(--g-gold-hi))}
+body.onboarding .obchips button,body.onboarding .obtypes button{border:1.5px solid var(--g-line);background:var(--g-card)}
+body.onboarding .obchips button[aria-pressed="true"],body.onboarding .obtypes button[aria-pressed="true"]{background:var(--g-soft);border-color:var(--g-gold);color:var(--g-ink);box-shadow:0 0 0 3px rgba(227,169,24,.2)}
+body.onboarding .obpreview{background:var(--g-soft);color:var(--g-ink)}
+body.onboarding .obpay{background:linear-gradient(135deg,#3A2A0E,#5A4115);color:#FFF3D1}
+body.onboarding .obpay b{color:var(--g-gold-hi)}
+
+/* welcome screen: fills the phone screen, actions stay within thumb reach */
+.welcome{display:flex;flex-direction:column;justify-content:space-between;gap:22px;min-height:calc(100dvh - 170px - env(safe-area-inset-top,0px))}
+.wbody{display:flex;flex-direction:column;gap:18px}
+.wh{font-size:clamp(30px,8.4vw,40px)!important;line-height:1.08;margin-top:4px}
+.wsub{margin:-8px 0 0;color:var(--g-muted,var(--muted));font-size:16.5px;max-width:34ch}
+.wcard{position:relative;align-self:stretch;padding:18px 18px 16px;border-radius:20px;color:#FFF3D1;background:linear-gradient(145deg,#3A2A0E,#5A4115);box-shadow:0 14px 30px rgba(90,65,21,.28);overflow:hidden;animation:wcardin .8s var(--spring) backwards}
+.wcard::after{content:"";position:absolute;right:-40px;top:-40px;width:140px;height:140px;border-radius:50%;background:radial-gradient(circle,rgba(242,194,63,.45),rgba(242,194,63,0) 70%)}
+.wtag{position:absolute;right:14px;top:14px;font-size:11.5px;font-weight:600;color:#FFE9AE;border:1px solid rgba(255,233,174,.45);border-radius:999px;padding:2px 9px;z-index:1}
+.wtop{display:flex;align-items:center;gap:8px;font-weight:600;font-size:14px;color:#FFE9AE}
+.wdot{width:9px;height:9px;border-radius:50%;background:var(--g-gold-hi);box-shadow:0 0 0 4px rgba(242,194,63,.25)}
+.wpay{font-size:46px;line-height:1.1;font-weight:600;color:#F7CB57;margin:10px 0 2px;letter-spacing:-.02em}
+.wmeta{font-size:14px;color:#E9D7A5}
+.wbar{height:6px;border-radius:999px;background:rgba(255,233,174,.18);margin-top:14px;overflow:hidden}
+.wbar i{display:block;height:100%;width:83%;border-radius:inherit;background:linear-gradient(90deg,var(--g-gold),var(--g-gold-hi));transform-origin:left;animation:wfill .9s .5s var(--spring) backwards}
+.wfeat{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:14px}
+.wfeat li{display:flex;gap:14px;align-items:center;background:none!important;padding:0!important;animation:wrise .55s var(--ease-out) backwards}
+.wfeat li:nth-child(1){animation-delay:.3s}.wfeat li:nth-child(2){animation-delay:.38s}.wfeat li:nth-child(3){animation-delay:.46s}
+.wico{flex:none;width:46px;height:46px;border-radius:14px;display:grid;place-items:center;background:var(--g-soft);color:var(--g-gold-deep);border:1px solid var(--g-line)}
+.wfeat b{display:block;font-size:16px;color:var(--g-ink)}
+.wfeat span span,.wfeat div>span{display:block;font-size:14px;color:var(--muted);line-height:1.35}
+.wact{display:flex;flex-direction:column;gap:12px;padding:6px 0 4px}
+@keyframes wrise{from{opacity:0;transform:translateY(14px)}}
+@keyframes wcardin{from{opacity:0;transform:translateY(28px) scale(.955)}}
+@keyframes wfill{from{transform:scaleX(0)}}
+
+/* time pickers: hour and minute in one pill */
+.tpick{display:flex;align-items:center;justify-content:center;gap:2px;height:56px;border-radius:14px;border:1.5px solid var(--g-line,var(--line));background:var(--surface);transition:border-color .15s ease-out,box-shadow .15s ease-out}
+.tpick:focus-within{border-color:var(--g-gold,var(--ink));box-shadow:0 0 0 4px rgba(227,169,24,.25)}
+.tpick select{appearance:none;-webkit-appearance:none;width:auto!important;min-width:52px;border:0!important;background:transparent!important;box-shadow:none!important;padding:8px 6px!important;text-align:center;text-align-last:center;font-family:var(--f-num);font-variant-numeric:tabular-nums;font-size:26px!important;font-weight:600;color:var(--ink);cursor:pointer;border-radius:10px!important}
+.tpick select:focus-visible{outline:2px solid var(--g-gold-deep,var(--focus));outline-offset:-2px}
+.tpick>span{font-family:var(--f-num);font-size:26px;font-weight:600;color:var(--g-gold-deep,var(--muted));padding-bottom:3px}
+html:has(body.authing),html:has(body.onboarding){--bg:#FFF8E6;background:#FFF8E6}
+
+/* ===== Motion system for the sign-up screens =====
+   Rules: only transform and opacity move. Springs (slight overshoot, like iOS) for things that travel,
+   ease-out for fades, 100ms for presses. With reduced motion on, everything below is switched off by the
+   global rule at the top, and every animated element rests in its finished state, so nothing is lost. */
+body.authing,body.onboarding{
+  --ease-out:cubic-bezier(.22,1,.36,1);
+  --press:cubic-bezier(.3,.7,.4,1);
+  --spring:cubic-bezier(.34,1.35,.64,1);
+  -webkit-tap-highlight-color:transparent}
+@supports (transition-timing-function:linear(0,1)){
+  body.authing,body.onboarding{--spring:linear(0,.047,.156,.293,.434,.565,.679,.774,.848,.905,.947,.975,.994,1.006,1.012,1.015,1.015,1.014,1.012,1.01,1.008,1.006,1.004,1.003,1.002,1.001,1.001,1,1,1,1)}
+}
+body.authing button,body.onboarding button,body.authing a,body.onboarding a{touch-action:manipulation}
+
+/* buttons: sink on press (fast), rise back on a spring */
+body.authing .btn,body.onboarding .btn{transition:transform .5s var(--spring),box-shadow .25s var(--ease-out),background-color .2s var(--ease-out);will-change:transform}
+body.authing .btn:active,body.onboarding .btn:active{transform:scale(.965);transition-duration:.09s,.09s,.2s;transition-timing-function:var(--press)}
+body.authing .btn.busy::before{content:"";display:inline-block;width:15px;height:15px;margin-right:10px;vertical-align:-2px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:wspin .7s linear infinite}
+@keyframes wspin{to{transform:rotate(360deg)}}
+
+/* errors arrive, they don't pop */
+body.authing .banner.bad:not([hidden]),body.onboarding .banner.bad:not([hidden]){animation:wbanner .3s var(--ease-out) backwards}
+@keyframes wbanner{from{opacity:0;transform:translateY(-6px)}}
+
+/* the example card's gold sheen: one pass, after the number has landed */
+.wcard::before{content:"";position:absolute;top:-25%;bottom:-25%;left:-45%;width:38%;opacity:0;pointer-events:none;z-index:1;
+  background:linear-gradient(90deg,rgba(255,236,170,0),rgba(255,236,170,.3),rgba(255,236,170,0));transform:skewX(-18deg);
+  animation:wsheen 1.1s 1.3s var(--ease-out)}
+@keyframes wsheen{0%{opacity:0;transform:translateX(0) skewX(-18deg)}12%{opacity:1}88%{opacity:1}100%{opacity:0;transform:translateX(420%) skewX(-18deg)}}
+
+/* feature icons draw themselves in, row by row (pathLength is set to 1 in auth.js) */
+.wico svg *{stroke-dasharray:1;stroke-dashoffset:0;animation:wdraw .9s var(--ease-out) backwards}
+.wfeat li:nth-child(1) .wico svg *{animation-delay:.45s}.wfeat li:nth-child(2) .wico svg *{animation-delay:.53s}.wfeat li:nth-child(3) .wico svg *{animation-delay:.61s}
+@keyframes wdraw{from{stroke-dashoffset:1}}
+
+/* coming back to the welcome page: no replay of the intro */
+.welcome.again .wcard,.welcome.again .wcard::before,.welcome.again .wbar i,.welcome.again .wfeat li,.welcome.again .wico svg *{animation:none!important}
+
+/* setup: the progress bar and chosen options settle on a spring */
+body.onboarding .onbbar i{transition:width .6s var(--spring)}
+body.onboarding .obchips button[aria-pressed="true"],body.onboarding .obtypes button[aria-pressed="true"]{animation:wpop .45s var(--spring)}
+body.onboarding .obchips button,body.onboarding .obtypes button{transition:background-color .2s var(--ease-out),border-color .2s var(--ease-out),box-shadow .25s var(--ease-out),transform .45s var(--spring)}
+body.onboarding .obchips button:active,body.onboarding .obtypes button:active{transform:scale(.96);transition-duration:.09s}
+@keyframes wpop{from{transform:scale(.94)}}
+body.onboarding .tpick select{transition:background-color .15s var(--ease-out)}
+@media (hover:hover){body.onboarding .tpick select:hover{background:var(--g-soft)!important}}
+.strow .tpick{height:52px}
+.strow .tpick select{font-size:22px!important;min-width:44px}
+.strow .tpick>span{font-size:22px}
+
+/* reload: hide the app until sign-in / setup / app is decided, so the previous screen never flashes */
+html.boot .wrap{visibility:hidden}
+html.boot-light,html.boot-light body{background:#FFF8E6!important}
+html.boot-light body::before{background:#FFF8E6!important}
+html.booted .wrap{animation:bootin .22s var(--ease-out,ease-out) both}
+@keyframes bootin{from{opacity:0}to{opacity:1}}
+
+/* ---- floating shapes behind sign-up / setup (decorative, ignored by screen readers) ---- */
+.deco{display:none}
+body.authing .deco,body.onboarding .deco{display:block;position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+body.authing .wrap,body.onboarding .wrap{position:relative;z-index:1}
+html.boot .deco{visibility:hidden}
+.deco .sh{position:absolute;display:block;opacity:0;will-change:transform;
+  animation:shpop .9s var(--spring,cubic-bezier(.34,1.35,.64,1)) var(--dl) forwards,shfl var(--fl) ease-in-out var(--dl) infinite alternate,shsp var(--sp) linear var(--dl) infinite}
+.deco .sh svg{display:block;width:100%;height:100%;overflow:visible}
+.deco .glow{position:absolute;border-radius:50%;pointer-events:none;animation:shbreathe 9s ease-in-out infinite alternate}
+.deco .g1{width:420px;height:420px;right:-160px;top:12%;background:radial-gradient(circle,rgba(242,194,63,.34),rgba(242,194,63,0) 68%)}
+.deco .g2{width:460px;height:460px;left:-200px;bottom:-60px;background:radial-gradient(circle,rgba(227,169,24,.26),rgba(227,169,24,0) 68%);animation-delay:-4s}
+@keyframes shpop{from{opacity:0;scale:.3}to{opacity:.95;scale:1}}
+@keyframes shfl{from{translate:0 0}to{translate:var(--dx) var(--dy)}}
+@keyframes shsp{from{rotate:0deg}to{rotate:calc(360deg * var(--dir,1))}}
+@keyframes shbreathe{from{opacity:.65;transform:scale(1)}to{opacity:1;transform:scale(1.08)}}
+@media (prefers-reduced-motion:reduce){.deco .sh{opacity:.95;scale:1}}
+@media (max-width:480px){.deco .sh{filter:none}.deco .s3,.deco .s5{opacity:.85}}
+/* phones: keep shapes in the margins, half off-screen, so they never sit on text */
+@media (max-width:560px){
+  .deco .sh{opacity:.9}
+  .deco .s2{left:-15px!important}.deco .s4{left:-18px!important}.deco .s10{left:-9px!important}
+  .deco .s5{left:calc(100% - 24px)!important}.deco .s9{left:calc(100% - 14px)!important}.deco .s7{left:calc(100% - 30px)!important;top:40%!important}
+  .deco .s1{left:calc(100% - 34px)!important}.deco .s3{left:calc(100% - 40px)!important}
+  .deco .s6{top:96%!important;left:12%!important}.deco .s8{left:48%!important;top:96%!important}
+}

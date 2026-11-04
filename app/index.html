@@ -14,6 +14,7 @@
     }
   </style>
   <script src="src/guard.js"></script>
+  <script src="src/early.js"></script>
   <title>Shiftbuck</title>
   <meta name="description" content="Shift log, pay, tax and budgeting app for care workers.">
   <link rel="stylesheet" href="src/fonts.css">
@@ -24,6 +25,18 @@
 </head>
 
 <body>
+<div class="deco" aria-hidden="true"><b class="glow g1"></b><b class="glow g2"></b>
+  <i class="sh s1" style="top:15%;left:80%;width:44px;height:44px;--fl:9s;--sp:46s;--dl:0.1s;--dx:-14px;--dy:18px;--dir:1"><svg viewBox="0 0 100 100"><path d="M50 12 90 84H10Z" fill="#1D1608" stroke="#1D1608" stroke-width="10" stroke-linejoin="round"/></svg></i>
+  <i class="sh s2" style="top:63%;left:5%;width:30px;height:30px;--fl:11s;--sp:38s;--dl:0.35s;--dx:12px;--dy:-16px;--dir:-1"><svg viewBox="0 0 100 100"><path d="M50 12 90 84H10Z" fill="#1D1608" stroke="#1D1608" stroke-width="10" stroke-linejoin="round"/></svg></i>
+  <i class="sh s3" style="top:82%;left:76%;width:58px;height:58px;--fl:13s;--sp:60s;--dl:0.6s;--dx:-18px;--dy:-12px;--dir:1"><svg viewBox="0 0 100 100"><path d="M50 12 90 84H10Z" fill="none" stroke="#8A6200" stroke-width="7" stroke-linejoin="round"/></svg></i>
+  <i class="sh s4" style="top:31%;left:3%;width:34px;height:34px;--fl:10s;--sp:0s;--dl:0.2s;--dx:10px;--dy:14px;--dir:1"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="#F2C23F"/></svg></i>
+  <i class="sh s5" style="top:47%;left:86%;width:46px;height:46px;--fl:12s;--sp:50s;--dl:0.5s;--dx:-12px;--dy:16px;--dir:1"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="none" stroke="#8A6200" stroke-width="9"/></svg></i>
+  <i class="sh s6" style="top:91%;left:18%;width:26px;height:26px;--fl:8s;--sp:30s;--dl:0.75s;--dx:10px;--dy:-10px;--dir:1"><svg viewBox="0 0 100 100"><path d="M50 14v72M14 50h72" stroke="#1D1608" stroke-width="16" stroke-linecap="round"/></svg></i>
+  <i class="sh s7" style="top:23%;left:90%;width:40px;height:40px;--fl:10s;--sp:0s;--dl:0.9s;--dx:-8px;--dy:12px;--dir:1"><svg viewBox="0 0 100 60"><path d="M4 30c11-24 22-24 33 0s22 24 33 0 20-20 26-6" fill="none" stroke="#E3A918" stroke-width="9" stroke-linecap="round"/></svg></i>
+  <i class="sh s8" style="top:93%;left:58%;width:38px;height:38px;--fl:12s;--sp:0s;--dl:0.4s;--dx:-10px;--dy:-8px;--dir:1"><svg viewBox="0 0 100 50"><path d="M4 48a46 46 0 0 1 92 0Z" fill="#F2C23F"/></svg></i>
+  <i class="sh s9" style="top:56%;left:92%;width:22px;height:22px;--fl:9s;--sp:34s;--dl:0.15s;--dx:-8px;--dy:-12px;--dir:-1"><svg viewBox="0 0 100 100"><rect x="16" y="16" width="68" height="68" rx="16" fill="none" stroke="#1D1608" stroke-width="12"/></svg></i>
+  <i class="sh s10" style="top:70%;left:2%;width:22px;height:22px;--fl:7s;--sp:0s;--dl:0.55s;--dx:8px;--dy:10px;--dir:1"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="44" fill="#1D1608"/></svg></i>
+</div>
 
   <div class="wrap">
     <header class="top">
@@ -77,21 +90,7 @@
         </div>
         <form id="setupForm" novalidate>
           <div class="obstep" data-step="0">
-            <svg class="oblogo" viewBox="0 0 120 120" aria-hidden="true">
-              <rect width="120" height="120" rx="28" fill="#C8102E" />
-              <circle cx="60" cy="65" r="40" fill="#B07800" />
-              <circle cx="60" cy="57" r="40" fill="#F2B705" />
-              <circle cx="60" cy="57" r="37.5" fill="none" stroke="#FFE27A" stroke-width="5"
-                stroke-dasharray="2.6 2.6" />
-              <circle cx="60" cy="57" r="31" fill="#FFD23F" stroke="#C98A00" stroke-width="2.5" />
-              <path d="M60 32v5M60 77v5M35 57h5M80 57h5" stroke="#14213D" stroke-width="4" stroke-linecap="round" />
-              <path d="M60 57V41M60 57l12 8" fill="none" stroke="#14213D" stroke-width="6" stroke-linecap="round"
-                stroke-linejoin="round" />
-              <circle cx="60" cy="57" r="4.5" fill="#C8102E" stroke="#14213D" stroke-width="2.5" />
-              <path d="M36 45a27 27 0 0 1 11-12" fill="none" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round"
-                opacity=".9" />
-            </svg>
-            <h2 class="obh">Know your pay before payday</h2>
+              <h2 class="obh">Know your pay before payday</h2>
             <ul class="obwhy">
               <li><b>See what every shift pays</b>, including sleep-ins, as you log it.</li>
               <li><b>Check your payslip</b> and your take-home after tax.</li>
@@ -109,34 +108,6 @@
                 id="uRole" placeholder="Support Worker"></div>
           </div>
           <div class="obstep" data-step="2" hidden>
-            <h2 class="obh">A bit about you</h2>
-            <p class="obsub">Only used to understand who uses Shiftbuck. Never shown to other carers or to your
-              employer.</p>
-            <div class="field"><label for="uAge">Age group</label>
-              <select id="uAge">
-                <option value="">Choose…</option>
-                <option value="under18">Under 18</option>
-                <option value="18-24">18–24</option>
-                <option value="25-34">25–34</option>
-                <option value="35-44">35–44</option>
-                <option value="45-54">45–54</option>
-                <option value="55-64">55–64</option>
-                <option value="65+">65 or over</option>
-                <option value="na">Prefer not to say (I'm 18 or over)</option>
-              </select>
-            </div>
-            <div class="field"><label for="uSex">Sex <span class="hint">optional</span></label>
-              <select id="uSex">
-                <option value="">Prefer not to say</option>
-                <option value="female">Female</option>
-                <option value="male">Male</option>
-                <option value="other">I'd rather describe it</option>
-              </select>
-            </div>
-            <div class="field" id="uSexOtherWrap" hidden><label for="uSexOther">In your own words <span
-                  class="hint">optional</span></label><input type="text" id="uSexOther" maxlength="40"></div>
-          </div>
-          <div class="obstep" data-step="3" hidden>
             <h2 class="obh">Where do you work?</h2>
             <p class="obsub">Your area puts you in the right carers' group. Your employer is kept private and never
               shown to anyone.</p>
@@ -152,7 +123,7 @@
               <span class="hint">This is how other carers see you. Don't use your real name.</span>
             </div>
           </div>
-          <div class="obstep" data-step="4" hidden>
+          <div class="obstep" data-step="3" hidden>
             <h2 class="obh">What are you paid?</h2>
             <p class="obsub">It's on your contract or payslip. You can change it later.</p>
             <div class="field"><label for="uRate">Hourly rate (£)</label><input type="number" id="uRate" step="0.01"
@@ -161,12 +132,12 @@
                   sleep-ins</span></label><input type="number" id="uSleep" step="0.01" min="0" inputmode="decimal"
                 placeholder="e.g. 40"></div>
           </div>
-          <div class="obstep" data-step="5" hidden>
+          <div class="obstep" data-step="4" hidden>
             <h2 class="obh">When does your pay month start?</h2>
             <p class="obsub">The first day your payslip counts. For example, if it covers 26 Oct to 25 Nov, pick 26.</p>
             <div class="field"><label for="uDay">Day your pay month starts (1 to 31) <span class="hint">31 means the last day of each month</span></label><input type="number" id="uDay" min="1" max="31" inputmode="numeric"></div>
           </div>
-          <div class="obstep" data-step="6" hidden>
+          <div class="obstep" data-step="5" hidden>
           <h2 class="obh">What shifts do you work?</h2>
           <p class="obsub">Tap every shift you do, then set your own start and finish times. They become one-tap buttons when you log a shift. You can change them or add more later in Settings.</p>
           <div class="field"><span class="lbl">Your kind of work</span>
@@ -176,14 +147,14 @@
           <div id="obTypeLib"></div>
           <p class="obpreview" id="obPatPrev"></p>
         </div>
-        <div class="obstep" data-step="7" hidden>
+        <div class="obstep" data-step="6" hidden>
             <h2 class="obh">Who do you support?</h2>
             <p class="obsub">First names or initials only, separated by commas. You can skip this and add people as you
               log shifts.</p>
             <div class="field"><label for="uUsers">Service users <span class="hint">optional</span></label><input
                 type="text" id="uUsers" placeholder="e.g. Alex, S.B."></div>
           </div>
-          <div class="obstep" data-step="8" hidden>
+          <div class="obstep" data-step="7" hidden>
             <h2 class="obh">Log your first shift</h2>
             <p class="obsub">Your last or next shift. You can skip this.</p>
             <div class="field"><label for="obDate">Date</label><input type="date" id="obDate"></div>
@@ -738,9 +709,8 @@
         <ul>
           <li>What you enter in setup: your first name, role, hourly and sleep-in rates, pay period start day and usual
             shift times.</li>
-          <li>Your profile: age group, sex (optional), your area, your employer (optional) and your community nickname.
-            Other carers only ever see your nickname. Your employer never sees any of it. Age group and sex are only
-            used, added up across all users, to understand who uses Shiftbuck.</li>
+          <li>Your profile: your area, your employer (optional) and your community nickname.
+            Other carers only ever see your nickname. Your employer never sees any of it.</li>
           <li>How you sign in: your mobile number or email address and, if you choose one, a password. If you continue
             with Google, Google tells us your email address and name, and nothing else. Your password is only ever kept
             scrambled (hashed) by Supabase, so nobody at Shiftbuck can read it.</li>
