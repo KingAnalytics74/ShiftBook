@@ -1,0 +1,48 @@
+import { ymd, parse, addDays } from "./dates.js";
+import { hasDayHrs, worked, isNight } from "./restCheck.js";
+
+const asUsers = s => {
+    if (!s || !s.users) return [];
+    if (Array.isArray(s.users)) return s.users.filter(Boolean);
+    return [s.users].filter(Boolean);
+};
+
+// Predicts the next 7 days from the last 8 weeks: how often each weekday was worked,
+// the most common shift type on that weekday, and the usual hours, break and service users.
+export const FC_WEEKS = 8;
+// A saved shift type ("Waking night", "Early"...) wins; older shifts without one are grouped by what they were.
+export const shiftKind = s => s.type || (s.sleepIn && hasDayHrs(s) ? "Day + sleep-in" : s.sleepIn ? "Sleep-in" : isNight(s) ? "Night" : "Day shift");
+const medianOf = a => { const b = a.slice().sort((x, y) => x - y); return b.length ? b[Math.floor((b.length - 1) / 2)] : null; };
+const modeOf = a => { const m = new Map(); a.forEach(x => m.set(x, (m.get(x) || 0) + 1)); let best = null, n = 0; m.forEach((v, k) => { if (v > n) { n = v; best = k; } }); return best; };
+
+// shifts: Map of "YYYY-MM-DD" -> shift. todayStr: "YYYY-MM-DD". calcFn: (shift) => { total, ... } (the pay rule).
+export function forecast(shifts, todayStr, calcFn = () => ({ total: 0 })) {
+    if (!todayStr || typeof todayStr !== "string") return { days: [], basis: 0, weeks: 0 };
+    const map = shifts instanceof Map ? shifts : new Map();
+    const today = parse(todayStr);
+    const past = [...map.values()].filter(s => s && s.date && s.date < todayStr && worked(s));
+    if (!past.length) return { days: [], basis: 0, weeks: 0 };
+    const first = parse(past.map(s => s.date).sort()[0]);
+    const from = first > addDays(today, -7 * FC_WEEKS) ? first : addDays(today, -7 * FC_WEEKS);
+    const inWin = past.filter(s => parse(s.date) >= from);
+    const days = [];
+    for (let i = 0; i < 7; i++) {
+        const d = addDays(today, i), key = ymd(d), wd = d.getDay();
+        let seen = 0; for (let x = from; x < today; x = addDays(x, 1)) if (x.getDay() === wd) seen++;
+        const hits = inWin.filter(s => parse(s.date).getDay() === wd);
+        const p = seen ? hits.length / seen : 0, existing = map.get(key);
+        let guess = null;
+        if (hits.length) {
+            const kind = modeOf(hits.map(shiftKind)), same = hits.filter(s => shiftKind(s) === kind), dayOnes = same.filter(hasDayHrs);
+            const last = same.slice().sort((a, b) => a.date.localeCompare(b.date)).pop() || {};
+            guess = {
+                date: key, type: last.type || null, start: last.start || null, end: last.end || null, rate: last.rate ?? null,
+                users: (modeOf(same.map(s => asUsers(s).join("|"))) || "").split("|").filter(Boolean), sleepIn: !!last.sleepIn,
+                dayHours: dayOnes.length ? medianOf(dayOnes.map(s => Number(s.dayHours))) : null, breakHrs: dayOnes.length ? medianOf(dayOnes.map(s => Number(s.breakHrs) || 0)) : null, notes: ""
+            };
+        }
+        const total = existing ? calcFn(existing).total : guess ? calcFn(guess).total : 0;
+        days.push({ d, key, p, existing, guess, pay: total });
+    }
+    return { days, basis: inWin.length, weeks: Math.max(1, Math.round((today - from) / 6048e5)) };
+}

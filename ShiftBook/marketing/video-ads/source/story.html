@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<title>Shiftbuck story ad</title>
+<style>
+/* Story ad, 1080x1920: Tunde, a new support worker, logs shifts, sees his pay and saves for a deposit.
+   Navy ground with Shiftbuck's sun yellow and red; real app screens in rounded frames; Tunde and his home are drawn in SVG. */
+@font-face{font-family:'Figtree';font-weight:500;src:url(../../../app/fonts/figtree-latin-500-normal.woff2) format('woff2')}
+@font-face{font-family:'Figtree';font-weight:700;src:url(../../../app/fonts/figtree-latin-700-normal.woff2) format('woff2')}
+@font-face{font-family:'Bricolage Grotesque';font-weight:700;src:url(../../../app/fonts/bricolage-grotesque-latin-700-normal.woff2) format('woff2')}
+@font-face{font-family:'IBM Plex Mono';font-weight:600;src:url(../../../app/fonts/ibm-plex-mono-latin-600-normal.woff2) format('woff2')}
+:root{--navy:#14213D;--navy2:#233A6E;--red:#C8102E;--sun:#FFD23F;--blue:#2563EB;--white:#FFFFFF;--mist:#C9D3EA;--ink:#14213D;
+  --f-display:'Bricolage Grotesque',system-ui,sans-serif;--f-body:'Figtree',system-ui,sans-serif;--f-num:'IBM Plex Mono',monospace}
+html,body{margin:0;background:#000}
+#stage{position:relative;width:1080px;height:1920px;overflow:hidden;background:radial-gradient(120% 80% at 20% 0%,var(--navy2),var(--navy) 60%);font-family:var(--f-body);color:var(--white)}
+.band{position:absolute;inset:0 0 auto 0;height:12px;background:linear-gradient(90deg,var(--blue) 0 33%,var(--sun) 33% 66%,var(--red) 66%);z-index:5}
+.brand{position:absolute;left:70px;top:80px;display:flex;align-items:center;gap:22px;z-index:4}
+.brand img{width:92px;height:92px;border-radius:24px;box-shadow:0 0 0 4px rgba(255,255,255,.9)}
+.brand b{font-family:var(--f-display);font-size:58px;letter-spacing:-.01em}
+.brand b span,.wm span,em{color:var(--sun);font-style:normal}
+.scene{position:absolute;inset:0;opacity:0}
+.head{position:absolute;left:70px;right:70px;top:250px;font-family:var(--f-display);font-weight:700;font-size:86px;line-height:1.05;letter-spacing:-.015em;text-wrap:balance}
+.sub{position:absolute;left:70px;right:70px;font-size:42px;line-height:1.3;color:var(--mist);font-weight:500}
+.frame{position:absolute;left:70px;width:940px;overflow:hidden;border-radius:40px;background:#EEF2F8;box-shadow:0 30px 80px rgba(0,0,0,.45),0 0 0 6px rgba(255,255,255,.08)}
+.frame img{position:absolute;left:0;top:0;transform-origin:0 0}
+.ring{position:absolute;border:9px solid var(--sun);border-radius:26px;opacity:0}
+.who{position:absolute;right:70px;top:96px;display:flex;align-items:center;gap:14px;font-weight:700;font-size:34px;z-index:4}
+.who svg{width:76px;height:76px;border-radius:50%;background:var(--sun)}
+.art{position:absolute;left:0;top:0;width:1080px;height:1920px}
+.counter{position:absolute;z-index:2;left:70px;right:70px;top:820px;background:var(--white);color:var(--ink);border-radius:40px;padding:56px 56px 60px;box-shadow:0 30px 80px rgba(0,0,0,.45)}
+.counter .lbl{display:flex;align-items:center;gap:14px;font-family:var(--f-display);font-size:46px}
+.counter .lbl i{width:22px;height:22px;border-radius:6px;background:#7C3AED;display:block}
+.counter .amt{font-family:var(--f-num);font-weight:600;font-size:132px;letter-spacing:-.03em;margin:26px 0 8px}
+.counter .mo{font-size:38px;color:#55607A;font-weight:600}
+.counter .bar{height:34px;border-radius:999px;background:#EDE5FD;margin-top:40px;overflow:hidden}
+.counter .bar i{display:block;height:100%;width:0;border-radius:999px;background:#7C3AED}
+.counter .ticks{display:flex;justify-content:space-between;margin-top:16px;font-size:30px;color:#55607A;font-weight:600}
+.coin{position:absolute;z-index:1;width:86px;height:86px;opacity:0}
+.note{position:absolute;left:70px;right:70px;top:1560px;font-size:30px;color:var(--mist);text-align:center}
+.end{text-align:center}
+.end .logo{position:absolute;left:50%;top:420px;width:360px;height:360px;margin-left:-180px;border-radius:84px;box-shadow:0 0 0 8px rgba(255,255,255,.92),0 40px 90px rgba(0,0,0,.45)}
+.wm{position:absolute;left:0;right:0;top:860px;font-family:var(--f-display);font-size:150px;letter-spacing:-.02em}
+.tag{position:absolute;left:0;right:0;top:1060px;font-size:60px;font-weight:700}
+.chip{position:absolute;left:50%;top:1200px;transform:translateX(-50%);background:var(--sun);color:var(--navy);font-weight:700;font-size:46px;padding:22px 44px;border-radius:999px;white-space:nowrap}
+.url{position:absolute;left:0;right:0;top:1350px;font-family:var(--f-display);font-size:64px;letter-spacing:-.01em}
+.small{position:absolute;left:90px;right:90px;top:1460px;font-size:28px;color:var(--mist);text-align:center;line-height:1.4}
+</style>
+</head>
+<body>
+<div id="stage"><div class="band"></div><div id="scenes"></div></div>
+<script>
+const CTA_URL = "shiftbuck.com";
+const W = 940, SAVE_MONTH = 344.50, MONTHS = 36;   // the app's own figure: 15% of £2,296.64 take-home
+const SKIN = "#8A5A3B", SKIN_D = "#6E4529", HAIR = "#17151A", TUNIC = "#2563EB", TROUSERS = "#1D2433";
+const LOGO = "../../../app/favicon.svg";
+
+// Tunde, drawn at 360x640. arm: "wave" | "keys" | "down". t drives waving and blinking.
+function tunde(arm, t) {
+  const blink = (t % 3.1) < 0.12 ? 0.1 : 1;
+  const wave = arm === "wave" ? Math.sin(t * 9) * 14 : 0;
+  const right = arm === "down" ? `<g transform="rotate(8 268 250)"><rect x="252" y="236" width="40" height="92" rx="20" fill="${TUNIC}"/><rect x="256" y="312" width="32" height="96" rx="16" fill="${SKIN}"/><circle cx="272" cy="414" r="20" fill="${SKIN}"/></g>`
+    : `<g transform="rotate(${-150 + wave} 268 250)"><rect x="252" y="236" width="40" height="92" rx="20" fill="${TUNIC}"/><rect x="256" y="312" width="32" height="96" rx="16" fill="${SKIN}"/><circle cx="272" cy="414" r="22" fill="${SKIN}"/>
+      ${arm === "keys" ? `<g transform="translate(272 440) rotate(150)"><circle r="20" fill="none" stroke="#FFD23F" stroke-width="7"/><rect x="-6" y="16" width="12" height="62" rx="5" fill="#FFD23F"/><rect x="6" y="56" width="16" height="9" rx="3" fill="#FFD23F"/><rect x="6" y="68" width="11" height="8" rx="3" fill="#FFD23F"/></g>` : ""}</g>`;
+  return `<svg viewBox="0 0 360 640" xmlns="http://www.w3.org/2000/svg">
+    <rect x="118" y="470" width="54" height="150" rx="24" fill="${TROUSERS}"/><rect x="188" y="470" width="54" height="150" rx="24" fill="${TROUSERS}"/>
+    <rect x="106" y="606" width="74" height="30" rx="15" fill="#0B0D12"/><rect x="180" y="606" width="74" height="30" rx="15" fill="#0B0D12"/>
+    <g transform="rotate(-8 92 250)"><rect x="68" y="236" width="40" height="92" rx="20" fill="${TUNIC}"/><rect x="72" y="312" width="32" height="96" rx="16" fill="${SKIN}"/><circle cx="88" cy="414" r="20" fill="${SKIN}"/></g>
+    <path d="M96 252 Q100 222 150 214 L210 214 Q260 222 264 252 L262 488 Q180 502 98 488 Z" fill="${TUNIC}"/>
+    <path d="M150 214 L180 262 L210 214" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linejoin="round"/>
+    <rect x="164" y="190" width="32" height="34" rx="10" fill="${SKIN_D}"/>
+    <path d="M142 222 L180 330 L218 222" fill="none" stroke="#FFD23F" stroke-width="7"/>
+    <g transform="translate(150 324)"><rect width="62" height="80" rx="9" fill="#FFFFFF"/><rect width="62" height="16" rx="5" fill="#C8102E"/><circle cx="31" cy="38" r="11" fill="${SKIN}"/><rect x="12" y="56" width="38" height="6" rx="3" fill="#14213D"/><rect x="18" y="66" width="26" height="5" rx="2.5" fill="#9AA3B8"/></g>
+    ${right}
+    <ellipse cx="126" cy="128" rx="13" ry="18" fill="${SKIN_D}"/><ellipse cx="234" cy="128" rx="13" ry="18" fill="${SKIN_D}"/>
+    <ellipse cx="180" cy="122" rx="56" ry="68" fill="${SKIN}"/>
+    <path d="M124 112 Q122 52 180 50 Q238 52 236 112 Q228 82 180 80 Q132 82 124 112 Z" fill="${HAIR}"/>
+    <path d="M126 132 Q130 190 180 194 Q230 190 234 132 Q226 176 180 178 Q134 176 126 132 Z" fill="${HAIR}" opacity=".85"/>
+    <g transform="translate(0 ${120 - 120 * blink})"><ellipse cx="158" cy="120" rx="7" ry="${8 * blink}" fill="#17151A"/><ellipse cx="202" cy="120" rx="7" ry="${8 * blink}" fill="#17151A"/></g>
+    <path d="M146 100 Q158 94 168 100 M192 100 Q202 94 214 100" stroke="${HAIR}" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <path d="M160 152 Q180 168 200 152" stroke="#FFFFFF" stroke-width="7" fill="none" stroke-linecap="round"/>
+  </svg>`;
+}
+// a small round avatar of Tunde for the app-screen scenes
+const avatar = `<svg viewBox="80 40 200 200" xmlns="http://www.w3.org/2000/svg"><rect x="80" y="40" width="200" height="200" fill="#FFD23F"/>
+  <path d="M96 252 Q100 222 150 214 L210 214 Q260 222 264 252 L264 260 L96 260 Z" fill="${TUNIC}"/><rect x="164" y="190" width="32" height="34" rx="10" fill="${SKIN_D}"/>
+  <ellipse cx="180" cy="122" rx="56" ry="68" fill="${SKIN}"/><path d="M124 112 Q122 52 180 50 Q238 52 236 112 Q228 82 180 80 Q132 82 124 112 Z" fill="${HAIR}"/>
+  <path d="M126 132 Q130 190 180 194 Q230 190 234 132 Q226 176 180 178 Q134 176 126 132 Z" fill="${HAIR}" opacity=".85"/>
+  <ellipse cx="158" cy="120" rx="7" ry="8" fill="#17151A"/><ellipse cx="202" cy="120" rx="7" ry="8" fill="#17151A"/><path d="M160 152 Q180 168 200 152" stroke="#FFFFFF" stroke-width="7" fill="none" stroke-linecap="round"/></svg>`;
+// his first home, 600x560, with a SOLD board
+const house = `<svg viewBox="0 0 600 560" xmlns="http://www.w3.org/2000/svg">
+  <rect x="410" y="60" width="54" height="120" fill="#8F0A20"/>
+  <rect x="70" y="230" width="460" height="320" rx="10" fill="#EEF2F8"/>
+  <path d="M40 250 L300 50 L560 250 Z" fill="#C8102E" stroke="#8F0A20" stroke-width="10" stroke-linejoin="round"/>
+  <rect x="250" y="370" width="100" height="180" rx="12" fill="#14213D"/><circle cx="330" cy="465" r="8" fill="#FFD23F"/>
+  <rect x="112" y="300" width="100" height="90" rx="10" fill="#FFD23F"/><path d="M162 300v90M112 345h100" stroke="#EEF2F8" stroke-width="8"/>
+  <rect x="388" y="300" width="100" height="90" rx="10" fill="#FFD23F"/><path d="M438 300v90M388 345h100" stroke="#EEF2F8" stroke-width="8"/>
+  <circle cx="300" cy="190" r="34" fill="#FFD23F"/><path d="M300 156v68M266 190h68" stroke="#EEF2F8" stroke-width="8"/>
+</svg>`;
+const sold = `<svg viewBox="0 0 220 300" xmlns="http://www.w3.org/2000/svg"><rect x="100" y="90" width="20" height="210" fill="#EEF2F8"/>
+  <rect x="10" y="20" width="200" height="110" rx="14" fill="#C8102E" stroke="#FFFFFF" stroke-width="8"/>
+  <text x="110" y="96" text-anchor="middle" font-family="Bricolage Grotesque, sans-serif" font-weight="700" font-size="60" fill="#FFFFFF">SOLD</text></svg>`;
+const coinSvg = `<img src="${LOGO}" alt="" style="width:100%;height:100%;border-radius:22px">`;
+
+const SCENES = [
+  { kind: "meet", t: [0, 3.6], head: "Meet Tunde.<br><em>He's just started as a support worker.</em>" },
+  { kind: "app", t: [3.6, 6.8], head: "He logs every shift<br><em>in Shiftbuck.</em>", sub: "Day, sleep-in or both, at his own rates.",
+    imgs: [{ src: "screens/story/logcard.png", iw: 1074, win: [470, 1130], rings: [{ x: 46, y: 1006, w: 724, h: 90, at: 5.0 }] }] },
+  { kind: "app", t: [6.8, 9.4], head: "<em>£175</em> for a day<br>and a sleep-in.", sub: "He sees what a shift pays as he logs it.", top: 900,
+    imgs: [{ src: "screens/story/logpreview.png", iw: 972, win: [0, 162], rings: [{ x: 640, y: 30, w: 310, h: 102, at: 7.7 }] }] },
+  { kind: "app", t: [9.4, 12.6], head: "He knows his pay<br><em>before payday.</em>", sub: "£2,915 this month. £2,296.64 after tax.",
+    imgs: [{ src: "screens/story/hero.png", iw: 1074, win: [0, 678], rings: [{ x: 36, y: 128, w: 590, h: 128, at: 10.4 }, { x: 36, y: 280, w: 840, h: 100, at: 11.4 }] }] },
+  { kind: "app", t: [12.6, 16.4], head: "Every pound gets a job.<br><em>Including a house deposit.</em>", sub: "15% of his take-home: £344.50 a month.",
+    imgs: [{ src: "screens/story/plantop.png", iw: 1074, win: [0, 465] }, { src: "screens/story/pot.png", iw: 972, win: [0, 708], w: 760, rings: [{ x: 30, y: 180, w: 260, h: 90, at: 14.2 }, { x: 610, y: 606, w: 330, h: 70, at: 15.1 }] }] },
+  { kind: "save", t: [16.4, 20.6], head: "Month after month,<br><em>it adds up.</em>" },
+  { kind: "home", t: [20.6, 24.0], head: "Three years on:<br><em>keys to his first home.</em>" },
+  { kind: "end", t: [24.0, 27.5] }
+];
+
+const ease = x => x < 0 ? 0 : x > 1 ? 1 : x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+const out = x => x < 0 ? 0 : x > 1 ? 1 : 1 - Math.pow(1 - x, 3);
+const gbp0 = n => "£" + Math.round(n).toLocaleString("en-GB");
+const brand = `<div class="brand"><img src="${LOGO}" alt=""><b>Shift<span>buck</span></b></div>`;
+const root = document.getElementById("scenes");
+const els = SCENES.map(s => {
+  const el = document.createElement("div"); el.className = "scene " + s.kind;
+  if (s.kind === "meet") el.innerHTML = `${brand}<div class="head">${s.head}</div><div class="art" data-tunde style="left:250px;top:760px;width:580px;height:1031px"></div>`;
+  if (s.kind === "app") {
+    el.innerHTML = `${brand}<div class="who">${avatar}<span>Tunde</span></div><div class="head">${s.head}</div><div class="sub">${s.sub}</div>` +
+      s.imgs.map(im => { const w = im.w || W, sc = w / im.iw; im.sc = sc; im.h = Math.round((im.win[1] - im.win[0]) * sc);
+        return `<div class="frame" style="width:${w}px;left:${70 + (W - w) / 2}px;height:${im.h}px"><img src="${im.src}" style="width:${im.iw}px;transform:scale(${sc});top:${-im.win[0] * sc}px">${(im.rings || []).map(() => `<div class="ring"></div>`).join("")}</div>`; }).join("");
+  }
+  if (s.kind === "save") el.innerHTML = `${brand}<div class="who">${avatar}<span>Tunde</span></div><div class="head">${s.head}</div>
+    <div class="counter"><div class="lbl"><i></i>House deposit</div><div class="amt">£0</div><div class="mo">Month 1 of 36</div><div class="bar"><i></i></div><div class="ticks"><span>Year 1</span><span>Year 2</span><span>Year 3</span></div></div>
+    ${[0, 1, 2, 3, 4].map(i => `<div class="coin" data-i="${i}">${coinSvg}</div>`).join("")}
+    <div class="note">Example: £344.50 a month for 36 months. Shiftbuck helps you plan; it doesn't hold or save money for you.</div>`;
+  if (s.kind === "home") el.innerHTML = `${brand}<div class="head">${s.head}</div>
+    <div class="art" data-house style="left:150px;top:840px;width:560px;height:523px">${house}</div>
+    <div class="art" data-sold style="left:20px;top:1110px;width:180px;height:245px">${sold}</div>
+    <div class="art" data-tunde style="left:600px;top:800px;width:420px;height:747px"></div>
+    <div class="note" style="top:1640px">Dramatisation with example figures.</div>`;
+  if (s.kind === "end") el.innerHTML = `<img class="logo" src="${LOGO}" alt=""><div class="wm">Shift<span>buck</span></div><div class="tag">Know your pay before payday</div>
+    <div class="chip">Free for UK care workers</div><div class="url">${CTA_URL}</div>
+    <div class="small">Dramatisation with example figures. Your pay and savings depend on your own shifts, rates and choices.</div>`;
+  root.appendChild(el); return el;
+});
+function layout() {
+  SCENES.forEach((s, i) => {
+    if (s.kind !== "app") return;
+    const el = els[i], head = el.querySelector(".head"), sub = el.querySelector(".sub");
+    const subTop = 250 + head.offsetHeight + 34; sub.style.top = subTop + "px";
+    let y = Math.max(s.top || 0, subTop + sub.offsetHeight + 56);
+    el.querySelectorAll(".frame").forEach((f, j) => { f.style.top = y + "px"; y += s.imgs[j].h + 34; });
+  });
+}
+window.DURATION = SCENES[SCENES.length - 1].t[1];
+window.renderAt = t => {
+  SCENES.forEach((s, i) => {
+    const el = els[i], [a, b] = s.t, k = t - a, inT = out(k / .45), outT = i === SCENES.length - 1 ? 1 : 1 - ease((t - (b - .3)) / .3);
+    const vis = t >= a - .01 && t <= b + .01;
+    el.style.opacity = vis ? Math.min(inT, outT) : 0;
+    if (!vis) return;
+    const head = el.querySelector(".head"); if (head) head.style.transform = `translateY(${(1 - inT) * 50}px)`;
+    el.querySelectorAll("[data-tunde]").forEach(d => {
+      d.innerHTML = tunde(s.kind === "meet" ? (k > .5 ? "wave" : "down") : "keys", k);
+      d.style.transform = `translateY(${(1 - out((k - .1) / .6)) * 160 + Math.sin(k * 2.2) * 6}px)`;
+    });
+    if (s.kind === "app") {
+      el.querySelectorAll(".frame").forEach((f, j) => {
+        const d = .1 + j * .25; f.style.opacity = out((k - d) / .4); f.style.transform = `translateY(${(1 - out((k - d) / .5)) * 120}px)`;
+        (s.imgs[j].rings || []).forEach((r, n) => {
+          const ring = f.querySelectorAll(".ring")[n], rk = t - r.at, im = s.imgs[j], pad = 14 / im.sc;
+          ring.style.left = `${(r.x - pad) * im.sc}px`; ring.style.top = `${(r.y - pad - im.win[0]) * im.sc}px`;
+          ring.style.width = `${(r.w + pad * 2) * im.sc}px`; ring.style.height = `${(r.h + pad * 2) * im.sc}px`;
+          ring.style.opacity = out(rk / .25); ring.style.transform = `scale(${rk < 0 ? 1.15 : 1.15 - .15 * out(rk / .3)})`;
+        });
+      });
+      el.querySelector(".sub").style.opacity = out((k - .25) / .4);
+      el.querySelector(".who").style.opacity = out((k - .2) / .4);
+    }
+    if (s.kind === "save") {
+      const c = el.querySelector(".counter"), p = ease((k - .6) / 3.0), m = Math.max(1, Math.min(MONTHS, Math.ceil(p * MONTHS)));
+      c.style.opacity = out((k - .1) / .4); c.style.transform = `translateY(${(1 - out((k - .1) / .5)) * 120}px)`;
+      c.querySelector(".amt").textContent = gbp0(p >= 1 ? SAVE_MONTH * MONTHS : SAVE_MONTH * p * MONTHS);
+      c.querySelector(".mo").textContent = p >= 1 ? "36 months · saved towards a deposit" : `Month ${m} of ${MONTHS}`;
+      c.querySelector(".bar i").style.width = (p * 100) + "%";
+      el.querySelectorAll(".coin").forEach(coin => {
+        const i = +coin.dataset.i, ck = ((k - .6 - i * .55) % 2.75 + 2.75) % 2.75, live = k > .6 + i * .55 && k < 3.8;
+        coin.style.opacity = live ? Math.max(0, 1 - ck / .9) : 0;
+        coin.style.left = (170 + i * 170) + "px"; coin.style.top = (560 + out(ck / .9) * 300) + "px";
+        coin.style.transform = `scaleX(${Math.cos(ck * 6)})`;
+      });
+      el.querySelector(".note").style.opacity = out((k - .8) / .5);
+    }
+    if (s.kind === "home") {
+      const h = el.querySelector("[data-house]"), so = el.querySelector("[data-sold]");
+      h.style.transform = `scale(${.9 + .1 * out(k / .6)})`; h.style.transformOrigin = "50% 100%"; h.style.opacity = out(k / .4);
+      so.style.transform = `rotate(${(1 - out((k - .5) / .5)) * -30}deg)`; so.style.transformOrigin = "50% 100%"; so.style.opacity = out((k - .5) / .3);
+      el.querySelector(".note").style.opacity = out((k - .6) / .4);
+    }
+    if (s.kind === "end") {
+      const logo = el.querySelector(".logo");
+      logo.style.transform = `scale(${.6 + .4 * out(k / .5)}) rotate(${(1 - out(k / .6)) * -20}deg)`;
+      [".wm", ".tag", ".url", ".small"].forEach((sel, n) => { const e = el.querySelector(sel); e.style.opacity = out((k - .25 - n * .15) / .4); e.style.transform = `translateY(${(1 - out((k - .25 - n * .15) / .4)) * 30}px)`; });
+      const chip = el.querySelector(".chip"), kc = out((k - .6) / .4);
+      chip.style.opacity = kc; chip.style.transform = `translateX(-50%) scale(${.85 + .15 * kc + .025 * Math.sin(Math.max(0, k - 1.2) * 5)})`;
+    }
+  });
+};
+window.ready = Promise.all([document.fonts.ready, ...[...document.images].map(i => i.decode().catch(() => {}))]).then(() => { layout(); renderAt(0); return true; });
+</script>
+</body>
+</html>

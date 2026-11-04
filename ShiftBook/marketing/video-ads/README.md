@@ -1,0 +1,62 @@
+# Shiftbuck video ads
+
+Three 15-second vertical ads (1080×1920, 9:16) for TikTok, Instagram Reels and Stories, Facebook Reels and YouTube Shorts. They show the real app with example figures.
+
+| File | Opens with | Shows |
+|---|---|---|
+| `shiftbuck-payslip-9x16.mp4` | "Was a sleep-in missing from your payslip?" | The payslip check catching £45 not paid, then gross pay for the month |
+| `shiftbuck-shiftpay-9x16.mp4` | "What does today's shift actually pay?" | Picking a shift type, "This shift pays £175", then the month adding up |
+| `shiftbuck-rest-9x16.mp4` | "7 days in a row without a day off?" | The rest check warning and 70 hours in 7 days, then gross pay |
+| `shiftbuck-story-tunde-9x16.mp4` (27 s) | "Meet Tunde. He's just started as a support worker." | Tunde logs a shift (£175), sees £2,915 before payday, gives 15% (£344.50 a month) to a House deposit pot, saves £12,402 over 3 years and gets the keys to his first home |
+
+Tunde is an illustrated, made-up character. His story is labelled as a dramatisation with example figures, and every app screen is the real app with his example account (`source/seed-story.js`). The £12,402 is the app's own £344.50 a month times 36.
+
+Each ends on the logo, "Know your pay before payday", "Free for UK care workers" and **shiftbuck.com**.
+
+They're made to work **with the sound off**: every message is on screen. Each file has a silent audio track, so platforms accept it. To add music, pick it inside TikTok or Instagram from their **commercial music library**. Paid ads can't use ordinary trending songs.
+
+Text and app screens stay out of the bottom fifth and the right edge, where TikTok and Instagram put their buttons and captions.
+
+## Captions to post with them
+
+**Payslip ad**
+> Ever been paid less than you worked? Log your shifts in Shiftbuck and it checks your payslip against them, including sleep-ins. Free for UK care workers. 💷
+> #carers #supportworker #carework #sleepins #payslip #ukcarers
+
+**Shift pay ad**
+> Day shift, sleep-in or both: see what it pays before payday. Shiftbuck adds up every shift at your own rates. Free for UK care workers.
+> #carers #supportworker #carework #nightshift #ukcarers
+
+**Rest ad**
+> Working day after day with no break? Shiftbuck warns you when you're not getting enough rest, using UK working time rules. Free for UK care workers.
+> #carers #supportworker #carework #selfcare #ukcarers
+
+**Tunde's story**
+> Tunde started as a support worker, logged every shift in Shiftbuck, knew his pay before payday and gave every pound a job, including a house deposit. Plan your pay with Shiftbuck. Free for UK care workers. 🏡 (Dramatisation, example figures)
+> #carers #supportworker #carework #firsthome #savingmoney #ukcarers
+
+## Before you pay to promote them
+
+1. **Real accounts are on** (Supabase is connected). Sign up once yourself on shiftbuck.com before promoting, to check sign-up and email confirmation work.
+2. **Check shiftbuck.com on a phone before each campaign.** The ads send people there (hosted on Vercel).
+3. **Keep the claims true (UK advertising rules, CAP Code).** The ads show only what the app does, with "Example figures shown" on the end card.
+   - Keep "Free for UK care workers" true for as long as these ads run.
+   - Don't add claims the app can't back up, such as "never be underpaid again" or "matches every payslip".
+   - The rest check is a guide, not legal advice. Don't present it as a legal guarantee.
+   - Tunde's story must keep its "Dramatisation with example figures" label. Shiftbuck helps people plan; it doesn't hold, save or invest money, so don't suggest it will get anyone a house.
+4. **Use an account for the business.** Use a TikTok Business account or Meta Business Suite in WesTech Innovation's name, and link the privacy notice (`app/#privacy`) wherever the platform asks for one.
+
+## Re-render them (for example with new wording)
+
+Everything is in `source/`. You need Node, Playwright with Chromium, and ffmpeg.
+
+1. Change `CTA_URL` near the top of the script in `source/ad.html`.
+2. From the repository root:
+   ```
+   python3 -m http.server 8773
+   node marketing/video-ads/source/render.js stills payslip 1.6,4,7.2,10.4,13.6   # quick check
+   node marketing/video-ads/source/render.js video payslip marketing/video-ads/shiftbuck-payslip-9x16.mp4
+   ```
+   Repeat for `shiftpay`, `rest` and `story` (Tunde's story, from `source/story.html`). Each takes under a minute.
+
+To refresh the app screens after the app changes, serve the repository root on port 8772 and run `node marketing/video-ads/source/capture.js marketing/video-ads/source/screens`. The sample carer "Ada" and the service users "Alex", "Sam" and "Jo" are made up (`source/seed.js`).
