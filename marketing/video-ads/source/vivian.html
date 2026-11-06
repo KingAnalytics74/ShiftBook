@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<title>Shiftbuck overtime ad</title>
+<style>
+/* Overtime ad, 1080x1920: Vivian is asked to do overtime, checks Shiftbuck, sees her plan is short and says yes.
+   Same look as Tunde's story ad (story.html).
+*/
+@font-face{font-family:'Figtree';font-weight:500;src:url(../../../app/fonts/figtree-latin-500-normal.woff2) format('woff2')}
+@font-face{font-family:'Figtree';font-weight:700;src:url(../../../app/fonts/figtree-latin-700-normal.woff2) format('woff2')}
+@font-face{font-family:'Bricolage Grotesque';font-weight:700;src:url(../../../app/fonts/bricolage-grotesque-latin-700-normal.woff2) format('woff2')}
+@font-face{font-family:'IBM Plex Mono';font-weight:600;src:url(../../../app/fonts/ibm-plex-mono-latin-600-normal.woff2) format('woff2')}
+:root{--navy:#14213D;--navy2:#233A6E;--red:#C8102E;--sun:#FFD23F;--blue:#2563EB;--white:#FFFFFF;--mist:#C9D3EA;--ink:#14213D;
+  --f-display:'Bricolage Grotesque',system-ui,sans-serif;--f-body:'Figtree',system-ui,sans-serif;--f-num:'IBM Plex Mono',monospace}
+html,body{margin:0;background:#000}
+#stage{position:relative;width:1080px;height:1920px;overflow:hidden;background:radial-gradient(120% 80% at 20% 0%,var(--navy2),var(--navy) 60%);font-family:var(--f-body);color:var(--white)}
+.band{position:absolute;inset:0 0 auto 0;height:12px;background:linear-gradient(90deg,var(--blue) 0 33%,var(--sun) 33% 66%,var(--red) 66%);z-index:5}
+.brand{position:absolute;left:70px;top:80px;display:flex;align-items:center;gap:22px;z-index:4}
+.brand img{width:92px;height:92px;border-radius:24px;box-shadow:0 0 0 4px rgba(255,255,255,.9)}
+.brand b{font-family:var(--f-display);font-size:58px;letter-spacing:-.01em}
+.brand b span,.wm span,em{color:var(--sun);font-style:normal}
+.scene{position:absolute;inset:0;opacity:0}
+.head{position:absolute;left:70px;right:70px;top:250px;font-family:var(--f-display);font-weight:700;font-size:86px;line-height:1.05;letter-spacing:-.015em;text-wrap:balance}
+.sub{position:absolute;left:70px;right:70px;font-size:42px;line-height:1.3;color:var(--mist);font-weight:500}
+.frame{position:absolute;left:70px;width:940px;overflow:hidden;border-radius:40px;background:#EEF2F8;box-shadow:0 30px 80px rgba(0,0,0,.45),0 0 0 6px rgba(255,255,255,.08)}
+.frame img{position:absolute;left:0;top:0;transform-origin:0 0}
+.ring{position:absolute;border:9px solid var(--sun);border-radius:26px;opacity:0}
+.who{position:absolute;right:70px;top:96px;display:flex;align-items:center;gap:14px;font-weight:700;font-size:34px;z-index:4}
+.who svg{width:76px;height:76px;border-radius:50%;background:var(--sun)}
+.art{position:absolute;left:0;top:0;width:1080px;height:1920px}
+.counter{position:absolute;z-index:2;left:70px;right:70px;top:820px;background:var(--white);color:var(--ink);border-radius:40px;padding:56px 56px 60px;box-shadow:0 30px 80px rgba(0,0,0,.45)}
+.counter .lbl{display:flex;align-items:center;gap:14px;font-family:var(--f-display);font-size:46px}
+.counter .lbl i{width:22px;height:22px;border-radius:6px;background:#7C3AED;display:block}
+.counter .amt{font-family:var(--f-num);font-weight:600;font-size:132px;letter-spacing:-.03em;margin:26px 0 8px}
+.counter .mo{font-size:38px;color:#55607A;font-weight:600}
+.counter .bar{height:34px;border-radius:999px;background:#EDE5FD;margin-top:40px;overflow:hidden}
+.counter .bar i{display:block;height:100%;width:0;border-radius:999px;background:#7C3AED}
+.counter .ticks{display:flex;justify-content:space-between;margin-top:16px;font-size:30px;color:#55607A;font-weight:600}
+.coin{position:absolute;z-index:1;width:86px;height:86px;opacity:0}
+.note{position:absolute;left:70px;right:70px;top:1560px;font-size:30px;color:var(--mist);text-align:center}
+.end{text-align:center}
+.end .logo{position:absolute;left:50%;top:420px;width:360px;height:360px;margin-left:-180px;border-radius:84px;box-shadow:0 0 0 8px rgba(255,255,255,.92),0 40px 90px rgba(0,0,0,.45)}
+.wm{position:absolute;left:0;right:0;top:860px;font-family:var(--f-display);font-size:150px;letter-spacing:-.02em}
+.tag{position:absolute;left:0;right:0;top:1060px;font-size:60px;font-weight:700}
+.chip{position:absolute;left:50%;top:1200px;transform:translateX(-50%);background:var(--sun);color:var(--navy);font-weight:700;font-size:46px;padding:22px 44px;border-radius:999px;white-space:nowrap}
+.url{position:absolute;left:0;right:0;top:1350px;font-family:var(--f-display);font-size:64px;letter-spacing:-.01em}
+.small{position:absolute;left:90px;right:90px;top:1460px;font-size:28px;color:var(--mist);text-align:center;line-height:1.4}
+
+.msg{position:absolute;left:70px;right:150px;top:560px;background:var(--white);color:var(--ink);border-radius:36px 36px 36px 8px;padding:34px 40px;font-size:44px;line-height:1.3;font-weight:600;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+.msg small{display:block;font-size:30px;color:#55607A;font-weight:700;margin-bottom:10px}
+.think{position:absolute;right:70px;top:900px;width:430px;background:rgba(255,255,255,.12);border:3px dashed rgba(255,255,255,.55);border-radius:40px;padding:28px 32px;font-size:40px;line-height:1.3;color:var(--white);font-style:italic}
+.yes{position:absolute;left:70px;top:620px;background:var(--sun);color:var(--navy);border-radius:36px 36px 8px 36px;padding:30px 42px;font-size:50px;font-weight:700;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+</style>
+</head>
+<body>
+<div id="stage"><div class="band"></div><div id="scenes"></div></div>
+<script>
+const CTA_URL = "shiftbuck.com";
+const W = 940, LOGO = "../../../app/favicon.svg";
+const SKIN = "#6B4129", SKIN_D = "#56331F", HAIR = "#151217", TUNIC = "#7C3AED", TROUSERS = "#1D2433";
+
+// Vivian, drawn at 360x640. pose: "phone" (looking at her phone) | "think" | "wave" (off to work, bag on shoulder)
+function vivian(pose, t) {
+  const blink = (t % 3.3) < 0.12 ? 0.1 : 1, wave = pose === "wave" ? Math.sin(t * 9) * 14 : 0;
+  const armL = pose === "think"
+    ? `<g transform="rotate(-128 92 250)"><rect x="68" y="236" width="40" height="92" rx="20" fill="${TUNIC}"/><rect x="72" y="312" width="32" height="70" rx="16" fill="${SKIN}"/><circle cx="88" cy="388" r="20" fill="${SKIN}"/></g>`
+    : `<g transform="rotate(-8 92 250)"><rect x="68" y="236" width="40" height="92" rx="20" fill="${TUNIC}"/><rect x="72" y="312" width="32" height="96" rx="16" fill="${SKIN}"/><circle cx="88" cy="414" r="20" fill="${SKIN}"/></g>`;
+  const armR = pose === "phone"
+    ? `<g transform="rotate(34 268 250)"><rect x="252" y="236" width="40" height="92" rx="20" fill="${TUNIC}"/><rect x="256" y="312" width="32" height="96" rx="16" fill="${SKIN}"/>
+        <g transform="translate(272 404) rotate(-34) translate(-30 -70)"><rect width="60" height="104" rx="11" fill="#14213D"/><rect x="6" y="9" width="48" height="82" rx="6" fill="#FFD23F"/><circle cx="30" cy="50" r="13" fill="#C8102E"/></g>
+        <circle cx="272" cy="414" r="21" fill="${SKIN}"/></g>`
+    : pose === "wave"
+    ? `<g transform="rotate(${-150 + wave} 268 250)"><rect x="252" y="236" width="40" height="92" rx="20" fill="${TUNIC}"/><rect x="256" y="312" width="32" height="96" rx="16" fill="${SKIN}"/><circle cx="272" cy="414" r="22" fill="${SKIN}"/></g>`
+    : `<g transform="rotate(8 268 250)"><rect x="252" y="236" width="40" height="92" rx="20" fill="${TUNIC}"/><rect x="256" y="312" width="32" height="96" rx="16" fill="${SKIN}"/><circle cx="272" cy="414" r="20" fill="${SKIN}"/></g>`;
+  const bag = pose === "wave" ? `<path d="M110 236 L230 470" stroke="#C8102E" stroke-width="10"/><rect x="196" y="440" width="96" height="80" rx="16" fill="#C8102E"/><rect x="214" y="458" width="60" height="10" rx="5" fill="#8F0A20"/>` : "";
+  return `<svg viewBox="0 0 360 640" xmlns="http://www.w3.org/2000/svg">
+    <rect x="118" y="470" width="54" height="150" rx="24" fill="${TROUSERS}"/><rect x="188" y="470" width="54" height="150" rx="24" fill="${TROUSERS}"/>
+    <rect x="106" y="606" width="74" height="30" rx="15" fill="#0B0D12"/><rect x="180" y="606" width="74" height="30" rx="15" fill="#0B0D12"/>
+    ${pose === "think" ? "" : armL}
+    <path d="M100 252 Q104 222 152 214 L208 214 Q256 222 260 252 L258 488 Q180 502 102 488 Z" fill="${TUNIC}"/>
+    <path d="M152 214 L180 258 L208 214" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linejoin="round"/>
+    <rect x="164" y="190" width="32" height="34" rx="10" fill="${SKIN_D}"/>
+    <path d="M144 222 L180 326 L216 222" fill="none" stroke="#FFD23F" stroke-width="7"/>
+    <g transform="translate(150 320)"><rect width="62" height="80" rx="9" fill="#FFFFFF"/><rect width="62" height="16" rx="5" fill="#C8102E"/><circle cx="31" cy="38" r="11" fill="${SKIN}"/><rect x="12" y="56" width="38" height="6" rx="3" fill="#14213D"/><rect x="18" y="66" width="26" height="5" rx="2.5" fill="#9AA3B8"/></g>
+    ${bag}${armR}${pose === "think" ? armL : ""}
+    <circle cx="180" cy="44" r="40" fill="${HAIR}"/>
+    <path d="M118 128 Q114 56 180 54 Q246 56 242 128 Q246 176 232 196 Q236 150 226 120 Q180 96 134 120 Q124 150 128 196 Q114 176 118 128 Z" fill="${HAIR}"/>
+    <ellipse cx="180" cy="128" rx="54" ry="64" fill="${SKIN}"/>
+    <path d="M128 112 Q140 72 180 70 Q220 72 232 112 Q206 92 180 92 Q154 92 128 112 Z" fill="${HAIR}"/>
+    <circle cx="128" cy="150" r="7" fill="#FFD23F"/><circle cx="232" cy="150" r="7" fill="#FFD23F"/>
+    <g><ellipse cx="160" cy="128" rx="7" ry="${8 * blink}" fill="#17151A"/><ellipse cx="200" cy="128" rx="7" ry="${8 * blink}" fill="#17151A"/></g>
+    <path d="M148 108 Q160 102 170 108 M190 108 Q200 102 212 108" stroke="${HAIR}" stroke-width="5" fill="none" stroke-linecap="round"/>
+    ${pose === "think" ? `<path d="M164 160 Q180 154 196 160" stroke="#3A2016" stroke-width="6" fill="none" stroke-linecap="round"/>`
+                       : `<path d="M160 156 Q180 174 200 156" stroke="#FFFFFF" stroke-width="7" fill="none" stroke-linecap="round"/>`}
+  </svg>`;
+}
+const avatar = `<svg viewBox="80 20 200 220" xmlns="http://www.w3.org/2000/svg"><rect x="80" y="20" width="200" height="220" fill="#FFD23F"/>
+  <path d="M100 252 Q104 222 152 214 L208 214 Q256 222 260 252 L260 260 L100 260 Z" fill="${TUNIC}"/><rect x="164" y="190" width="32" height="34" rx="10" fill="${SKIN_D}"/>
+  <circle cx="180" cy="44" r="40" fill="${HAIR}"/><path d="M118 128 Q114 56 180 54 Q246 56 242 128 Q246 176 232 196 Q236 150 226 120 Q180 96 134 120 Q124 150 128 196 Q114 176 118 128 Z" fill="${HAIR}"/>
+  <ellipse cx="180" cy="128" rx="54" ry="64" fill="${SKIN}"/><path d="M128 112 Q140 72 180 70 Q220 72 232 112 Q206 92 180 92 Q154 92 128 112 Z" fill="${HAIR}"/>
+  <ellipse cx="160" cy="128" rx="7" ry="8" fill="#17151A"/><ellipse cx="200" cy="128" rx="7" ry="8" fill="#17151A"/><path d="M160 156 Q180 174 200 156" stroke="#FFFFFF" stroke-width="7" fill="none" stroke-linecap="round"/></svg>`;
+
+// screens: the real app with Vivian's example account (seed-vivian.js, capture-vivian.js)
+const V = "screens/vivian/";
+const SCENES = [
+  { kind: "ask", t: [0, 4.2], head: "Overtime<br><em>this Saturday?</em>" },
+  { kind: "app", t: [4.2, 7.6], head: "Vivian checks<br><em>Shiftbuck first.</em>", sub: "£1,650 this month. £1,436.44 after tax.",
+    imgs: [{ src: V + "hero-before.png", iw: 1074, win: [0, 678], rings: [{ x: 36, y: 280, w: 840, h: 100, at: 5.4 }] }] },
+  { kind: "app", t: [7.6, 11.2], head: "Her plan is<br><em>£83.56 short.</em>", sub: "Rent, bills, food, travel, family and savings come to £1,520.",
+    imgs: [{ src: V + "plan-before.png", iw: 1074, win: [0, 500], rings: [{ x: 40, y: 160, w: 930, h: 110, at: 8.8 }] }] },
+  { kind: "app", t: [11.2, 14.8], head: "One overtime day pays<br><em>£181.50.</em>", sub: "Saturday's long day at her £16.50 overtime rate.",
+    imgs: [{ src: V + "logtypes.png", iw: 972, win: [0, 372], pad: 30, rings: [{ x: 0, y: 296, w: 792, h: 86, at: 12.4 }] },
+           { src: V + "logpreview.png", iw: 972, win: [0, 159], rings: [{ x: 640, y: 28, w: 310, h: 102, at: 13.4 }] }] },
+  { kind: "app", t: [14.8, 18.2], head: "Now her plan<br><em>adds up.</em>", sub: "With £39.76 to spare.",
+    imgs: [{ src: V + "plan-after.png", iw: 1074, win: [0, 450], rings: [{ x: 40, y: 160, w: 930, h: 60, at: 15.9 }] }] },
+  { kind: "app", t: [18.2, 21.6], head: "And she's still<br><em>well rested.</em>", sub: "Under 40 hours that week, with Sunday off.",
+    imgs: [{ src: V + "rest.png", iw: 1074, win: [0, 300], rings: [{ x: 600, y: 54, w: 424, h: 90, at: 19.2 }] }] },
+  { kind: "go", t: [21.6, 24.6], head: "Vivian said<br><em>yes to Saturday.</em>" },
+  { kind: "end", t: [24.6, 28] }
+];
+
+const ease = x => x < 0 ? 0 : x > 1 ? 1 : x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+const out = x => x < 0 ? 0 : x > 1 ? 1 : 1 - Math.pow(1 - x, 3);
+const brand = `<div class="brand"><img src="${LOGO}" alt=""><b>Shift<span>buck</span></b></div>`;
+const who = `<div class="who">${avatar}<span>Vivian</span></div>`;
+const root = document.getElementById("scenes");
+const els = SCENES.map(s => {
+  const el = document.createElement("div"); el.className = "scene " + s.kind;
+  if (s.kind === "ask") el.innerHTML = `${brand}<div class="head">${s.head}</div>
+    <div class="msg"><small>Manager · 2 min ago</small>Can you do an extra long day on Saturday? It's paid at the overtime rate.</div>
+    <div class="think">I've probably earned enough this month…</div>
+    <div class="art" data-viv style="left:40px;top:860px;width:520px;height:924px"></div>`;
+  if (s.kind === "app") {
+    el.innerHTML = `${brand}${who}<div class="head">${s.head}</div><div class="sub">${s.sub}</div>` +
+      s.imgs.map(im => { const pad = im.pad || 0, w = Math.min(W, W * (im.iw + 2 * pad) / Math.max(...s.imgs.map(x => x.iw + 2 * (x.pad || 0)))), sc = (w - 0) / (im.iw + 2 * pad);
+        im.sc = sc; im.pd = pad * sc; im.w = w; im.h = Math.round((im.win[1] - im.win[0]) * sc + 2 * im.pd);
+        return `<div class="frame" style="width:${w}px;left:${70 + (W - w) / 2}px;height:${im.h}px;background:#FFFFFF"><img src="${im.src}" style="width:${im.iw}px;transform:scale(${sc});left:${im.pd}px;top:${im.pd - im.win[0] * sc}px">${(im.rings || []).map(() => `<div class="ring"></div>`).join("")}</div>`; }).join("");
+  }
+  if (s.kind === "go") el.innerHTML = `${brand}<div class="head">${s.head}</div><div class="yes">Yes, I'll do Saturday 👍</div>
+    <div class="art" data-viv style="left:260px;top:820px;width:560px;height:996px"></div>
+    <div class="note" style="top:1700px">Dramatisation with example figures.</div>`;
+  if (s.kind === "end") el.innerHTML = `<img class="logo" src="${LOGO}" alt=""><div class="wm">Shift<span>buck</span></div><div class="tag">Know your pay before payday</div>
+    <div class="chip">Free for UK care workers</div><div class="url">${CTA_URL}</div>
+    <div class="small">Dramatisation with example figures. Your pay depends on your own shifts, rates and choices.</div>`;
+  root.appendChild(el); return el;
+});
+function layout() {
+  SCENES.forEach((s, i) => {
+    if (s.kind !== "app") return;
+    const el = els[i], head = el.querySelector(".head"), sub = el.querySelector(".sub");
+    const subTop = 250 + head.offsetHeight + 34; sub.style.top = subTop + "px";
+    let y = subTop + sub.offsetHeight + 56;
+    el.querySelectorAll(".frame").forEach((f, j) => { f.style.top = y + "px"; y += s.imgs[j].h + 30; });
+  });
+}
+window.DURATION = SCENES[SCENES.length - 1].t[1];
+window.renderAt = t => {
+  SCENES.forEach((s, i) => {
+    const el = els[i], [a, b] = s.t, k = t - a, inT = out(k / .45), outT = i === SCENES.length - 1 ? 1 : 1 - ease((t - (b - .3)) / .3);
+    const vis = t >= a - .01 && t <= b + .01;
+    el.style.opacity = vis ? Math.min(inT, outT) : 0;
+    if (!vis) return;
+    const head = el.querySelector(".head"); if (head) head.style.transform = `translateY(${(1 - inT) * 50}px)`;
+    el.querySelectorAll("[data-viv]").forEach(d => {
+      d.innerHTML = vivian(s.kind === "ask" ? (k < 2.2 ? "phone" : "think") : "wave", k);
+      d.style.transform = `translateY(${(1 - out((k - .1) / .6)) * 160 + Math.sin(k * 2.2) * 6}px)`;
+    });
+    if (s.kind === "ask") {
+      const m = el.querySelector(".msg"), th = el.querySelector(".think");
+      m.style.opacity = out((k - .3) / .4); m.style.transform = `translateY(${(1 - out((k - .3) / .5)) * 40}px) scale(${.92 + .08 * out((k - .3) / .4)})`;
+      th.style.opacity = out((k - 2.2) / .4); th.style.transform = `scale(${.9 + .1 * out((k - 2.2) / .4)})`;
+    }
+    if (s.kind === "app") {
+      el.querySelectorAll(".frame").forEach((f, j) => {
+        const d = .1 + j * .25; f.style.opacity = out((k - d) / .4); f.style.transform = `translateY(${(1 - out((k - d) / .5)) * 120}px)`;
+        const im = s.imgs[j];
+        (im.rings || []).forEach((r, n) => {
+          const ring = f.querySelectorAll(".ring")[n], rk = t - r.at, pad = 12 / im.sc;
+          ring.style.left = `${im.pd + (r.x - pad) * im.sc}px`; ring.style.top = `${im.pd + (r.y - pad - im.win[0]) * im.sc}px`;
+          ring.style.width = `${(r.w + pad * 2) * im.sc}px`; ring.style.height = `${(r.h + pad * 2) * im.sc}px`;
+          ring.style.opacity = out(rk / .25); ring.style.transform = `scale(${rk < 0 ? 1.15 : 1.15 - .15 * out(rk / .3)})`;
+        });
+      });
+      el.querySelector(".sub").style.opacity = out((k - .25) / .4);
+      el.querySelector(".who").style.opacity = out((k - .2) / .4);
+    }
+    if (s.kind === "go") {
+      const y = el.querySelector(".yes"); y.style.opacity = out((k - .4) / .3); y.style.transform = `scale(${.8 + .2 * out((k - .4) / .35)})`;
+      el.querySelector(".note").style.opacity = out((k - .6) / .4);
+    }
+    if (s.kind === "end") {
+      const logo = el.querySelector(".logo");
+      logo.style.transform = `scale(${.6 + .4 * out(k / .5)}) rotate(${(1 - out(k / .6)) * -20}deg)`;
+      [".wm", ".tag", ".url", ".small"].forEach((sel, n) => { const e = el.querySelector(sel); e.style.opacity = out((k - .25 - n * .15) / .4); e.style.transform = `translateY(${(1 - out((k - .25 - n * .15) / .4)) * 30}px)`; });
+      const chip = el.querySelector(".chip"), kc = out((k - .6) / .4);
+      chip.style.opacity = kc; chip.style.transform = `translateX(-50%) scale(${.85 + .15 * kc + .025 * Math.sin(Math.max(0, k - 1.2) * 5)})`;
+    }
+  });
+};
+window.ready = Promise.all([document.fonts.ready, ...[...document.images].map(i => i.decode().catch(() => {}))]).then(() => { layout(); renderAt(0); return true; });
+</script>
+</body>
+</html>

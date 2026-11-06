@@ -7,7 +7,10 @@ Three 15-second vertical ads (1080×1920, 9:16) for TikTok, Instagram Reels and 
 | `shiftbuck-payslip-9x16.mp4` | "Was a sleep-in missing from your payslip?" | The payslip check catching £45 not paid, then gross pay for the month |
 | `shiftbuck-shiftpay-9x16.mp4` | "What does today's shift actually pay?" | Picking a shift type, "This shift pays £175", then the month adding up |
 | `shiftbuck-rest-9x16.mp4` | "7 days in a row without a day off?" | The rest check warning and 70 hours in 7 days, then gross pay |
+| `shiftbuck-overtime-vivian-9x16.mp4` (28 s) | "Overtime this Saturday?" | Vivian thinks she's earned enough, checks Shiftbuck: £1,436.44 take-home, plan £83.56 short; one overtime long day at £16.50 an hour pays £181.50, her plan adds up with £39.76 to spare, she's still well rested, and she says yes |
 | `shiftbuck-story-tunde-9x16.mp4` (27 s) | "Meet Tunde. He's just started as a support worker." | Tunde logs a shift (£175), sees £2,915 before payday, gives 15% (£344.50 a month) to a House deposit pot, saves £12,402 over 3 years and gets the keys to his first home |
+
+Vivian and Tunde are illustrated, made-up characters. Vivian's figures come from her example account (`source/seed-vivian.js`, `capture-vivian.js`): the app worked out every number on screen, before and after the overtime shift was logged.
 
 Tunde is an illustrated, made-up character. His story is labelled as a dramatisation with example figures, and every app screen is the real app with his example account (`source/seed-story.js`). The £12,402 is the app's own £344.50 a month times 36.
 
@@ -30,6 +33,10 @@ Text and app screens stay out of the bottom fifth and the right edge, where TikT
 **Rest ad**
 > Working day after day with no break? Shiftbuck warns you when you're not getting enough rest, using UK working time rules. Free for UK care workers.
 > #carers #supportworker #carework #selfcare #ukcarers
+
+**Vivian's overtime**
+> Vivian nearly said no to Saturday's overtime. Then she checked Shiftbuck: her plan was £83.56 short. One overtime day paid £181.50, and she was still well rested. Know your pay before you decide. Free for UK care workers. (Dramatisation, example figures)
+> #carers #supportworker #overtime #carework #ukcarers
 
 **Tunde's story**
 > Tunde started as a support worker, logged every shift in Shiftbuck, knew his pay before payday and gave every pound a job, including a house deposit. Plan your pay with Shiftbuck. Free for UK care workers. 🏡 (Dramatisation, example figures)
@@ -57,6 +64,6 @@ Everything is in `source/`. You need Node, Playwright with Chromium, and ffmpeg.
    node marketing/video-ads/source/render.js stills payslip 1.6,4,7.2,10.4,13.6   # quick check
    node marketing/video-ads/source/render.js video payslip marketing/video-ads/shiftbuck-payslip-9x16.mp4
    ```
-   Repeat for `shiftpay`, `rest` and `story` (Tunde's story, from `source/story.html`). Each takes under a minute.
+   Repeat for `shiftpay`, `rest`, `story` (Tunde's story, `source/story.html`) and `vivian` (Vivian's overtime, `source/vivian.html`). Each takes under a minute.
 
 To refresh the app screens after the app changes, serve the repository root on port 8772 and run `node marketing/video-ads/source/capture.js marketing/video-ads/source/screens`. The sample carer "Ada" and the service users "Alex", "Sam" and "Jo" are made up (`source/seed.js`).
