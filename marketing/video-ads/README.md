@@ -7,8 +7,11 @@ Three 15-second vertical ads (1080×1920, 9:16) for TikTok, Instagram Reels and 
 | `shiftbuck-payslip-9x16.mp4` | "Was a sleep-in missing from your payslip?" | The payslip check catching £45 not paid, then gross pay for the month |
 | `shiftbuck-shiftpay-9x16.mp4` | "What does today's shift actually pay?" | Picking a shift type, "This shift pays £175", then the month adding up |
 | `shiftbuck-rest-9x16.mp4` | "7 days in a row without a day off?" | The rest check warning and 70 hours in 7 days, then gross pay |
+| `shiftbuck-community-king-toby-9x16.mp4` (29.5 s) | "King's company is hiring." | King posts the job in the carers' community; Toby sees it, messages him privately and gets the link to apply; then what the community offers (nicknames only, Near me, pay, rights, rest, report and block) and "Real jobs never ask you to pay." |
 | `shiftbuck-overtime-vivian-9x16.mp4` (28 s) | "Overtime this Saturday?" | Vivian thinks she's earned enough, checks Shiftbuck: £1,436.44 take-home, plan £83.56 short; one overtime long day at £16.50 an hour pays £181.50, her plan adds up with £39.76 to spare, she's still well rested, and she says yes |
 | `shiftbuck-story-tunde-9x16.mp4` (27 s) | "Meet Tunde. He's just started as a support worker." | Tunde logs a shift (£175), sees £2,915 before payday, gives 15% (£344.50 a month) to a House deposit pot, saves £12,402 over 3 years and gets the keys to his first home |
+
+King and Toby's community screens are the real app, signed in as Toby against a stand-in back end (`source/mock-supabase-community.js`, `capture-community.js`), so the post and messages are made up and no real data is used. The link in King's message is a dummy address (`kingscare.example`).
 
 Vivian and Tunde are illustrated, made-up characters. Vivian's figures come from her example account (`source/seed-vivian.js`, `capture-vivian.js`): the app worked out every number on screen, before and after the overtime shift was logged.
 
@@ -33,6 +36,10 @@ Text and app screens stay out of the bottom fifth and the right edge, where TikT
 **Rest ad**
 > Working day after day with no break? Shiftbuck warns you when you're not getting enough rest, using UK working time rules. Free for UK care workers.
 > #carers #supportworker #carework #selfcare #ukcarers
+
+**King and Toby (community)**
+> King's company was hiring, so he posted in the Shiftbuck carers' community. Toby saw it, messaged him privately and got the link to apply. Talk pay, rights and rest with carers near you, by nickname. Real jobs never ask you to pay. Free for UK care workers. (Dramatisation)
+> #carers #supportworker #carejobs #carework #ukcarers
 
 **Vivian's overtime**
 > Vivian nearly said no to Saturday's overtime. Then she checked Shiftbuck: her plan was £83.56 short. One overtime day paid £181.50, and she was still well rested. Know your pay before you decide. Free for UK care workers. (Dramatisation, example figures)

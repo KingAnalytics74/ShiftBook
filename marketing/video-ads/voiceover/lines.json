@@ -235,5 +235,66 @@
         "text": "Know your pay before you decide. Shiftbuck."
       }
     ]
+  },
+  "community": {
+    "video": "shiftbuck-community-king-toby-9x16.mp4",
+    "lines": [
+      {
+        "id": "1",
+        "voice": "narrator",
+        "at": 0.3,
+        "max": 3.3,
+        "text": "King's company is hiring, so he posts on Shiftbuck."
+      },
+      {
+        "id": "2",
+        "voice": "narrator",
+        "at": 4.0,
+        "max": 3.4,
+        "text": "Toby, a support worker nearby, sees the post."
+      },
+      {
+        "id": "3",
+        "voice": "toby",
+        "at": 7.8,
+        "max": 3.4,
+        "text": "Hi King, is the job still open?"
+      },
+      {
+        "id": "4",
+        "voice": "king",
+        "at": 11.6,
+        "max": 3.2,
+        "text": "Yes! Here's the link to apply."
+      },
+      {
+        "id": "5",
+        "voice": "narrator",
+        "at": 15.2,
+        "max": 3.8,
+        "text": "Toby applies that same night."
+      },
+      {
+        "id": "6",
+        "voice": "narrator",
+        "at": 19.4,
+        "max": 4.0,
+        "text": "Talk pay, rights and rest with carers near you. Nicknames only."
+      },
+      {
+        "id": "7",
+        "voice": "narrator",
+        "at": 23.75,
+        "max": 2.2,
+        "text": "Real jobs never ask you to pay."
+      },
+      {
+        "id": "8",
+        "voice": "narrator",
+        "at": 26.2,
+        "max": 3.1,
+        "text": "Shiftbuck. Free for UK care workers."
+      }
+    ]
   }
 }

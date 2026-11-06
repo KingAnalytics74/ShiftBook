@@ -69,6 +69,21 @@ Use one warm, friendly narrator for all five, ideally a real care worker. Vivian
 | `vivian/8` | 21.8 s | 2.6 s | Vivian | Yes, I'll do Saturday! |
 | `vivian/9` | 24.8 s | 3.1 s | Narrator | Know your pay before you decide. Shiftbuck. |
 
+## King and Toby, community (`shiftbuck-community-king-toby-9x16.mp4`)
+
+| File | Starts | Up to | Voice | Line |
+|---|---|---|---|---|
+| `community/1` | 0.3 s | 3.3 s | Narrator | King's company is hiring, so he posts on Shiftbuck. |
+| `community/2` | 4.0 s | 3.4 s | Narrator | Toby, a support worker nearby, sees the post. |
+| `community/3` | 7.8 s | 3.4 s | Toby | Hi King, is the job still open? |
+| `community/4` | 11.6 s | 3.2 s | King | Yes! Here's the link to apply. |
+| `community/5` | 15.2 s | 3.8 s | Narrator | Toby applies that same night. |
+| `community/6` | 19.4 s | 4.0 s | Narrator | Talk pay, rights and rest with carers near you. Nicknames only. |
+| `community/7` | 23.8 s | 2.2 s | Narrator | Real jobs never ask you to pay. |
+| `community/8` | 26.2 s | 3.1 s | Narrator | Shiftbuck. Free for UK care workers. |
+
+AI voices: `bf_emma` (narrator), `bm_lewis` (Toby), `bm_george` (King).
+
 ## Other ways to add a voice
 
 - **TikTok or Instagram's own text-to-speech:** add the lines as text in the app's editor and turn on text-to-speech. It's free, but every brand using it sounds the same.
