@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<title>Shiftbuck image ads</title>
+<style>
+/* Still ads in two sizes: sq (1080x1080, feeds) and story (1080x1920, Stories and Reels).
+   Same look as the video ads: navy ground, sun-yellow emphasis, the real app screen in a rounded frame. */
+@font-face{font-family:'Figtree';font-weight:500;src:url(../../../app/fonts/figtree-latin-500-normal.woff2) format('woff2')}
+@font-face{font-family:'Figtree';font-weight:700;src:url(../../../app/fonts/figtree-latin-700-normal.woff2) format('woff2')}
+@font-face{font-family:'Bricolage Grotesque';font-weight:700;src:url(../../../app/fonts/bricolage-grotesque-latin-700-normal.woff2) format('woff2')}
+:root{--navy:#14213D;--navy2:#233A6E;--red:#C8102E;--sun:#FFD23F;--blue:#2563EB;--white:#FFFFFF;--mist:#C9D3EA;
+  --f-display:'Bricolage Grotesque',system-ui,sans-serif;--f-body:'Figtree',system-ui,sans-serif}
+html,body{margin:0;background:#000}
+#stage{position:relative;overflow:hidden;background:radial-gradient(120% 80% at 15% 0%,var(--navy2),var(--navy) 62%);font-family:var(--f-body);color:var(--white)}
+.band{position:absolute;inset:0 0 auto 0;height:12px;background:linear-gradient(90deg,var(--blue) 0 33%,var(--sun) 33% 66%,var(--red) 66%)}
+.brand{position:absolute;display:flex;align-items:center;gap:18px}
+.brand img{border-radius:22%;box-shadow:0 0 0 4px rgba(255,255,255,.9)}
+.brand b{font-family:var(--f-display);letter-spacing:-.01em}
+.brand b span,em{color:var(--sun);font-style:normal}
+.head{position:absolute;font-family:var(--f-display);font-weight:700;line-height:1.04;letter-spacing:-.015em;text-wrap:balance}
+.sub{position:absolute;color:var(--mist);font-weight:500;line-height:1.3}
+.frame{position:absolute;overflow:hidden;background:#FFFFFF;box-shadow:0 30px 80px rgba(0,0,0,.45),0 0 0 6px rgba(255,255,255,.08)}
+.frame img{position:absolute;left:0;transform-origin:0 0}
+.ring{position:absolute;border:8px solid var(--sun);border-radius:22px}
+.tag{position:absolute;background:var(--white);color:var(--navy);font-weight:700;border-radius:999px;white-space:nowrap;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+.tag b{font-family:var(--f-display)}
+.cta{position:absolute;left:0;right:0;display:flex;align-items:center;justify-content:space-between;gap:20px}
+.chip{background:var(--sun);color:var(--navy);font-weight:700;border-radius:999px;white-space:nowrap}
+.url{font-family:var(--f-display);letter-spacing:-.01em;white-space:nowrap}
+.small{position:absolute;color:var(--mist);text-align:center}
+/* square */
+.sq #stage{width:1080px;height:1080px}
+.sq .brand{left:60px;top:50px} .sq .brand img{width:64px;height:64px} .sq .brand b{font-size:40px}
+.sq .head{left:60px;right:60px;top:150px;font-size:76px}
+.sq .sub{left:60px;right:60px;font-size:32px}
+.sq .frame{border-radius:30px}
+.sq .cta{bottom:0;height:116px;padding:0 60px;background:var(--red)}
+.sq .chip{font-size:30px;padding:14px 28px} .sq .url{font-size:46px}
+.sq .small{left:60px;right:60px;bottom:126px;font-size:20px}
+.sq .tag{font-size:28px;padding:14px 26px}
+/* story: text and CTA kept out of the bottom and right edges where apps put their buttons */
+.story #stage{width:1080px;height:1920px}
+.story .brand{left:70px;top:80px} .story .brand img{width:92px;height:92px} .story .brand b{font-size:58px}
+.story .head{left:70px;right:70px;top:250px;font-size:96px}
+.story .sub{left:70px;right:70px;font-size:44px}
+.story .frame{border-radius:40px}
+.story .cta{top:1480px;padding:0 70px;flex-direction:column;align-items:flex-start;gap:22px}
+.story .chip{font-size:44px;padding:20px 40px} .story .url{font-size:84px}
+.story .small{left:70px;right:70px;top:1720px;font-size:28px;text-align:left}
+.story .tag{font-size:38px;padding:18px 34px}
+</style>
+</head>
+<body>
+<div id="stage"><div class="band"></div></div>
+<script>
+const LOGO = "../../../app/favicon.svg", URL_TEXT = "shiftbuck.com";
+// win: [top, bottom] of the screenshot to show; rings in screenshot pixels; tag: a callout under the screen
+const ADS = {
+  pay: { head: "Know your pay<br><em>before payday.</em>", sub: "See what every shift and sleep-in adds up to, as you log it.",
+    imgs: [{ src: "screens/hero.png", iw: 1074, win: [0, 678], rings: [{ x: 36, y: 128, w: 590, h: 128 }] }] },
+  payslip: { head: "Was your payslip<br><em>short?</em>", sub: "Shiftbuck checks it against the shifts you logged.",
+    imgs: [{ src: "screens/payslip.png", iw: 1074, win: [160, 1400], rings: [{ x: 50, y: 1198, w: 975, h: 186 }] }] },
+  shifts: { head: "Any shift.<br><em>Your rates.</em>", sub: "Long days, waking nights, sleep-ins and weekends, with night and weekend rates.",
+    imgs: [{ src: "screens/logtypes.png", iw: 972, win: [0, 470], pad: 36, rings: [{ x: 0, y: 192, w: 676, h: 86 }] },
+           { src: "screens/logpreview.png", iw: 972, win: [0, 159] }],
+    tag: "Waking night at <b>£14.50</b> an hour" },
+  rest: { head: "7 days in a row<br><em>without a day off?</em>", sub: "Shiftbuck warns you when you're not resting enough.",
+    imgs: [{ src: "screens/rest.png", iw: 1074, win: [0, 740], rings: [{ x: 548, y: 54, w: 476, h: 90 }] }] }
+};
+const q = new URLSearchParams(location.search), ad = ADS[q.get("ad") || "pay"], size = q.get("size") || "sq";
+document.body.className = size;
+const S = { sq: { W: 1080, H: 1080, side: 60, bottom: 1080 - 116 - 52, gap: 18 }, story: { W: 1080, H: 1920, side: 70, bottom: 1400, gap: 28 } }[size];
+const st = document.getElementById("stage");
+st.insertAdjacentHTML("beforeend", `<div class="brand"><img src="${LOGO}" alt=""><b>Shift<span>buck</span></b></div>
+  <div class="head">${ad.head}</div><div class="sub">${ad.sub}</div>
+  ${ad.imgs.map(im => `<div class="frame"><img src="${im.src}" style="width:${im.iw}px">${(im.rings || []).map(() => `<div class="ring"></div>`).join("")}</div>`).join("")}
+  ${ad.tag ? `<div class="tag">${ad.tag}</div>` : ""}
+  <div class="cta"><span class="chip">Free for UK care workers</span><span class="url">${URL_TEXT}</span></div>
+  <div class="small">Example figures shown.</div>`);
+
+window.ready = Promise.all([document.fonts.ready, ...[...document.images].map(i => i.decode().catch(() => {}))]).then(() => {
+  const head = st.querySelector(".head"), sub = st.querySelector(".sub"), tag = st.querySelector(".tag");
+  const headTop = parseFloat(getComputedStyle(head).top);
+  sub.style.top = (headTop + head.offsetHeight + (size === "sq" ? 18 : 30)) + "px";
+  const top = parseFloat(sub.style.top) + sub.offsetHeight + (size === "sq" ? 34 : 56);
+  const tagH = tag ? tag.offsetHeight + S.gap : 0, avail = S.bottom - top - tagH - S.gap * (ad.imgs.length - 1), maxW = S.W - 2 * S.side;
+  // fit every screen into the space left, at one shared scale, centred
+  const P = im => im.pad || 0, totalH = ad.imgs.reduce((a, im) => a + (im.win[1] - im.win[0]) + 2 * P(im), 0), maxIw = Math.max(...ad.imgs.map(im => im.iw + 2 * P(im)));
+  const sc = Math.min(maxW / maxIw, avail / totalH);
+  const used = totalH * sc + S.gap * (ad.imgs.length - 1) + tagH;
+  let y = top + (size === "story" ? Math.max(0, (S.bottom - top - used) / 2) : 0);
+  st.querySelectorAll(".frame").forEach((f, i) => {
+    const im = ad.imgs[i], pd = P(im) * sc, w = im.iw * sc + 2 * pd, h = (im.win[1] - im.win[0]) * sc + 2 * pd;
+    Object.assign(f.style, { left: (S.W - w) / 2 + "px", top: y + "px", width: w + "px", height: h + "px" });
+    const img = f.querySelector("img"); img.style.transform = `scale(${sc})`; img.style.top = (pd - im.win[0] * sc) + "px"; img.style.left = pd + "px";
+    f.querySelectorAll(".ring").forEach((r, n) => { const g = im.rings[n], pad = 10 / sc;
+      Object.assign(r.style, { left: pd + (g.x - pad) * sc + "px", top: pd + (g.y - pad - im.win[0]) * sc + "px", width: (g.w + 2 * pad) * sc + "px", height: (g.h + 2 * pad) * sc + "px" }); });
+    y += h + S.gap;
+  });
+  if (tag) { tag.style.top = y + "px"; tag.style.left = (S.W - tag.offsetWidth) / 2 + "px"; }
+  return true;
+});
+</script>
+</body>
+</html>
