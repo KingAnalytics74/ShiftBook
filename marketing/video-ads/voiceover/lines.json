@@ -1,5 +1,5 @@
 {
-  "_about": "Voiceover lines for each video ad. 'at' is the second the line starts; 'max' is how long it can last before the next scene. Record each line as its own file named <id>.wav, .mp3 or .m4a in voiceover/<ad>/, then run mix.py.",
+  "_about": "Voiceover lines for each video ad. 'at' is the second the line starts; 'max' is how long it can last before the next scene. Record each line as its own file named <id>.wav, .mp3 or .m4a in voiceover/<ad>/, then run mix.py. 'say', where given, is how an AI voice should be told to say the line (for example Tunde as 'Toonday'); people recording read 'text'.",
   "payslip": {
     "video": "shiftbuck-payslip-9x16.mp4",
     "lines": [
@@ -114,7 +114,8 @@
         "voice": "narrator",
         "at": 0.3,
         "max": 3.2,
-        "text": "Meet Tunde. He's just started as a support worker."
+        "text": "Meet Tunde. He's just started as a support worker.",
+        "say": "Meet Toonday. He's just started as a support worker."
       },
       {
         "id": "2",

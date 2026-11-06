@@ -16,7 +16,7 @@ Tunde is an illustrated, made-up character. His story is labelled as a dramatisa
 
 Each ends on the logo, "Know your pay before payday", "Free for UK care workers" and **shiftbuck.com**.
 
-They're made to work **with the sound off**: every message is on screen. Each file has a silent audio track, so platforms accept it. To add music, pick it inside TikTok or Instagram from their **commercial music library**. Paid ads can't use ordinary trending songs.
+Each video comes in two versions: the original with a silent track, and a **`-voice.mp4`** copy with a British voiceover (see `voiceover/`). Use the voice version for TikTok, Reels and Shorts, where many people watch with sound. Both work **with the sound off**, because every message is also on screen. To add music, pick it inside TikTok or Instagram from their **commercial music library**. Paid ads can't use ordinary trending songs.
 
 Text and app screens stay out of the bottom fifth and the right edge, where TikTok and Instagram put their buttons and captions.
 

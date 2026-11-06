@@ -2,6 +2,8 @@
 
 The script for all five videos, timed to the scenes. Record each line as its own file, then `mix.py` puts the lines on the videos.
 
+**Current voices:** the files in the ad folders (`payslip/`, `vivian/` and so on) are British AI voices made with Kokoro, a free, open-source voice model (Apache 2.0 licence, so they can be used in ads): `bf_emma` for the narrator, `bm_george` for the manager and `bf_isabella` for Vivian. To swap in real recordings, replace a file with one of the same number and run `mix.py` again.
+
 ## How to record
 
 1. Use a phone's voice recorder in a quiet room with soft furnishings (a bedroom is better than a kitchen). Hold the phone about a hand's width from your mouth.
