@@ -1,0 +1,238 @@
+{
+  "_about": "Voiceover lines for each video ad. 'at' is the second the line starts; 'max' is how long it can last before the next scene. Record each line as its own file named <id>.wav, .mp3 or .m4a in voiceover/<ad>/, then run mix.py.",
+  "payslip": {
+    "video": "shiftbuck-payslip-9x16.mp4",
+    "lines": [
+      {
+        "id": "1",
+        "voice": "narrator",
+        "at": 0.2,
+        "max": 2.6,
+        "text": "Was a sleep-in missing from your payslip?"
+      },
+      {
+        "id": "2",
+        "voice": "narrator",
+        "at": 3.0,
+        "max": 5.2,
+        "text": "Log every shift in Shiftbuck, and it checks your payslip for you."
+      },
+      {
+        "id": "3",
+        "voice": "narrator",
+        "at": 8.6,
+        "max": 3.0,
+        "text": "Know your pay before payday."
+      },
+      {
+        "id": "4",
+        "voice": "narrator",
+        "at": 12.0,
+        "max": 2.9,
+        "text": "Shiftbuck. Free for UK care workers."
+      }
+    ]
+  },
+  "shiftpay": {
+    "video": "shiftbuck-shiftpay-9x16.mp4",
+    "lines": [
+      {
+        "id": "1",
+        "voice": "narrator",
+        "at": 0.2,
+        "max": 2.6,
+        "text": "What does today's shift actually pay?"
+      },
+      {
+        "id": "2",
+        "voice": "narrator",
+        "at": 3.0,
+        "max": 3.5,
+        "text": "Pick the shift, and Shiftbuck shows you."
+      },
+      {
+        "id": "3",
+        "voice": "narrator",
+        "at": 6.8,
+        "max": 2.5,
+        "text": "That's a hundred and seventy-five pounds."
+      },
+      {
+        "id": "4",
+        "voice": "narrator",
+        "at": 9.6,
+        "max": 2.3,
+        "text": "Watch your month add up."
+      },
+      {
+        "id": "5",
+        "voice": "narrator",
+        "at": 12.2,
+        "max": 2.7,
+        "text": "Shiftbuck. Free for UK care workers."
+      }
+    ]
+  },
+  "rest": {
+    "video": "shiftbuck-rest-9x16.mp4",
+    "lines": [
+      {
+        "id": "1",
+        "voice": "narrator",
+        "at": 0.2,
+        "max": 2.6,
+        "text": "Seven days straight, no day off?"
+      },
+      {
+        "id": "2",
+        "voice": "narrator",
+        "at": 3.0,
+        "max": 4.8,
+        "text": "Shiftbuck warns you when you're not resting enough, using UK working time rules."
+      },
+      {
+        "id": "3",
+        "voice": "narrator",
+        "at": 8.2,
+        "max": 3.4,
+        "text": "And shows you what every shift pays."
+      },
+      {
+        "id": "4",
+        "voice": "narrator",
+        "at": 12.0,
+        "max": 2.9,
+        "text": "Shiftbuck. Free for UK care workers."
+      }
+    ]
+  },
+  "story": {
+    "video": "shiftbuck-story-tunde-9x16.mp4",
+    "lines": [
+      {
+        "id": "1",
+        "voice": "narrator",
+        "at": 0.3,
+        "max": 3.2,
+        "text": "Meet Tunde. He's just started as a support worker."
+      },
+      {
+        "id": "2",
+        "voice": "narrator",
+        "at": 3.8,
+        "max": 2.8,
+        "text": "He logs every shift in Shiftbuck."
+      },
+      {
+        "id": "3",
+        "voice": "narrator",
+        "at": 7.0,
+        "max": 2.3,
+        "text": "That's a hundred and seventy-five pounds."
+      },
+      {
+        "id": "4",
+        "voice": "narrator",
+        "at": 9.6,
+        "max": 2.8,
+        "text": "So he knows his pay before payday."
+      },
+      {
+        "id": "5",
+        "voice": "narrator",
+        "at": 12.8,
+        "max": 3.4,
+        "text": "Every pound gets a job, including a house deposit."
+      },
+      {
+        "id": "6",
+        "voice": "narrator",
+        "at": 16.6,
+        "max": 3.8,
+        "text": "Month after month: over twelve thousand pounds."
+      },
+      {
+        "id": "7",
+        "voice": "narrator",
+        "at": 20.8,
+        "max": 3.0,
+        "text": "Three years on: keys to his first home."
+      },
+      {
+        "id": "8",
+        "voice": "narrator",
+        "at": 24.2,
+        "max": 3.1,
+        "text": "Shiftbuck. Free for UK care workers."
+      }
+    ]
+  },
+  "vivian": {
+    "video": "shiftbuck-overtime-vivian-9x16.mp4",
+    "lines": [
+      {
+        "id": "1",
+        "voice": "manager",
+        "at": 0.3,
+        "max": 2.0,
+        "text": "Vivian, can you work Saturday?"
+      },
+      {
+        "id": "2",
+        "voice": "vivian",
+        "at": 2.4,
+        "max": 1.8,
+        "text": "I've earned enough this month..."
+      },
+      {
+        "id": "3",
+        "voice": "narrator",
+        "at": 4.4,
+        "max": 3.0,
+        "text": "But first, she checks Shiftbuck."
+      },
+      {
+        "id": "4",
+        "voice": "narrator",
+        "at": 7.8,
+        "max": 3.2,
+        "text": "Her plan is eighty-three pounds short."
+      },
+      {
+        "id": "5",
+        "voice": "narrator",
+        "at": 11.4,
+        "max": 3.2,
+        "text": "Saturday pays one hundred and eighty-one pounds fifty."
+      },
+      {
+        "id": "6",
+        "voice": "narrator",
+        "at": 15.0,
+        "max": 3.0,
+        "text": "Now her plan adds up."
+      },
+      {
+        "id": "7",
+        "voice": "narrator",
+        "at": 18.4,
+        "max": 3.0,
+        "text": "And she's still well rested."
+      },
+      {
+        "id": "8",
+        "voice": "vivian",
+        "at": 21.8,
+        "max": 2.6,
+        "text": "Yes, I'll do Saturday!"
+      },
+      {
+        "id": "9",
+        "voice": "narrator",
+        "at": 24.8,
+        "max": 3.1,
+        "text": "Know your pay before you decide. Shiftbuck."
+      }
+    ]
+  }
+}
