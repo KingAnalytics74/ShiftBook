@@ -126,7 +126,7 @@ create or replace view public.community_feed as
   from public.community_posts p
   where auth.uid() is not null
     and (not p.hidden or p.user_id = auth.uid() or public.community_is_moderator());
-revoke all on public.community_feed from public, anon;
+revoke all on public.community_feed from public, anon, authenticated;  -- authenticated too: Supabase grants it full rights by default, and these views bypass RLS
 grant select on public.community_feed to authenticated;
 
 -- Posts always go out under the poster's own profile. p_nickname and p_area are only used to create that
@@ -256,7 +256,7 @@ create or replace view public.community_people as
   select pr.id, pr.nickname, pr.area, pr.dm_open, pr.created_at, (pr.user_id = auth.uid()) as me
   from public.community_profiles pr
   where auth.uid() is not null;
-revoke all on public.community_people from public, anon;
+revoke all on public.community_people from public, anon, authenticated;  -- authenticated too: Supabase grants it full rights by default, and these views bypass RLS
 grant select on public.community_people to authenticated;
 
 create or replace function public.community_upsert_profile(p_nickname text, p_area text)
@@ -482,7 +482,7 @@ create or replace view public.announcements_feed as
   where auth.uid() is not null
   order by a.created_at desc
   limit 20;
-revoke all on public.announcements_feed from public, anon;
+revoke all on public.announcements_feed from public, anon, authenticated;  -- authenticated too: Supabase grants it full rights by default, and these views bypass RLS
 grant select on public.announcements_feed to authenticated;
 
 create or replace function public.announce(p_body text)
