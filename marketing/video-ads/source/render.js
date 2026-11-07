@@ -2,14 +2,14 @@
 //   python3 -m http.server 8773
 // node render.js stills <ad> t1,t2,...   -> stills_<ad>.png (contact sheet of frames)
 // node render.js video  <ad> <out.mp4>   -> 30 fps H.264, 1080x1920, silent audio track
-// <ad> is payslip, shiftpay, rest, story (Tunde's story ad, story.html) vivian (Vivian's overtime ad, vivian.html) or community (King and Toby, community.html). Needs Playwright (Chromium) and ffmpeg with libx264.
+// <ad> is payslip, shiftpay, rest, story (Tunde's story ad, story.html) vivian (Vivian's overtime ad, vivian.html) community (King and Toby, community.html) or everyshift (Kemi and Dami, everyshift.html). Needs Playwright (Chromium) and ffmpeg with libx264.
 const { spawn } = require('child_process');
 const { chromium } = require(require('child_process').execSync('npm root -g').toString().trim() + '/playwright');
 const [mode, ad, arg] = process.argv.slice(2), DIR = __dirname, FPS = 30;
 (async () => {
   const b = await chromium.launch(); const p = await b.newPage({ viewport: { width: 1080, height: 1920 } });
   const errs = []; p.on('pageerror', e => errs.push(e.message)); p.on('console', m => { if (m.type() === 'error') errs.push(m.text()); });
-  await p.goto(['story', 'vivian', 'community'].includes(ad) ? `http://localhost:8773/marketing/video-ads/source/${ad}.html` : `http://localhost:8773/marketing/video-ads/source/ad.html?ad=${ad}`); await p.evaluate(() => window.ready);
+  await p.goto(['story', 'vivian', 'community', 'everyshift'].includes(ad) ? `http://localhost:8773/marketing/video-ads/source/${ad}.html` : `http://localhost:8773/marketing/video-ads/source/ad.html?ad=${ad}`); await p.evaluate(() => window.ready);
   const stage = p.locator('#stage');
   if (mode === 'stills') {
     const times = arg.split(',').map(Number), shots = [];

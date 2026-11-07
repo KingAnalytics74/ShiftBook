@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<title>Shiftbuck: Every shift counts</title>
+<style>
+/* 1080x1920 (9:16). "On your side" palette: Payday Green, Marigold for action and highlights (never text), Charcoal, Warm White, Night Shift.
+   Kemi and Dami are made-up people. App screens are the real app with example accounts (seed-factory.js, seed.js). */
+@font-face{font-family:'Figtree';font-weight:500;src:url(../../../app/fonts/figtree-latin-500-normal.woff2) format('woff2')}
+@font-face{font-family:'Figtree';font-weight:700;src:url(../../../app/fonts/figtree-latin-700-normal.woff2) format('woff2')}
+@font-face{font-family:'Bricolage Grotesque';font-weight:700;src:url(../../../app/fonts/bricolage-grotesque-latin-700-normal.woff2) format('woff2')}
+@font-face{font-family:'IBM Plex Mono';font-weight:600;src:url(../../../app/fonts/ibm-plex-mono-latin-600-normal.woff2) format('woff2')}
+:root{--green:#0F5C3C;--green2:#13724B;--mari:#F5B21B;--char:#1F2933;--white:#FAF8F4;--night:#101A2B;--night2:#1B2A44;--mist:#C8D3CC;
+  --f-d:'Bricolage Grotesque',system-ui,sans-serif;--f-b:'Figtree',system-ui,sans-serif}
+html,body{margin:0;background:#000}
+#stage{position:relative;width:1080px;height:1920px;overflow:hidden;font-family:var(--f-b);color:var(--white)}
+.bg{position:absolute;inset:0}
+#bgNight{background:radial-gradient(110% 70% at 30% 10%,var(--night2),var(--night) 65%)}
+#bgGreen{background:radial-gradient(120% 80% at 20% 0%,var(--green2),var(--green) 62%);opacity:0}
+.stars i{position:absolute;width:6px;height:6px;border-radius:50%;background:var(--white)}
+.scene{position:absolute;inset:0;opacity:0}
+.brand{position:absolute;left:70px;top:84px;display:flex;align-items:center;gap:20px}
+.brand img{width:84px;height:84px;border-radius:22px;box-shadow:0 0 0 4px rgba(250,248,244,.9)}
+.brand b{font-family:var(--f-d);font-size:54px;letter-spacing:-.01em}
+.hl{position:relative;display:inline-block;z-index:0}
+.hl::after{content:"";position:absolute;left:-6px;right:-6px;bottom:.06em;height:.22em;background:var(--mari);border-radius:8px;z-index:-1;transform-origin:0 50%;transform:scaleX(var(--k,1))}
+.words{position:absolute;left:70px;top:560px;font-family:var(--f-d);font-size:168px;line-height:1.08;letter-spacing:-.02em}
+.words div{opacity:0}
+.who{position:absolute;left:70px;top:1080px;font-family:var(--f-d);font-size:150px;letter-spacing:-.02em}
+.what{position:absolute;left:74px;top:1260px;font-size:50px;font-weight:700;color:var(--mist)}
+.what span{font-family:'IBM Plex Mono',monospace;font-weight:600;color:var(--white)}
+.art{position:absolute;left:70px;top:250px;width:940px;height:760px}
+.q1{position:absolute;left:70px;right:120px;top:300px;font-size:58px;font-weight:700;color:var(--mist)}
+.q2{position:absolute;left:70px;right:110px;top:700px;font-family:var(--f-d);font-size:132px;line-height:1.04;letter-spacing:-.02em}
+.pills{position:absolute;left:70px;top:430px;display:flex;gap:22px}
+.pill{background:rgba(250,248,244,.12);border:3px solid rgba(250,248,244,.35);border-radius:999px;padding:14px 34px;font-size:44px;font-weight:700}
+.head{position:absolute;left:70px;right:110px;top:250px;font-family:var(--f-d);font-size:104px;line-height:1.02;letter-spacing:-.02em}
+.tagline{position:absolute;left:70px;top:390px;font-size:44px;font-weight:700;color:var(--mist)}
+.tagline b{display:inline-block;background:var(--white);color:var(--green);border-radius:999px;padding:8px 26px;margin-right:16px;font-size:40px}
+.frame{position:absolute;left:70px;width:940px;overflow:hidden;border-radius:40px;background:#F3F4F7;box-shadow:0 30px 80px rgba(0,0,0,.35),0 0 0 6px rgba(250,248,244,.10)}
+.frame img{position:absolute;left:0;top:0;transform-origin:0 0}
+.ring{position:absolute;border:9px solid var(--mari);border-radius:26px;opacity:0}
+.tap{position:absolute;width:120px;height:120px;margin:-60px 0 0 -60px;border-radius:50%;background:rgba(245,178,27,.55);opacity:0}
+.note{position:absolute;left:74px;right:120px;font-size:34px;color:var(--mist)}
+.end{text-align:center}
+.end .logo{position:absolute;left:50%;top:380px;width:340px;height:340px;margin-left:-170px;border-radius:80px;box-shadow:0 0 0 8px rgba(250,248,244,.92),0 40px 90px rgba(0,0,0,.35)}
+.wm{position:absolute;left:0;right:0;top:800px;font-family:var(--f-d);font-size:150px;letter-spacing:-.02em}
+.tag{position:absolute;left:0;right:0;top:1000px;font-size:60px;font-weight:700}
+.chip{position:absolute;left:50%;top:1130px;transform:translateX(-50%);background:var(--mari);color:var(--char);font-weight:700;font-size:48px;padding:22px 46px;border-radius:999px;white-space:nowrap}
+.url{position:absolute;left:0;right:0;top:1290px;font-family:var(--f-d);font-size:66px}
+.small{position:absolute;left:100px;right:100px;top:1400px;font-size:28px;color:var(--mist)}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="bg" id="bgNight"><div class="stars" id="stars"></div></div>
+  <div class="bg" id="bgGreen"></div>
+
+  <div class="scene" id="sA">
+    <div class="brand"><img src="../../../app/favicon.svg" alt=""><b>Shiftbuck</b></div>
+    <div class="words"><div><span class="hl">Nights.</span></div><div><span class="hl">Earlies.</span></div><div><span class="hl">Sleep-ins.</span></div></div>
+  </div>
+
+  <div class="scene" id="sB">
+    <svg class="art" viewBox="0 0 940 760" aria-hidden="true">
+      <circle cx="770" cy="130" r="70" fill="#FAF8F4"/><circle cx="800" cy="110" r="66" fill="#16233A" class="moonbite"/>
+      <path d="M40 700 V400 L190 300 V400 L340 300 V400 L490 300 V400 L640 300 V400 L790 300 V400 L900 330 V700 Z" fill="#22344F"/>
+      <rect x="40" y="690" width="860" height="14" fill="#2C4161"/>
+      <g class="win" fill="#F5B21B"><rect x="90" y="470" width="90" height="60" rx="6"/><rect x="240" y="470" width="90" height="60" rx="6"/><rect x="390" y="470" width="90" height="60" rx="6"/><rect x="690" y="470" width="90" height="60" rx="6"/></g>
+      <rect x="540" y="560" width="120" height="140" fill="#F5B21B" opacity=".9"/><rect x="540" y="560" width="120" height="28" fill="#0F2036" opacity=".35"/>
+      <g fill="#C79A3A"><rect x="560" y="640" width="36" height="34" rx="3"/><rect x="604" y="650" width="30" height="24" rx="3"/></g>
+      <rect x="120" y="610" width="200" height="16" rx="8" fill="#3B5378"/><g fill="#8B6A2E"><rect x="140" y="580" width="40" height="30" rx="3" class="box"/><rect x="210" y="586" width="34" height="24" rx="3" class="box"/><rect x="270" y="580" width="40" height="30" rx="3" class="box"/></g>
+    </svg>
+    <div class="who">Kemi</div>
+    <div class="what">Warehouse · nights <span>22:00–06:00</span></div>
+  </div>
+
+  <div class="scene" id="sC">
+    <svg class="art" viewBox="0 0 940 760" aria-hidden="true">
+      <g fill="#FAF8F4"><circle cx="160" cy="120" r="5"/><circle cx="300" cy="70" r="4"/><circle cx="820" cy="160" r="5"/><circle cx="660" cy="60" r="4"/></g>
+      <path d="M190 700 V380 L470 170 L750 380 V700 Z" fill="#22344F"/>
+      <path d="M150 400 L470 150 L790 400" fill="none" stroke="#2C4161" stroke-width="40" stroke-linejoin="round"/>
+      <rect x="610" y="190" width="60" height="120" fill="#22344F"/>
+      <rect x="260" y="440" width="150" height="120" rx="8" fill="#F5B21B" class="lamp"/><path d="M335 440 V560 M260 500 H410" stroke="#22344F" stroke-width="10"/>
+      <rect x="520" y="500" width="130" height="200" rx="10" fill="#0F2036"/><rect class="door" x="520" y="500" width="130" height="200" rx="10" fill="#3B5378"/>
+      <circle cx="630" cy="605" r="8" fill="#F5B21B"/>
+      <rect x="40" y="690" width="860" height="14" fill="#2C4161"/>
+    </svg>
+    <div class="who">Dami</div>
+    <div class="what">Care worker · day + sleep-in <span>08:00–08:00</span></div>
+  </div>
+
+  <div class="scene" id="sD">
+    <div class="brand"><img src="../../../app/favicon.svg" alt=""><b>Shiftbuck</b></div>
+    <div class="q1">Both want to know one thing:</div>
+    <div class="pills"><div class="pill">Kemi</div><div class="pill">Dami</div></div>
+    <div class="q2">What does this shift <span class="hl">actually pay?</span></div>
+  </div>
+
+  <div class="scene card" id="sE">
+    <div class="head">Pick the shift.</div>
+    <div class="tagline"><b>Kemi</b>warehouse nights</div>
+    <div class="frame" id="fE1" style="top:540px;height:512px;background:#fff"><img src="screens/factory/logtypes.png" style="width:972px;transform:scale(.909)"><div class="ring"></div><div class="tap"></div></div>
+    <div class="frame" id="fE2" style="top:1110px;height:157px"><img src="screens/factory/logpreview.png" style="width:972px;transform:scale(.967)"><div class="ring"></div></div>
+    <div class="note" style="top:1310px">Example: £13.20 an hour, 30-minute unpaid break.</div>
+  </div>
+
+  <div class="scene card" id="sF">
+    <div class="head">Day + sleep-in.</div>
+    <div class="tagline"><b>Dami</b>care</div>
+    <div class="frame" id="fF1" style="top:540px;height:578px"><img src="screens/logcard.png" style="width:1074px;transform:scale(.8752)"><div class="ring"></div></div>
+    <div class="frame" id="fF2" style="top:1170px;height:157px"><img src="screens/logpreview.png" style="width:972px;transform:scale(.967)"><div class="ring"></div></div>
+    <div class="note" style="top:1370px">Example: £13 an hour, £45 a sleep-in.</div>
+  </div>
+
+  <div class="scene card" id="sG">
+    <div class="head">Rest warnings.</div>
+    <div class="tagline">Based on UK working time rules.</div>
+    <div class="frame" id="fG" style="top:540px;height:613px"><img src="screens/rest.png" style="width:1074px;transform:scale(.8752)"><div class="ring"></div></div>
+  </div>
+
+  <div class="scene card" id="sH">
+    <div class="head">Payslip check.</div>
+    <div class="tagline">Your shifts against your payslip.</div>
+    <div class="frame" id="fH" style="top:530px;left:121px;width:838px;height:968px"><img src="screens/payslip.png" style="width:1074px;transform:scale(.78)"><div class="ring"></div></div>
+  </div>
+
+  <div class="scene end" id="sZ">
+    <img class="logo" src="../../../app/favicon.svg" alt="">
+    <div class="wm">Shiftbuck</div>
+    <div class="tag">Know your pay <span class="hl">before payday</span></div>
+    <div class="chip">Free for UK shift workers</div>
+    <div class="url">shiftbuck.com</div>
+    <div class="small">Dramatisation: Kemi and Dami are made up. Example figures shown; your pay depends on your own shifts and rates.</div>
+  </div>
+</div>
+<script>
+// timeline (seconds); voiceover lines are timed to these scenes (see voiceover.json)
+const S = { A: [0, 3.0], B: [3.0, 5.6], C: [5.6, 8.0], D: [8.0, 12.0], E: [12.0, 17.2], F: [17.2, 21.0], G: [21.0, 23.6], H: [23.6, 26.1], Z: [26.1, 31.5] };
+window.DURATION = 31.5;
+// what each frame shows, in image pixels: [left, top, width, height], plus the window [top] scrolled to
+const WIN = { E1: 0, E2: 0, F1: 470, F2: 0, G: 0, H: 160 };
+const OFF = { E1: [28, 24] };  // padding inside a frame, px
+const RINGS = {
+  E1: { box: [0, 294, 512, 88], at: 13.55, sc: .909 }, E2: { box: [690, 22, 262, 118], at: 14.95, sc: .967 },
+  F1: { box: [46, 1006, 724, 90], at: 17.75, sc: .8752 }, F2: { box: [640, 22, 312, 118], at: 18.55, sc: .967 },
+  G: { box: [548, 54, 476, 90], at: 21.6, sc: .8752 }, H: { box: [50, 1198, 975, 186], at: 24.55, sc: .78 }
+};
+const TAP = { x: 255, y: 338, at: 13.4, sc: .909 };
+window.CUES = { // moments for the sound, written from the timeline (seconds)
+  words: [0.3, 0.85, 1.45], kemi: 3.0, dami: 5.6, question: 8.0, q2: 9.6, tap: 13.4, pay99: 14.95, dayplus: 17.75, pay175: 18.55, rest: 21.6, payslip: 24.55, end: 26.1, chip: 26.75
+};
+const ease = x => x < 0 ? 0 : x > 1 ? 1 : x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+const out = x => x < 0 ? 0 : x > 1 ? 1 : 1 - Math.pow(1 - x, 3);
+const back = x => { x = Math.max(0, Math.min(1, x)); const c = 1.6; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); };
+const $ = s => document.querySelector(s);
+// stars (fixed pattern)
+let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+const st = $("#stars"); const starList = [];
+for (let i = 0; i < 46; i++) { const e = document.createElement("i"); const x = rnd() * 1080, y = rnd() * 1300, s = .4 + rnd() * .9; e.style.left = x + "px"; e.style.top = y + "px"; e.style.transform = `scale(${s})`; st.appendChild(e); starList.push([e, rnd() * 6, .35 + rnd() * .5]); }
+function frameAt(id, t) {
+  const fr = $("#f" + id), img = fr.querySelector("img"), r = RINGS[id], top = WIN[id], sc = r ? r.sc : .8752;
+  const [ox, oy] = OFF[id] || [0, 0];
+  img.style.top = `${oy - top * sc}px`; img.style.left = `${ox}px`;
+  if (!r) return;
+  const ring = fr.querySelector(".ring"), k = t - r.at, pad = 12;
+  const [x, y, w, h] = r.box;
+  ring.style.left = `${ox + x * sc - pad}px`; ring.style.top = `${oy + (y - top) * sc - pad}px`; ring.style.width = `${w * sc + pad * 2 - 18}px`; ring.style.height = `${h * sc + pad * 2 - 18}px`;
+  ring.style.opacity = out(k / .22); ring.style.transform = `scale(${k < 0 ? 1.12 : 1.12 - .12 * out(k / .3) + .03 * Math.sin(Math.max(0, k) * 6) * Math.exp(-Math.max(0, k) * 1.6)})`;
+}
+function vis(el, t, [a, b], last) {
+  const inT = out((t - a) / .4), outT = last ? 1 : 1 - ease((t - (b - .28)) / .28), on = t >= a - .01 && t <= b + .01;
+  el.style.opacity = on ? Math.min(inT, outT) : 0; return on;
+}
+window.renderAt = t => {
+  // backgrounds: night for A–C, green from D
+  $("#bgGreen").style.opacity = ease((t - 7.75) / .5);
+  starList.forEach(([e, ph, b]) => e.style.opacity = b * (.6 + .4 * Math.sin(t * 2 + ph)));
+  // A: three words
+  if (vis($("#sA"), t, S.A)) $("#sA").querySelectorAll(".words div").forEach((d, i) => {
+    const k = t - CUES.words[i]; d.style.opacity = out(k / .3); d.style.transform = `translateX(${(1 - out(k / .35)) * -60}px)`;
+    d.querySelector(".hl").style.setProperty("--k", out((k - .1) / .35));
+  });
+  // B: Kemi
+  if (vis($("#sB"), t, S.B)) { const k = t - S.B[0], el = $("#sB");
+    el.querySelector(".art").style.transform = `translateY(${(1 - out(k / .6)) * 40}px) scale(${1 + k * .012})`;
+    el.querySelectorAll(".box").forEach((b, i) => b.style.transform = `translateX(${((k * 70 + i * 60) % 180) - 20}px)`);
+    el.querySelector(".who").style.transform = `translateY(${(1 - out((k - .1) / .4)) * 50}px)`; el.querySelector(".what").style.opacity = out((k - .3) / .4); }
+  // C: Dami
+  if (vis($("#sC"), t, S.C)) { const k = t - S.C[0], el = $("#sC");
+    el.querySelector(".art").style.transform = `translateY(${(1 - out(k / .6)) * 40}px) scale(${1 + k * .012})`;
+    const d = out((k - .7) / .5); el.querySelector(".door").style.transform = `translateX(${520 * (1 - Math.cos(d * 1.1))}px) scaleX(${1 - .75 * d})`; el.querySelector(".door").style.transformOrigin = "520px 600px";
+    el.querySelector(".lamp").style.opacity = .55 + .45 * out((k - .2) / .4);
+    el.querySelector(".who").style.transform = `translateY(${(1 - out((k - .1) / .4)) * 50}px)`; el.querySelector(".what").style.opacity = out((k - .3) / .4); }
+  // D: the question
+  if (vis($("#sD"), t, S.D)) { const k = t - S.D[0], el = $("#sD");
+    el.querySelector(".q1").style.opacity = out((k - .15) / .4);
+    el.querySelectorAll(".pill").forEach((p, i) => { const kk = k - .35 - i * .15; p.style.opacity = out(kk / .3); p.style.transform = `scale(${.8 + .2 * back(kk / .4)})`; });
+    const q = t - CUES.q2; el.querySelector(".q2").style.opacity = out(q / .35); el.querySelector(".q2").style.transform = `translateY(${(1 - out(q / .45)) * 60}px)`;
+    el.querySelector(".q2 .hl").style.setProperty("--k", out((q - .9) / .4)); }
+  // E: Kemi picks Night, sees £99
+  if (vis($("#sE"), t, S.E)) { const k = t - S.E[0], el = $("#sE");
+    el.querySelector(".head").style.transform = `translateY(${(1 - out(k / .45)) * 50}px)`; el.querySelector(".tagline").style.opacity = out((k - .2) / .4);
+    const f1 = $("#fE1"); f1.style.opacity = out((k - .1) / .4); f1.style.transform = `translateY(${(1 - out((k - .1) / .5)) * 110}px)`; frameAt("E1", t);
+    const tp = f1.querySelector(".tap"), kt = t - TAP.at; tp.style.left = 28 + TAP.x * TAP.sc + "px"; tp.style.top = 24 + TAP.y * TAP.sc + "px";
+    tp.style.opacity = kt < 0 ? 0 : Math.max(0, .9 - kt * 1.6); tp.style.transform = `scale(${.4 + out(kt / .45) * 1.4})`;
+    const f2 = $("#fE2"), k2 = t - 14.55; f2.style.opacity = out(k2 / .3); f2.style.transform = `translateY(${(1 - out(k2 / .4)) * 80}px)`; frameAt("E2", t);
+    el.querySelector(".note").style.opacity = out((t - 15.2) / .4); }
+  // F: Dami, £175
+  if (vis($("#sF"), t, S.F)) { const k = t - S.F[0], el = $("#sF");
+    el.querySelector(".head").style.transform = `translateY(${(1 - out(k / .45)) * 50}px)`; el.querySelector(".tagline").style.opacity = out((k - .2) / .4);
+    const f1 = $("#fF1"); f1.style.opacity = out((k - .1) / .4); f1.style.transform = `translateY(${(1 - out((k - .1) / .5)) * 110}px)`; frameAt("F1", t);
+    const f2 = $("#fF2"), k2 = t - 18.2; f2.style.opacity = out(k2 / .3); f2.style.transform = `translateY(${(1 - out(k2 / .4)) * 80}px)`; frameAt("F2", t);
+    el.querySelector(".note").style.opacity = out((t - 18.8) / .4); }
+  // G and H: rest and payslip
+  [["G", "fG"], ["H", "fH"]].forEach(([id, f]) => { const el = $("#s" + id); if (!vis(el, t, S[id])) return; const k = t - S[id][0];
+    el.querySelector(".head").style.transform = `translateY(${(1 - out(k / .45)) * 50}px)`; el.querySelector(".tagline").style.opacity = out((k - .2) / .4);
+    const fr = $("#" + f); fr.style.opacity = out((k - .1) / .4); fr.style.transform = `translateY(${(1 - out((k - .1) / .5)) * 110}px)`; frameAt(id, t); });
+  // Z: end card
+  if (vis($("#sZ"), t, S.Z, true)) { const k = t - S.Z[0], el = $("#sZ");
+    el.querySelector(".logo").style.transform = `scale(${.55 + .45 * back(k / .55)}) rotate(${(1 - out(k / .6)) * -18}deg)`;
+    [".wm", ".tag", ".url", ".small"].forEach((s, n) => { const e = el.querySelector(s), kk = k - .25 - n * .18; e.style.opacity = out(kk / .4); e.style.transform = `translateY(${(1 - out(kk / .4)) * 30}px)`; });
+    el.querySelector(".tag .hl").style.setProperty("--k", out((k - 1.0) / .4));
+    const kc = t - CUES.chip, c = el.querySelector(".chip"); c.style.opacity = out(kc / .3); c.style.transform = `translateX(-50%) scale(${.82 + .18 * back(kc / .45)})`; }
+};
+window.ready = Promise.all([document.fonts.ready, ...[...document.images].map(i => i.decode().catch(() => {}))]).then(() => { renderAt(0); return true; });
+</script>
+</body>
+</html>

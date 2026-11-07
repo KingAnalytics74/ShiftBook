@@ -1,5 +1,7 @@
 # Shiftbuck video ads
 
+**Not part of the website.** Everything in `marketing/` (video ads, image ads and their sources) stays in the repository but is never published on shiftbuck.com: `.vercelignore` at the repository root keeps the whole folder out of the Vercel deployment. Download the files from GitHub to post them.
+
 Three 15-second vertical ads (1080×1920, 9:16) for TikTok, Instagram Reels and Stories, Facebook Reels and YouTube Shorts. They show the real app with example figures.
 
 | File | Opens with | Shows |
@@ -10,10 +12,13 @@ Three 15-second vertical ads (1080×1920, 9:16) for TikTok, Instagram Reels and 
 | `shiftbuck-community-king-toby-9x16.mp4` (29.5 s) | "King's company is hiring." | King posts the job in the carers' community; Toby sees it, messages him privately and gets the link to apply; then what the community offers (nicknames only, Near me, pay, rights, rest, report and block) and "Real jobs never ask you to pay." |
 | `shiftbuck-overtime-vivian-9x16.mp4` (28 s) | "Overtime this Saturday?" | Vivian thinks she's earned enough, checks Shiftbuck: £1,436.44 take-home, plan £83.56 short; one overtime long day at £16.50 an hour pays £181.50, her plan adds up with £39.76 to spare, she's still well rested, and she says yes |
 | `shiftbuck-story-tunde-9x16.mp4` (27 s) | "Meet Tunde. He's just started as a support worker." | Tunde logs a shift (£175), sees £2,915 before payday, gives 15% (£344.50 a month) to a House deposit pot, saves £12,402 over 3 years and gets the keys to his first home |
+| `shiftbuck-every-shift-9x16.mp4` (31.5 s, voiced, with sound design) | "Nights. Earlies. Sleep-ins." | Kemi (warehouse nights) and Dami (care, day + sleep-in) both want to know what a shift pays: Kemi picks Night and sees £99.00, Dami's day and sleep-in pays £175.00, then rest warnings and the payslip check. Ends on "Free for UK shift workers". The first ad for factory workers as well as carers. |
 
 King and Toby's community screens are the real app, signed in as Toby against a stand-in back end (`source/mock-supabase-community.js`, `capture-community.js`), so the post and messages are made up and no real data is used. The link in King's message is a dummy address (`kingscare.example`).
 
 Vivian and Tunde are illustrated, made-up characters. Vivian's figures come from her example account (`source/seed-vivian.js`, `capture-vivian.js`): the app worked out every number on screen, before and after the overtime shift was logged.
+
+Kemi and Dami are made up. Kemi's screens are the real app in demo mode with her example account (`source/seed-factory.js`, `capture-factory.js`): the app worked out £99.00 (7.5 paid hours at £13.20). Its sound is in `sound/everyshift/`: a British AI voice (Kokoro), piano music built from Meta Piano samples (CC0), app sounds made in code with earshot, and real recordings from Oculus Audio Pack 01 (CC BY 4.0) placed with Real SFX. **Credit those recordings whenever you post it** (see the caption below and `sound/everyshift/CREDITS.md`).
 
 Tunde is an illustrated, made-up character. His story is labelled as a dramatisation with example figures, and every app screen is the real app with his example account (`source/seed-story.js`). The £12,402 is the app's own £344.50 a month times 36.
 
@@ -48,6 +53,11 @@ Text and app screens stay out of the bottom fifth and the right edge, where TikT
 **Tunde's story**
 > Tunde started as a support worker, logged every shift in Shiftbuck, knew his pay before payday and gave every pound a job, including a house deposit. Plan your pay with Shiftbuck. Free for UK care workers. 🏡 (Dramatisation, example figures)
 > #carers #supportworker #carework #firsthome #savingmoney #ukcarers
+
+**Every shift (Kemi and Dami)**
+> Nights, earlies or sleep-ins: see what every shift pays before payday. Shiftbuck works it out at your own rates, warns you when you're not resting enough and checks your payslip. Free for UK shift workers. (Dramatisation, example figures)
+> Sounds: "Oculus Audio Pack 01" by Oculus VR, LLC, CC BY 4.0.
+> #shiftwork #nightshift #warehouse #carers #supportworker #ukworkers
 
 ## Before you pay to promote them
 

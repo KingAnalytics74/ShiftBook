@@ -1,0 +1,9 @@
+{
+ "night":     {"ids": [17], "role": "ambience"},
+ "step":      {"ids": [18, 5, 9, 13, 10], "role": "foley"},
+ "factory":   {"ids": [15], "role": "ambience"},
+ "hydraulic": {"ids": [6], "role": "foley"},
+ "unlock":    {"ids": [11], "role": "foley"},
+ "dooropen":  {"ids": [7], "role": "foley"},
+ "endsting":  {"ids": [14], "role": "music_transition"}
+}
