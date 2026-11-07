@@ -1,0 +1,9 @@
+[
+ {"t": 0.00, "type": "night", "len": 8.0, "g": 0.5},
+ {"t": 0.15, "type": "step"}, {"t": 0.70, "type": "step"}, {"t": 1.25, "type": "step"}, {"t": 1.80, "type": "step"}, {"t": 2.35, "type": "step"},
+ {"t": 3.00, "type": "factory", "len": 2.7, "g": 0.7},
+ {"t": 3.25, "type": "hydraulic", "g": 0.6},
+ {"t": 5.75, "type": "unlock"},
+ {"t": 6.35, "type": "dooropen"},
+ {"t": 26.10, "type": "endsting"}
+]
