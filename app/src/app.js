@@ -24,6 +24,11 @@ import { calc as calcCore, summarise as summariseCore } from "./core/pay.js";
 import { REST, hasDayHrs, worked, isNight, restDay as restDayCore } from "./core/restCheck.js";
 import { parseTaxCode, deductions } from "./core/tax.js";
 import { forecast as forecastCore, shiftKind } from "./core/forecast.js";
+import { resolveArea } from "./core/areas.js";
+import { mountAreaPicker } from "./area-picker.js";
+import { startDeco } from "./deco.js";
+
+startDeco(); // the wandering worm on the sign-in and setup pages
 
 (() => {
   if (!document.documentElement.lang) document.documentElement.lang = "en-GB";
@@ -920,27 +925,28 @@ import { forecast as forecastCore, shiftKind } from "./core/forecast.js";
     document.querySelectorAll(".tabs, .bottombar, .period").forEach(el => { el.hidden = on; });
     document.body.classList.toggle("onboarding", on);
     if (window.SBReveal) SBReveal();
-    const tc = document.querySelector('meta[name="theme-color"]'); if (tc) tc.content = on ? "#FFF8E6" : "#C8102E";
+    const tc = document.querySelector('meta[name="theme-color"]'); if (tc) tc.content = on ? "#F9F8F4" : "#0F5C3C";
   }
   // ---------- first-time setup: one question per screen ----------
   // ---------- profile: age group, sex, area, employer, community nickname ----------
   const NICK_A = ["NightOwl", "SleepIn", "EarlyBird", "KindHands", "TeaBreak", "LongShift", "CalmCarer", "SteadyHand", "QuietHero", "DayShift"];
   const nickFor = area => NICK_A[Math.floor(Math.random() * NICK_A.length)] + "_" + ((area || "").replace(/[^A-Za-z]/g, "").slice(0, 6) || String(Math.floor(10 + Math.random() * 89)));
+  mountAreaPicker($("#uArea"));
   $("#uNickGen").onclick = () => { $("#uNick").value = nickFor(obVal("uArea")); obRender(); };
   ["uArea", "uEmployer", "uNick"].forEach(id => $("#" + id).addEventListener("input", () => { $("#setupErr").hidden = true; }));
   function profileCheck() {
     const err = m => { $("#setupErr").textContent = m; $("#setupErr").hidden = false; return false; };
     if (obStep === 2) {
-      if (!obVal("uArea")) return err("Add your town or county, for example Leicester.");
+      if (!resolveArea(obVal("uArea"))) return err("Pick your council from the list. Start typing its name.");
       const n = obVal("uNick"), first = obVal("uName").toLowerCase();
       if (!/^[A-Za-z0-9_]{3,20}$/.test(n)) return err("Pick a nickname of 3 to 20 letters, numbers or _ with no spaces. Tap Suggest one for ideas.");
       if (first.length > 2 && n.toLowerCase().includes(first)) return err("Pick a nickname without your real name in it, so other carers can't tell who you are.");
     }
     return true;
   }
-  const profileData = () => ({
-    area: obVal("uArea"), employer: obVal("uEmployer") || null, nickname: obVal("uNick"), createdAt: new Date().toISOString()
-  });
+  const profileData = () => { const a = resolveArea(obVal("uArea")); return {
+    area: a ? a.label : obVal("uArea"), areaCode: a ? a.code : null, employer: obVal("uEmployer") || null, nickname: obVal("uNick"), createdAt: new Date().toISOString()
+  }; };
   const OB_LAST = 7, OB_FIRST = window.SBAuth ? 1 : 0;
   let obStep = 0, obDay = null, obType = 0, obWork = "care", obPicked = new Set(OB_PICK.care), obEdit = {};
   const obVal = id => $("#" + id).value.trim();
@@ -1005,6 +1011,9 @@ import { forecast as forecastCore, shiftKind } from "./core/forecast.js";
     document.querySelectorAll(".obstep").forEach(el => el.hidden = Number(el.dataset.step) !== obStep);
     $("#obTop").hidden = obStep === 0;
     $("#obBar").style.width = (obStep / OB_LAST * 100) + "%";
+    { const pct = obStep / OB_LAST * 100, c = $("#obCoin"), w = $("#obBar").parentNode.clientWidth;
+      c.style.setProperty("--p", String(pct));
+      c.style.setProperty("--rot", String(Math.round((w * pct / 100) / (Math.PI * 28) * 360))); } // rolls without slipping: distance / circumference
     $("#obCount").textContent = obStep ? `Step ${obStep} of ${OB_LAST}` : "";
     $("#obBack").hidden = obStep <= OB_FIRST;
     $("#obNext").hidden = obStep === OB_LAST; $("#setupBtn").hidden = obStep !== OB_LAST;
@@ -1115,6 +1124,7 @@ import { forecast as forecastCore, shiftKind } from "./core/forecast.js";
   }
   function closeInfo() {
     ["privacy", "terms", "faq"].forEach(n => { $("#view-" + n).hidden = true; });
+    if (document.body.classList.contains("authing")) { $("#view-auth").hidden = false; window.scrollTo({ top: 0 }); return; } // signed out: back to the sign-in screen
     document.querySelectorAll(".tabs, .bottombar, .period").forEach(el => { el.hidden = false; });
     if (state.needsSetup && typeof setupMode === "function") { setupMode(true); return; }
     show(infoReturn && infoReturn !== "setup" ? infoReturn : "overview");
@@ -1123,6 +1133,9 @@ import { forecast as forecastCore, shiftKind } from "./core/forecast.js";
     const o = e.target.closest("[data-info]"); if (o) { e.preventDefault(); openInfo(o.dataset.info); return; }
     if (e.target.closest("[data-info-back]")) closeInfo();
   });
+  // the public homepage links straight to these pages: /app/#privacy, #terms, #faq
+  const deepInfo = (location.hash.match(/^#(privacy|terms|faq)$/) || [])[1];
+  if (deepInfo) setTimeout(() => openInfo(deepInfo), 700);
   if ($("#delAll")) {
     $("#delAll").onclick = () => { $("#delAllConfirm").hidden = false; };
     $("#delAllNo").onclick = () => { $("#delAllConfirm").hidden = true; };
@@ -1475,16 +1488,17 @@ import { forecast as forecastCore, shiftKind } from "./core/forecast.js";
     if (t.dataset.rep) { try { await cm.store.report(t.dataset.id, t.dataset.rep); toast("Thanks. A moderator will look at it."); } catch (e2) { toast("That didn't send. Try again."); } cm.reporting = null; renderCommunity(); return; }
     if (t.dataset.hide) { try { cm.feed.hidden.has(t.dataset.hide) ? await cm.store.unhide(t.dataset.hide) : await cm.store.hide(t.dataset.hide); } catch (e2) { toast("Only moderators can do that."); } return; }
   });
+  mountAreaPicker($("#cmArea"));
   $("#cmJoinForm").addEventListener("submit", async e => {
     e.preventDefault();
-    const nick = $("#cmNick").value.trim(), area = $("#cmArea").value.trim(), age = $("#cmAge").value;
+    const nick = $("#cmNick").value.trim(), areaPick = resolveArea($("#cmArea").value), area = areaPick ? areaPick.label : "", age = $("#cmAge").value;
     const bad = m => { $("#cmJoinErr").textContent = m; $("#cmJoinErr").hidden = false; };
     if (!cmNickOk(nick, state.cfg.name)) return bad("Pick a nickname of 3 to 20 letters, numbers or _ with no spaces and without your real name. Tap Suggest one for ideas.");
-    if (!area) return bad("Add your town or county, for example Leicester.");
+    if (!areaPick) return bad("Pick your council from the list. Start typing its name.");
     if (!age) return bad("Choose your age group.");
     if (age === "under18") return bad("The community is for care workers aged 18 and over.");
     if (!S || !S.profile) return bad("Sign in to join the community.");
-    try { await S.profile().set({ ...(state.profile || {}), nickname: nick, area, ageGroup: age, createdAt: (state.profile && state.profile.createdAt) || new Date().toISOString() }); toast(`Welcome, ${nick}`); }
+    try { await S.profile().set({ ...(state.profile || {}), nickname: nick, area, areaCode: areaPick.code, ageGroup: age, createdAt: (state.profile && state.profile.createdAt) || new Date().toISOString() }); toast(`Welcome, ${nick}`); }
     catch (e2) { bad("That didn't save. Try again."); }
   });
 

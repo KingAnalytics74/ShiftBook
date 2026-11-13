@@ -2,11 +2,222 @@
 <html lang="en-GB">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; connect-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="same-origin">
-<title>Shiftbuck</title>
-<meta http-equiv="refresh" content="0; url=app/">
-<link rel="canonical" href="app/">
+<meta name="theme-color" content="#0F5C3C">
+<title>Shiftbuck: your shifts, your pay, on your side</title>
+<meta name="description" content="Shiftbuck is a free app for care, factory and warehouse workers. Log every shift, see what you should be paid, check your payslip and know when you are short on rest.">
+<link rel="icon" href="app/favicon.svg" type="image/svg+xml">
+<link rel="canonical" href="https://shiftbuck.com/">
+<meta property="og:title" content="Shiftbuck: your shifts, your pay, on your side">
+<meta property="og:description" content="A free app for shift workers. Log shifts, check your pay and payslip, and spot tiredness before it hits.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://shiftbuck.com/">
+<link rel="stylesheet" href="app/src/fonts.css">
+<link rel="stylesheet" href="site/site.css">
+<script src="site/boot.js"></script>
+<script type="module" src="site/site.js"></script>
 </head>
-<body><p><a href="app/">Open Shiftbuck</a></p></body>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="nav" id="top">
+  <div class="nav-in">
+    <a class="logo" href="./" aria-label="Shiftbuck home">
+      <svg viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="60" fill="#F5B01A"/><circle cx="60" cy="60" r="33" fill="none" stroke="#111A2B" stroke-width="9"/><path d="M60 41v20l13 8" fill="none" stroke="#111A2B" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span>Shiftbuck</span>
+    </a>
+    <nav class="links" id="links" aria-label="Main">
+      <a href="#features">Features</a>
+      <a href="#how">How it works</a>
+      <a href="#community">Community</a>
+      <a href="#faq">FAQ</a>
+      <a href="app/" class="signin">Sign in</a>
+    </nav>
+    <a href="app/" class="btn amber sm">Start free</a>
+    <button class="menu" id="menu" type="button" aria-expanded="false" aria-controls="links" aria-label="Menu"><i></i><i></i><i></i></button>
+  </div>
+</header>
+
+<main id="main">
+  <!-- hero -->
+  <section class="hero" id="hero">
+    <div class="deco" aria-hidden="true">
+      <b class="glow g1"></b><b class="glow g2"></b>
+      <i class="sh a1"><svg viewBox="0 0 100 100"><path d="M50 12 90 84H10Z" fill="#F5B01A" stroke="#F5B01A" stroke-width="10" stroke-linejoin="round"/></svg></i>
+      <i class="sh a2"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="none" stroke="#F9F8F4" stroke-width="9"/></svg></i>
+      <i class="sh a3"><svg viewBox="0 0 100 100"><path d="M50 14v72M14 50h72" stroke="#F5B01A" stroke-width="16" stroke-linecap="round"/></svg></i>
+      <i class="sh a4"><svg viewBox="0 0 100 100"><path d="M50 12 90 84H10Z" fill="none" stroke="#F9F8F4" stroke-width="7" stroke-linejoin="round"/></svg></i>
+      <i class="sh a5"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="#F5B01A"/></svg></i>
+      <i class="sh a6"><svg viewBox="0 0 100 100"><rect x="16" y="16" width="68" height="68" rx="16" fill="none" stroke="#F5B01A" stroke-width="10"/></svg></i>
+      <i class="sh a7"><svg viewBox="0 0 100 50"><path d="M4 48a46 46 0 0 1 92 0Z" fill="#F9F8F4"/></svg></i>
+      <i class="sh a8"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="44" fill="#111A2B"/></svg></i>
+      <svg class="worm" aria-hidden="true" focusable="false"><path class="w1"/><path class="w2"/><path class="w3"/><circle class="wh" r="8"/><circle class="we" r="2.3"/></svg>
+    </div>
+
+    <div class="wrap hero-in">
+      <div class="hero-copy">
+        <p class="chip rv">Free for shift workers · No ads, ever</p>
+        <h1 class="rv">Your shifts. Your pay. <span>On your side.</span></h1>
+        <p class="lede rv">Shiftbuck is a free app for care, factory and warehouse workers. Log every shift, see what you should be paid, check your payslip and know when you are short on rest.</p>
+        <div class="cta rv">
+          <a href="app/" class="btn amber lg">Start free <span class="dash">—</span> takes 2 minutes</a>
+          <a href="#how" class="btn ghost lg">See how it works</a>
+        </div>
+        <p class="fine rv">Works in your phone's browser. Sign up with your email.</p>
+      </div>
+
+      <div class="phone-wrap" id="phoneWrap">
+        <div class="phone" role="img" aria-label="The Shiftbuck app on an iPhone, showing this week's shifts, a rest warning and expected pay of £1,284.50">
+          <i class="btn-l b1"></i><i class="btn-l b2"></i><i class="btn-l b3"></i><i class="btn-r b4"></i>
+          <div class="screen" aria-hidden="true">
+            <div class="island"></div>
+            <div class="status">
+              <span class="clock">9:41</span>
+              <span class="sys">
+                <svg width="18" height="12" viewBox="0 0 18 12"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.5" width="3" height="6.5" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg>
+                <svg width="17" height="12" viewBox="0 0 17 12"><path d="M8.5 2.2c2.3 0 4.4.9 6 2.4l1-1.1A10.4 10.4 0 0 0 8.5.7C5.8.7 3.3 1.8 1.5 3.5l1 1.1a8.9 8.9 0 0 1 6-2.4Zm0 3.4c1.4 0 2.7.5 3.7 1.4l1-1.1a7 7 0 0 0-9.4 0l1 1.1c1-.9 2.3-1.4 3.7-1.4Zm0 3.3c.6 0 1.2.2 1.6.6l-1.6 1.9-1.6-1.9c.4-.4 1-.6 1.6-.6Z"/></svg>
+                <svg width="27" height="13" viewBox="0 0 27 13"><rect x=".5" y=".5" width="22" height="12" rx="3.8" fill="none" stroke="currentColor" opacity=".4"/><rect x="2" y="2" width="19" height="9" rx="2.6"/><path d="M24 4.5v4c.8-.3 1.5-1.1 1.5-2s-.7-1.7-1.5-2Z" opacity=".5"/></svg>
+              </span>
+            </div>
+
+            <div class="app">
+              <div class="app-h"><b>This week</b><span>9–15 Nov</span></div>
+              <div class="sc c1"><div><b>Mon · Long day</b><small>Elm House · 08:00–20:00</small></div><em>10h</em></div>
+              <div class="sc c2"><div><b>Mon · Sleep-in</b><small>Elm House · 20:00–08:00</small></div><em>Sleep</em></div>
+              <div class="sc c3"><div><b>Wed · Late</b><small>Oak Lodge · 14:00–22:00</small></div><em>7.5h</em></div>
+              <div class="sc c4 warn"><div><b>Thu · Early</b><small>Oak Lodge · 07:00–15:00</small><u><svg viewBox="0 0 16 16" width="13" height="13"><path d="M8 1.5 15 14H1L8 1.5Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M8 6.2v3.4M8 11.6v.1" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>Only 9h rest after Wednesday</u></div><em>7.5h</em></div>
+              <div class="sc c5"><div><b>Sat · Long day</b><small>Elm House · 08:00–20:00</small></div><em>10h</em></div>
+              <div class="pay">
+                <small>Expected pay this month</small>
+                <b id="payNum">£1,284.50</b>
+                <span>Pay day in 9 days · 3 shifts to log</span>
+              </div>
+              <div class="wk">
+                <small>Weekly earnings</small>
+                <div class="bars"><i></i><i></i><i></i><i></i><i class="now"></i><i></i><i></i></div>
+                <div class="days"><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span></div>
+              </div>
+              <div class="rest"><i></i><div><b>Rest check</b><small>One short turnaround this week</small></div></div>
+            </div>
+            <div class="home"></div>
+          </div>
+        </div>
+        <span class="float-coin" aria-hidden="true"><svg viewBox="0 0 40 40"><circle cx="20" cy="22" r="18" fill="#C98200"/><circle cx="20" cy="20" r="18" fill="#F5B01A" stroke="#111A2B" stroke-width="2.4"/><circle cx="20" cy="20" r="12.5" fill="none" stroke="#111A2B" stroke-width="1.6" stroke-dasharray="2 2.4"/><text x="20" y="25.6" text-anchor="middle" font-family="Bricolage Grotesque,sans-serif" font-weight="800" font-size="16" fill="#111A2B">£</text></svg></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- trust strip -->
+  <section class="strip" aria-label="Why people trust Shiftbuck">
+    <ul class="wrap">
+      <li class="rv"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m3 8.5 3.2 3L13 4.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Free for every worker</li>
+      <li class="rv"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m3 8.5 3.2 3L13 4.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>No ads, no selling your data</li>
+      <li class="rv"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m3 8.5 3.2 3L13 4.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>No bank link needed</li>
+      <li class="rv"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m3 8.5 3.2 3L13 4.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Not linked to your employer</li>
+    </ul>
+    <span class="roll-coin" aria-hidden="true"><svg viewBox="0 0 40 40"><g class="spin"><circle cx="20" cy="20" r="18" fill="#F5B01A" stroke="#111A2B" stroke-width="2.4"/><circle cx="20" cy="20" r="12.5" fill="none" stroke="#111A2B" stroke-width="1.6" stroke-dasharray="2 2.4"/><text x="20" y="25.6" text-anchor="middle" font-family="Bricolage Grotesque,sans-serif" font-weight="800" font-size="16" fill="#111A2B">£</text></g></svg></span>
+  </section>
+
+  <!-- features -->
+  <section class="sec features" id="features">
+    <div class="wrap">
+      <p class="eyebrow rv">What you get</p>
+      <h2 class="rv">Everything about your shifts, in one place</h2>
+      <p class="sub rv">Built around how shift work really is: nights past midnight, sleep-ins, different houses and sites, and a pay month that never starts on the 1st.</p>
+      <div class="grid">
+        <article class="fc rv"><span class="ic"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg></span><h3>Shifts your way</h3><p>Earlies, lates, long days, waking nights and sleep-ins. Set your own start, finish and break, in care or factory work.</p></article>
+        <article class="fc rv"><span class="ic"><svg viewBox="0 0 24 24"><path d="M16.5 7c-.7-1.2-1.9-2-3.5-2-2.2 0-3.5 1.4-3.5 3.500V19M6.5 19h11M6.5 12.500H14"/></svg></span><h3>Know your pay</h3><p>Add a rate for each shift and see what this month should come to. Your pay month can start on any day.</p></article>
+        <article class="fc rv"><span class="ic"><svg viewBox="0 0 24 24"><path d="M6 3.500h8l4 4v13H6z"/><path d="m9 14 2 2 4-4.5"/></svg></span><h3>Payslip check</h3><p>Put your payslip next to your own record and spot missing hours before they slip by.</p></article>
+        <article class="fc rv"><span class="ic"><svg viewBox="0 0 24 24"><path d="M19.5 14.500A8 8 0 0 1 9.5 4.500a8 8 0 1 0 10 10Z"/></svg></span><h3>Rest warnings</h3><p>Shiftbuck flags when you have less than 11 hours between shifts, so you can see tiredness coming.</p></article>
+        <article class="fc rv"><span class="ic"><svg viewBox="0 0 24 24"><rect x="5" y="3.5" width="14" height="13" rx="3"/><path d="M5 11h14M8 20l1.5-3.500M16 20l-1.5-3.500M8.5 14h.01M15.5 14h.01"/></svg></span><h3>Money and travel</h3><p>Plan your spending and keep track of bus fares to work. You type it in, with no bank connection.</p></article>
+        <article class="fc rv"><span class="ic"><svg viewBox="0 0 24 24"><path d="M5 6h14M5 12h14M5 18h9"/></svg></span><h3>Timesheets in a tap</h3><p>Your shifts, types and times in a clear timesheet you can download as a spreadsheet.</p></article>
+      </div>
+    </div>
+  </section>
+
+  <!-- how it works -->
+  <section class="sec how" id="how">
+    <div class="wrap">
+      <h2 class="rv">Three steps. No paperwork.</h2>
+      <ol class="steps">
+        <li class="rv"><b class="n">1</b><h3>Sign up free</h3><p>Use your email. Pick a nickname. That's all other workers will see.</p></li>
+        <li class="rv"><b class="n">2</b><h3>Log your shifts</h3><p>Add each shift as you work it: where, when, and the rate you're paid.</p></li>
+        <li class="rv"><b class="n">3</b><h3>See it add up</h3><p>Your expected pay, your rest and your timesheet, ready when payday comes.</p></li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- community -->
+  <section class="sec community" id="community">
+    <div class="wrap two">
+      <div>
+        <p class="eyebrow rv">Community</p>
+        <h2 class="rv">Talk to people who get it</h2>
+        <p class="sub rv">Swap tips with other carers and shift workers, and message each other directly. Others only ever see your nickname and your area, never your real name, workplace or pay.</p>
+        <p class="madefor rv">Made for</p>
+        <ul class="tags rv"><li>Care and support workers</li><li>Factory and warehouse</li><li>Anyone on shifts</li></ul>
+      </div>
+      <div class="chat" aria-label="Example community messages">
+        <div class="bub rv"><small><b>NightOwl22</b> · East Midlands</small>Anyone else's sleep-ins show up as hours on the payslip, not a separate line? Took me ages to work out.</div>
+        <div class="bub mine rv"><small><b>Marigold_M</b> · Northamptonshire</small>Same here. Logging them in Shiftbuck made it easy to check.</div>
+        <div class="bub rv"><small><b>LateShiftLee</b> · Leicestershire</small>Tip: set your pay month to start on your real cut-off day. Totals finally match.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- values -->
+  <section class="values" aria-labelledby="vh">
+    <div class="wrap">
+      <h2 id="vh" class="rv">What we stand for</h2>
+      <div class="vgrid">
+        <div class="rv"><h3>Belief</h3><p>You work hard, and you should be paid for every minute of it. We start from believing you.</p></div>
+        <div class="rv"><h3>Creativity</h3><p>Shift work doesn't fit a 9-to-5 template, so neither do we. Nights, sleep-ins and odd pay months all just work.</p></div>
+        <div class="rv"><h3>Resilience</h3><p>Long shifts, short rests. We help you see tiredness coming, so you can keep going.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- faq -->
+  <section class="sec faq" id="faq">
+    <div class="wrap narrow">
+      <h2 class="rv">Questions</h2>
+      <details class="rv"><summary>Is Shiftbuck really free?</summary><p>Yes. It's free for every worker, with no ads. We don't sell your data.</p></details>
+      <details class="rv"><summary>Does it connect to my bank?</summary><p>No. You type in your shifts and your plans yourself, so there is no bank link to set up and nothing to trust us with.</p></details>
+      <details class="rv"><summary>Can my employer see my Shiftbuck?</summary><p>No. Your data is private to your account. Your employer, your manager and other workers can't see it. Only what you choose to send, such as a downloaded timesheet, leaves the app.</p></details>
+      <details class="rv"><summary>What do other members see about me?</summary><p>Only your nickname and your council area, and only if you join the community. Never your real name, your workplace or your pay.</p></details>
+      <details class="rv"><summary>Is it only for care workers?</summary><p>No. Shiftbuck works for care, factory and warehouse work, and for anyone paid by the shift.</p></details>
+    </div>
+  </section>
+
+  <!-- closing call -->
+  <section class="close">
+    <div class="wrap">
+      <div class="close-card rv">
+        <div class="deco" aria-hidden="true">
+          <i class="sh z1"><svg viewBox="0 0 100 100"><path d="M50 12 90 84H10Z" fill="#F5B01A" stroke="#F5B01A" stroke-width="10" stroke-linejoin="round"/></svg></i>
+          <i class="sh z2"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="none" stroke="#F9F8F4" stroke-width="9"/></svg></i>
+          <i class="sh z3"><svg viewBox="0 0 100 100"><path d="M50 14v72M14 50h72" stroke="#F5B01A" stroke-width="16" stroke-linecap="round"/></svg></i>
+        </div>
+        <h2>Every shift counts. Start counting.</h2>
+        <p>Free, no ads, and on your side from your first shift.</p>
+        <a href="app/" class="btn amber lg">Start free</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="wrap foot-in">
+    <p><b>Shiftbuck</b> · Powered by WesTech Innovation · © 2026</p>
+    <nav aria-label="Footer">
+      <a href="app/#privacy">Privacy</a>
+      <a href="app/#terms">Terms</a>
+      <a href="app/#privacy">Cookies</a>
+      <a href="https://westechinnovation.com/" target="_blank" rel="noopener">Contact</a>
+    </nav>
+  </div>
+</footer>
+</body>
 </html>
