@@ -1,0 +1,548 @@
+diff --git a/app/index.html b/app/index.html
+index 22f2273..7c8b9b5 100644
+--- a/app/index.html
++++ b/app/index.html
+@@ -77,21 +77,7 @@
+         </div>
+         <form id="setupForm" novalidate>
+           <div class="obstep" data-step="0">
+-            <svg class="oblogo" viewBox="0 0 120 120" aria-hidden="true">
+-              <rect width="120" height="120" rx="28" fill="#C8102E" />
+-              <circle cx="60" cy="65" r="40" fill="#B07800" />
+-              <circle cx="60" cy="57" r="40" fill="#F2B705" />
+-              <circle cx="60" cy="57" r="37.5" fill="none" stroke="#FFE27A" stroke-width="5"
+-                stroke-dasharray="2.6 2.6" />
+-              <circle cx="60" cy="57" r="31" fill="#FFD23F" stroke="#C98A00" stroke-width="2.5" />
+-              <path d="M60 32v5M60 77v5M35 57h5M80 57h5" stroke="#14213D" stroke-width="4" stroke-linecap="round" />
+-              <path d="M60 57V41M60 57l12 8" fill="none" stroke="#14213D" stroke-width="6" stroke-linecap="round"
+-                stroke-linejoin="round" />
+-              <circle cx="60" cy="57" r="4.5" fill="#C8102E" stroke="#14213D" stroke-width="2.5" />
+-              <path d="M36 45a27 27 0 0 1 11-12" fill="none" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round"
+-                opacity=".9" />
+-            </svg>
+-            <h2 class="obh">Know your pay before payday</h2>
++              <h2 class="obh">Know your pay before payday</h2>
+             <ul class="obwhy">
+               <li><b>See what every shift pays</b>, including sleep-ins, as you log it.</li>
+               <li><b>Check your payslip</b> and your take-home after tax.</li>
+@@ -109,34 +95,6 @@
+                 id="uRole" placeholder="Support Worker"></div>
+           </div>
+           <div class="obstep" data-step="2" hidden>
+-            <h2 class="obh">A bit about you</h2>
+-            <p class="obsub">Only used to understand who uses Shiftbuck. Never shown to other carers or to your
+-              employer.</p>
+-            <div class="field"><label for="uAge">Age group</label>
+-              <select id="uAge">
+-                <option value="">Choose…</option>
+-                <option value="under18">Under 18</option>
+-                <option value="18-24">18–24</option>
+-                <option value="25-34">25–34</option>
+-                <option value="35-44">35–44</option>
+-                <option value="45-54">45–54</option>
+-                <option value="55-64">55–64</option>
+-                <option value="65+">65 or over</option>
+-                <option value="na">Prefer not to say (I'm 18 or over)</option>
+-              </select>
+-            </div>
+-            <div class="field"><label for="uSex">Sex <span class="hint">optional</span></label>
+-              <select id="uSex">
+-                <option value="">Prefer not to say</option>
+-                <option value="female">Female</option>
+-                <option value="male">Male</option>
+-                <option value="other">I'd rather describe it</option>
+-              </select>
+-            </div>
+-            <div class="field" id="uSexOtherWrap" hidden><label for="uSexOther">In your own words <span
+-                  class="hint">optional</span></label><input type="text" id="uSexOther" maxlength="40"></div>
+-          </div>
+-          <div class="obstep" data-step="3" hidden>
+             <h2 class="obh">Where do you work?</h2>
+             <p class="obsub">Your area puts you in the right carers' group. Your employer is kept private and never
+               shown to anyone.</p>
+@@ -152,7 +110,7 @@
+               <span class="hint">This is how other carers see you. Don't use your real name.</span>
+             </div>
+           </div>
+-          <div class="obstep" data-step="4" hidden>
++          <div class="obstep" data-step="3" hidden>
+             <h2 class="obh">What are you paid?</h2>
+             <p class="obsub">It's on your contract or payslip. You can change it later.</p>
+             <div class="field"><label for="uRate">Hourly rate (£)</label><input type="number" id="uRate" step="0.01"
+@@ -161,12 +119,12 @@
+                   sleep-ins</span></label><input type="number" id="uSleep" step="0.01" min="0" inputmode="decimal"
+                 placeholder="e.g. 40"></div>
+           </div>
+-          <div class="obstep" data-step="5" hidden>
++          <div class="obstep" data-step="4" hidden>
+             <h2 class="obh">When does your pay month start?</h2>
+             <p class="obsub">The first day your payslip counts. For example, if it covers 26 Oct to 25 Nov, pick 26.</p>
+             <div class="field"><label for="uDay">Day your pay month starts (1 to 31) <span class="hint">31 means the last day of each month</span></label><input type="number" id="uDay" min="1" max="31" inputmode="numeric"></div>
+           </div>
+-          <div class="obstep" data-step="6" hidden>
++          <div class="obstep" data-step="5" hidden>
+           <h2 class="obh">What shifts do you work?</h2>
+           <p class="obsub">Tap every shift you do, then set your own start and finish times. They become one-tap buttons when you log a shift. You can change them or add more later in Settings.</p>
+           <div class="field"><span class="lbl">Your kind of work</span>
+@@ -176,14 +134,14 @@
+           <div id="obTypeLib"></div>
+           <p class="obpreview" id="obPatPrev"></p>
+         </div>
+-        <div class="obstep" data-step="7" hidden>
++        <div class="obstep" data-step="6" hidden>
+             <h2 class="obh">Who do you support?</h2>
+             <p class="obsub">First names or initials only, separated by commas. You can skip this and add people as you
+               log shifts.</p>
+             <div class="field"><label for="uUsers">Service users <span class="hint">optional</span></label><input
+                 type="text" id="uUsers" placeholder="e.g. Alex, S.B."></div>
+           </div>
+-          <div class="obstep" data-step="8" hidden>
++          <div class="obstep" data-step="7" hidden>
+             <h2 class="obh">Log your first shift</h2>
+             <p class="obsub">Your last or next shift. You can skip this.</p>
+             <div class="field"><label for="obDate">Date</label><input type="date" id="obDate"></div>
+@@ -738,9 +696,8 @@
+         <ul>
+           <li>What you enter in setup: your first name, role, hourly and sleep-in rates, pay period start day and usual
+             shift times.</li>
+-          <li>Your profile: age group, sex (optional), your area, your employer (optional) and your community nickname.
+-            Other carers only ever see your nickname. Your employer never sees any of it. Age group and sex are only
+-            used, added up across all users, to understand who uses Shiftbuck.</li>
++          <li>Your profile: your area, your employer (optional) and your community nickname.
++            Other carers only ever see your nickname. Your employer never sees any of it.</li>
+           <li>How you sign in: your mobile number or email address and, if you choose one, a password. If you continue
+             with Google, Google tells us your email address and name, and nothing else. Your password is only ever kept
+             scrambled (hashed) by Supabase, so nobody at Shiftbuck can read it.</li>
+diff --git a/app/src/app.js b/app/src/app.js
+index 06adf5e..8c4ee57 100644
+--- a/app/src/app.js
++++ b/app/src/app.js
+@@ -918,18 +918,18 @@ import { forecast as forecastCore, shiftKind } from "./core/forecast.js";
+     if (on && typeof obGo === "function" && !document.querySelector("#view-setup:not([hidden])")) obGo(OB_FIRST);
+     document.querySelectorAll("section.view").forEach(v => { v.hidden = on ? v.id !== "view-setup" : v.id !== "view-" + state.view; });
+     document.querySelectorAll(".tabs, .bottombar, .period").forEach(el => { el.hidden = on; });
++    document.body.classList.toggle("onboarding", on);
++    const tc = document.querySelector('meta[name="theme-color"]'); if (tc) tc.content = on ? "#FFF8E6" : "#C8102E";
+   }
+   // ---------- first-time setup: one question per screen ----------
+   // ---------- profile: age group, sex, area, employer, community nickname ----------
+   const NICK_A = ["NightOwl", "SleepIn", "EarlyBird", "KindHands", "TeaBreak", "LongShift", "CalmCarer", "SteadyHand", "QuietHero", "DayShift"];
+   const nickFor = area => NICK_A[Math.floor(Math.random() * NICK_A.length)] + "_" + ((area || "").replace(/[^A-Za-z]/g, "").slice(0, 6) || String(Math.floor(10 + Math.random() * 89)));
+   $("#uNickGen").onclick = () => { $("#uNick").value = nickFor(obVal("uArea")); obRender(); };
+-  $("#uSex").addEventListener("change", () => { $("#uSexOtherWrap").hidden = $("#uSex").value !== "other"; });
+-  ["uAge", "uSex", "uArea", "uEmployer", "uNick"].forEach(id => $("#" + id).addEventListener("input", () => { $("#setupErr").hidden = true; }));
++  ["uArea", "uEmployer", "uNick"].forEach(id => $("#" + id).addEventListener("input", () => { $("#setupErr").hidden = true; }));
+   function profileCheck() {
+     const err = m => { $("#setupErr").textContent = m; $("#setupErr").hidden = false; return false; };
+-    if (obStep === 2) { const a = $("#uAge").value; if (!a) return err("Choose your age group."); if (a === "under18") return err("Shiftbuck is for care workers aged 18 and over."); }
+-    if (obStep === 3) {
++    if (obStep === 2) {
+       if (!obVal("uArea")) return err("Add your town or county, for example Leicester.");
+       const n = obVal("uNick"), first = obVal("uName").toLowerCase();
+       if (!/^[A-Za-z0-9_]{3,20}$/.test(n)) return err("Pick a nickname of 3 to 20 letters, numbers or _ with no spaces. Tap Suggest one for ideas.");
+@@ -938,10 +938,9 @@ import { forecast as forecastCore, shiftKind } from "./core/forecast.js";
+     return true;
+   }
+   const profileData = () => ({
+-    ageGroup: $("#uAge").value, sex: $("#uSex").value || null, sexOther: $("#uSex").value === "other" ? obVal("uSexOther") || null : null,
+     area: obVal("uArea"), employer: obVal("uEmployer") || null, nickname: obVal("uNick"), createdAt: new Date().toISOString()
+   });
+-  const OB_LAST = 8, OB_FIRST = window.SBAuth ? 1 : 0;
++  const OB_LAST = 7, OB_FIRST = window.SBAuth ? 1 : 0;
+   let obStep = 0, obDay = null, obType = 0, obWork = "care", obPicked = new Set(OB_PICK.care), obEdit = {};
+   const obVal = id => $("#" + id).value.trim();
+   const obTypesChosen = () => TYPE_LIB[obWork].filter(t => obPicked.has(t.name)).map(t => ({ ...t, ...(obEdit[obWork + "|" + t.name] || {}) }));
+@@ -951,6 +950,40 @@ import { forecast as forecastCore, shiftKind } from "./core/forecast.js";
+     const rate = Number(t.rate) > 0 ? Number(t.rate) : Number($("#uRate").value) || 0, sleep = Number($("#uSleep").value) || 0, h = typeHours(t);
+     return (h == null ? 0 : Math.max(0, h - (Number(t.breakHrs) || 0)) * rate) + (t.paid === "hours" ? 0 : sleep);
+   }
++  // ---- setup motion: steps slide in from the direction you're moving; the shift pay rolls to its new value ----
++  const calmMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
++  const springEase = () => getComputedStyle(document.body).getPropertyValue("--spring").trim() || "cubic-bezier(.22,1,.36,1)";
++  function animateSafe(el, frames, opts) { try { return el.animate(frames, opts); } catch (e) { try { return el.animate(frames, { ...opts, easing: "cubic-bezier(.22,1,.36,1)" }); } catch (e2) {} } }
++  function obEnter(dir) {
++    const el = document.querySelector(`.obstep[data-step="${obStep}"]`);
++    if (!el || !el.animate || calmMotion()) return;
++    animateSafe(el, [{ opacity: 0 }, { opacity: 1 }], { duration: 240, easing: "cubic-bezier(.22,1,.36,1)" });
++    animateSafe(el, [{ transform: `translate3d(${26 * dir}px,0,0)` }, { transform: "none" }], { duration: 420, easing: springEase() });
++  }
++  let obPayShown = 0, obPayRaf = 0;
++  function obPayTo(v) {
++    const el = $("#obPayV"); cancelAnimationFrame(obPayRaf);
++    if (calmMotion() || !el.offsetParent || v === obPayShown) { el.textContent = gbp(v); obPayShown = v; return; }
++    const from = obPayShown, t0 = performance.now(), d = 420;
++    const tick = now => { const k = Math.min(1, (now - t0) / d), e = 1 - Math.pow(1 - k, 3); obPayShown = from + (v - from) * e; el.textContent = gbp(obPayShown); if (k < 1) obPayRaf = requestAnimationFrame(tick); else obPayShown = v; };
++    obPayRaf = requestAnimationFrame(tick);
++  }
++  // Time pickers: each <input type="time"> in `box` gets an hour and a minute (5-minute steps) select in a pill.
++  // The real input stays (hidden) as the value holder, so the code that reads it doesn't change.
++  function obTimePickers(box) {
++    const p2 = n => String(n).padStart(2, "0");
++    box.querySelectorAll('input[type="time"]').forEach(inp => {
++      const pill = document.createElement("div"), hh = document.createElement("select"), mm = document.createElement("select"), colon = document.createElement("span");
++      pill.className = "tpick"; pill.setAttribute("role", "group"); pill.setAttribute("aria-label", (inp.closest("label")?.firstChild?.textContent || "Time").trim());
++      hh.setAttribute("aria-label", "Hour"); mm.setAttribute("aria-label", "Minutes"); colon.textContent = ":"; colon.setAttribute("aria-hidden", "true");
++      for (let h = 0; h < 24; h++) hh.add(new Option(p2(h), p2(h)));
++      for (let m = 0; m < 60; m += 5) mm.add(new Option(p2(m), p2(m)));
++      const [h, m] = (inp.value || "00:00").split(":"); hh.value = h; mm.value = p2(Math.round(Number(m) / 5) * 5 % 60);
++      const push = () => { inp.value = hh.value + ":" + mm.value; inp.dispatchEvent(new Event("input", { bubbles: true })); };
++      hh.onchange = mm.onchange = push;
++      pill.append(hh, colon, mm); inp.after(pill); inp.hidden = true;
++    });
++  }
+   function obLibRender() {
+     $("#obWork").querySelectorAll("[data-w]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.w === obWork)));
+     $("#obTypeLib").innerHTML = `<div class="obgroup">Tap the shifts you work</div><div class="obchips" role="group" aria-label="Shifts you work">` +
+@@ -959,6 +992,7 @@ import { forecast as forecastCore, shiftKind } from "./core/forecast.js";
+         <label>Starts<input type="time" data-k="start" value="${esc(t.start)}"></label><label>Finishes<input type="time" data-k="end" value="${esc(t.end)}"></label>
+         ${t.paid === "both" ? `<label>Paid hours<input type="number" data-k="hours" min="0" max="24" step="0.25" inputmode="decimal" value="${t.hours ?? ""}"></label>` : ""}
+         ${t.paid !== "sleep" ? `<label>Unpaid break (hrs)<input type="number" data-k="breakHrs" min="0" max="8" step="0.25" inputmode="decimal" value="${t.breakHrs ?? 0}"></label>` : ""}</div>`).join("") + `</div>` : "");
++    obTimePickers($("#obTypeLib"));
+   }
+   $("#obWork").addEventListener("click", e => { const b = e.target.closest("[data-w]"); if (!b || b.dataset.w === obWork) return; obWork = b.dataset.w; obPicked = new Set(OB_PICK[obWork]); obType = 0; obRender(); });
+   $("#obTypeLib").addEventListener("input", e => {
+@@ -973,12 +1007,12 @@ import { forecast as forecastCore, shiftKind } from "./core/forecast.js";
+     $("#obCount").textContent = obStep ? `Step ${obStep} of ${OB_LAST}` : "";
+     $("#obBack").hidden = obStep <= OB_FIRST;
+     $("#obNext").hidden = obStep === OB_LAST; $("#setupBtn").hidden = obStep !== OB_LAST;
+-    $("#obNext").textContent = obStep === 0 ? "Get started" : obStep === 7 && !obVal("uUsers") ? "Skip" : "Next";
++    $("#obNext").textContent = obStep === 0 ? "Get started" : obStep === 6 && !obVal("uUsers") ? "Skip" : "Next";
+     obLibRender();
+     const chosen = obTypesChosen();
+     $("#obPatPrev").innerHTML = chosen.length ? `You picked <b>${chosen.length}</b> shift${chosen.length === 1 ? "" : "s"}: ${chosen.map(t => esc(t.name)).join(", ")}` : "Pick at least one shift.";
+     $("#obTypes").innerHTML = chosen.map((t, i) => `<button type="button" data-t="${i}" aria-pressed="${obType === i}">${esc(t.name)}<small>${t.start}–${t.end}</small></button>`).join("") + `<button type="button" data-t="none" aria-pressed="${obType === "none"}">Not now</button>`;
+-    $("#obPay").hidden = obType === "none"; $("#obPayV").textContent = gbp(obShiftPay());
++    $("#obPay").hidden = obType === "none"; obPayTo(obShiftPay());
+     $("#setupBtn").textContent = obType === "none" || !chosen.length ? "Start my Shiftbook" : "Save and start";
+     if (!$("#obDate").value) $("#obDate").value = todayStr;
+     $("#setupErr").hidden = true;
+@@ -987,16 +1021,16 @@ import { forecast as forecastCore, shiftKind } from "./core/forecast.js";
+     const err = m => { $("#setupErr").textContent = m; $("#setupErr").hidden = false; return false; };
+     if (obStep === 1 && !obVal("uName")) return err("Add your first name.");
+     if (!profileCheck()) return false;
+-    if (obStep === 4 && !(Number($("#uRate").value) > 0)) return err("Add your hourly rate, for example 13.00.");
+-    if (obStep === 4 && !(Number($("#uSleep").value || 0) >= 0)) return err("The sleep-in rate can't be below zero.");
+-    if (obStep === 5) { const d = Number($("#uDay").value); if (!(d >= 1 && d <= 31 && Number.isInteger(d))) return err("Type the day your pay month starts, from 1 to 31."); }
+-    if (obStep === 6 && !obTypesChosen().length) return err("Pick at least one shift you work. You can change them later.");
+-    if (obStep === 6) { const bad = obTypesChosen().find(t => !t.start || !t.end || (t.paid === "both" && !(t.hours > 0)) || (t.paid !== "sleep" && (Number(t.breakHrs) || 0) >= (typeHours(t) || 0))); if (bad) return err(`Check the times and break for ${bad.name}.`); }
++    if (obStep === 3 && !(Number($("#uRate").value) > 0)) return err("Add your hourly rate, for example 13.00.");
++    if (obStep === 3 && !(Number($("#uSleep").value || 0) >= 0)) return err("The sleep-in rate can't be below zero.");
++    if (obStep === 4) { const d = Number($("#uDay").value); if (!(d >= 1 && d <= 31 && Number.isInteger(d))) return err("Type the day your pay month starts, from 1 to 31."); }
++    if (obStep === 5 && !obTypesChosen().length) return err("Pick at least one shift you work. You can change them later.");
++    if (obStep === 5) { const bad = obTypesChosen().find(t => !t.start || !t.end || (t.paid === "both" && !(t.hours > 0)) || (t.paid !== "sleep" && (Number(t.breakHrs) || 0) >= (typeHours(t) || 0))); if (bad) return err(`Check the times and break for ${bad.name}.`); }
+     return true;
+   }
+-  const obGo = n => { obStep = Math.max(OB_FIRST, Math.min(OB_LAST, n)); obRender(); const f = document.querySelector(`.obstep[data-step="${obStep}"] input`); if (f && obStep) setTimeout(() => f.focus({ preventScroll: true }), 50); window.scrollTo({ top: 0 }); };
+-  $("#obNext").onclick = () => { if (obCheck()) obGo(obStep + 1 + (obStep === 6 && obWork !== "care" ? 1 : 0)); };
+-  $("#obBack").onclick = () => obGo(obStep - 1 - (obStep === 8 && obWork !== "care" ? 1 : 0));
++  const obGo = n => { const prev = obStep; obStep = Math.max(OB_FIRST, Math.min(OB_LAST, n)); obRender(); obEnter(obStep >= prev ? 1 : -1); const f = document.querySelector(`.obstep[data-step="${obStep}"] input`); if (f && obStep) setTimeout(() => f.focus({ preventScroll: true }), 50); window.scrollTo({ top: 0 }); };
++  $("#obNext").onclick = () => { if (obCheck()) obGo(obStep + 1 + (obStep === 5 && obWork !== "care" ? 1 : 0)); };
++  $("#obBack").onclick = () => obGo(obStep - 1 - (obStep === 7 && obWork !== "care" ? 1 : 0));
+   $("#setupForm").addEventListener("keydown", e => { if (e.key === "Enter" && e.target.tagName === "INPUT" && obStep < OB_LAST) { e.preventDefault(); $("#obNext").click(); } });
+   $("#obTypes").addEventListener("click", e => { const b = e.target.closest("[data-t]"); if (!b) return; obType = b.dataset.t === "none" ? "none" : Number(b.dataset.t); obRender(); });
+   ["uName", "uRole", "uRate", "uSleep", "uDay", "uUsers"].forEach(id => $("#" + id).addEventListener("input", obRender));
+@@ -1004,8 +1038,8 @@ import { forecast as forecastCore, shiftKind } from "./core/forecast.js";
+     e.preventDefault();
+     if (obStep !== OB_LAST) { $("#obNext").click(); return; }
+     const name = obVal("uName"), rate = Number($("#uRate").value), sleep = Number($("#uSleep").value) || 0, day = Number($("#uDay").value);
+-    if (!name || !(rate > 0) || !(day >= 1 && day <= 31)) { obGo(!name ? 1 : !(rate > 0) ? 4 : 5); obCheck(); return; }
+-    if (!$("#uAge").value || $("#uAge").value === "under18" || !obVal("uNick")) { obGo(!$("#uAge").value || $("#uAge").value === "under18" ? 2 : 3); obCheck(); return; }
++    if (!name || !(rate > 0) || !(day >= 1 && day <= 31)) { obGo(!name ? 1 : !(rate > 0) ? 3 : 4); obCheck(); return; }
++    if (!obVal("uNick")) { obGo(2); obCheck(); return; }
+     const types = obTypesChosen().map(t => ({ ...t })), t0 = types[obType], users = obWork === "care" ? obVal("uUsers").split(",").map(x => x.trim()).filter(Boolean) : [], pay = obShiftPay();
+     $("#setupBtn").disabled = true; $("#setupErr").hidden = true;
+     try {
+diff --git a/app/src/auth.js b/app/src/auth.js
+index 646f947..c6dcd86 100644
+--- a/app/src/auth.js
++++ b/app/src/auth.js
+@@ -45,8 +45,31 @@
+   // ---- screens ----
+   let kind = null, ident = null, demoCode = null, resendAt = 0, timer = null, busy = false;
+   const root = () => $("#authBox");
+-  function setBusy(on, btn) { busy = on; root().querySelectorAll("button").forEach(b => b.disabled = on); if (btn) btn.dataset.label ||= btn.textContent, btn.textContent = on ? "Please wait…" : btn.dataset.label; }
+-  function err(msg) { const e = $("#authErr"); if (!e) return; e.textContent = msg || ""; e.hidden = !msg; }
++
++  // ---- motion: one small system. Springs for movement, ease-out for fades, nothing when reduced motion is on ----
++  const calm = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
++  const tok = n => getComputedStyle(document.body).getPropertyValue(n).trim();
++  function play(el, frames, opts) {
++    if (!el || !el.animate || calm()) return;
++    try { return el.animate(frames, opts); }
++    catch (e) { try { return el.animate(frames, { ...opts, easing: "cubic-bezier(.22,1,.36,1)" }); } catch (e2) {} }
++  }
++  let navDir = 1;                                   // 1 = going forward, -1 = going back
++  function enter(el, dir) {
++    if (!el) return;
++    play(el, [{ opacity: 0 }, { opacity: 1 }], { duration: 240, easing: "cubic-bezier(.22,1,.36,1)" });
++    play(el, [{ transform: `translate3d(${26 * dir}px,0,0)` }, { transform: "none" }], { duration: 420, easing: tok("--spring") || "cubic-bezier(.22,1,.36,1)" });
++  }
++  function shake(el) {
++    play(el, [{ transform: "translateX(0)" }, { transform: "translateX(-8px)" }, { transform: "translateX(7px)" }, { transform: "translateX(-5px)" }, { transform: "translateX(3px)" }, { transform: "translateX(0)" }], { duration: 420, easing: "cubic-bezier(.36,.07,.19,.97)" });
++  }
++  function watchScreens() {                          // every new screen slides in from the side you're heading towards
++    const r = root(); if (!r || r.dataset.watched) return; r.dataset.watched = "1";
++    r.addEventListener("click", e => { navDir = e.target.closest(".linkback") ? -1 : 1; }, true);
++    new MutationObserver(() => { const w = r.querySelector(".welcome"); if (!(w && !w.classList.contains("again") && !r.dataset.seen)) enter(r, navDir); r.dataset.seen = "1"; }).observe(r, { childList: true });
++  }
++  function setBusy(on, btn) { busy = on; root().querySelectorAll("button").forEach(b => b.disabled = on); if (btn) btn.dataset.label ||= btn.textContent, btn.textContent = on ? "Please wait…" : btn.dataset.label, btn.classList.toggle("busy", on); }
++  function err(msg) { const e = $("#authErr"); if (!e) return; e.textContent = msg || ""; e.hidden = !msg; if (msg) shake(e.closest("form")); }
+ 
+   // Two clear paths: "Create my Shiftbuck" (sign up) and "I already have an account" (sign in).
+   // Both use a code; signing in with a number or email we don't know offers to create the account instead.
+@@ -58,24 +81,58 @@
+   const up = () => intent === "signup";
+   const what = k => k === "phone" ? "phone number" : "email";
+ 
++  let introPlayed = false;
+   function screenWelcome() {
+     kind = null; ident = null; clearInterval(timer);
++    const again = introPlayed; introPlayed = true;
++    const ico = d => `<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d.replace(/<(path|circle) /g, "<$1 pathLength=\"1\" ")}</svg>`;
+     root().innerHTML = `
+-      <svg class="oblogo" viewBox="0 0 120 120" aria-hidden="true"><rect width="120" height="120" rx="28" fill="#C8102E"/><circle cx="60" cy="65" r="40" fill="#B07800"/><circle cx="60" cy="57" r="40" fill="#F2B705"/><circle cx="60" cy="57" r="37.5" fill="none" stroke="#FFE27A" stroke-width="5" stroke-dasharray="2.6 2.6"/><circle cx="60" cy="57" r="31" fill="#FFD23F" stroke="#C98A00" stroke-width="2.5"/><path d="M60 32v5M60 77v5M35 57h5M80 57h5" stroke="#14213D" stroke-width="4" stroke-linecap="round"/><path d="M60 57V41M60 57l12 8" fill="none" stroke="#14213D" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="60" cy="57" r="4.5" fill="#C8102E" stroke="#14213D" stroke-width="2.5"/><path d="M36 45a27 27 0 0 1 11-12" fill="none" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round" opacity=".9"/></svg>
+-      <h2 class="obh">Know your pay before payday</h2>
+-      <ul class="obwhy">
+-        <li><b>See what every shift pays</b>, including sleep-ins, as you log it.</li>
+-        <li><b>Check your payslip</b> and your take-home after tax.</li>
+-        <li><b>Get a warning</b> when you're not getting enough rest.</li>
+-      </ul>
+-      <div class="authstack">
+-        <button type="button" class="btn authbtn" id="goUp">Create my Shiftbuck</button>
+-        <button type="button" class="btn secondary authbtn" id="goIn">I already have an account</button>
+-      </div>
+-      <p class="obpriv">Free for care workers. Your shifts and pay are private to you; your employer can't see them. <a href="#privacy" data-info="privacy">How your data is kept</a></p>
+-      ${mode === "demo" ? `<p class="authdemo"><b>Demo mode.</b> No codes are really sent and your data stays in this browser. Add your Supabase details in <code>src/config.js</code> to go live.</p>` : ""}`;
++      <div class="welcome${again ? " again" : ""}">
++        <div class="wbody">
++          <div class="wcard" aria-hidden="true">
++            <div class="wtag">Example shift</div>
++            <div class="wtop"><span class="wdot"></span>Day shift · 08:00 to 20:00</div>
++            <div class="wpay num" id="wPay">£130.00</div>
++            <div class="wmeta">10 paid hours after a 2 hour break</div>
++            <div class="wbar"><i></i></div>
++          </div>
++          <h2 class="obh wh">Know your pay before payday</h2>
++          <p class="wsub">The shift log for care and support workers. Free, and private to you.</p>
++          <ul class="wfeat">
++            <li><span class="wico">${ico('<circle cx="12" cy="12" r="9"/><path d="M14.8 8.6a3 3 0 0 0-2.6-1.4c-1.6 0-2.7 1-2.7 2.4 0 1 .5 1.7 1.3 2.300v1.8c0 1-.5 1.8-1.5 2.400h6M8.8 12.2h4.2"/>')}</span><div><b>See what every shift pays</b><span>Sleep-ins and breaks included, as you log it.</span></div></li>
++            <li><span class="wico">${ico('<path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/>')}</span><div><b>Check your payslip</b><span>See your take-home after tax and compare it.</span></div></li>
++            <li><span class="wico">${ico('<path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z"/>')}</span><div><b>Get a rest warning</b><span>A nudge when you're not getting enough time off.</span></div></li>
++          </ul>
++        </div>
++        <div class="wact">
++          <div class="authstack">
++            <button type="button" class="btn authbtn" id="goUp">Sign up</button>
++            <button type="button" class="btn secondary authbtn" id="goIn">Sign in</button>
++          </div>
++          <p class="obpriv">Your shifts and pay are private. Your employer can't see them. <a href="#privacy" data-info="privacy">How your data is kept</a></p>
++          ${mode === "demo" ? `<p class="authdemo"><b>Demo mode.</b> No codes are really sent and your data stays in this browser. Add your Supabase details in <code>src/config.js</code> to go live.</p>` : ""}
++        </div>
++      </div>`;
+     $("#goUp").onclick = () => { intent = "signup"; screenChoose(); };
+     $("#goIn").onclick = () => { intent = "signin"; screenChoose(); };
++    if (!again) {
++      countUp($("#wPay"), 130);
++      // the logo is a coin: it turns over once as the page arrives
++      play(document.querySelector(".top .logo"), [{ transform: "perspective(500px) rotateY(0deg)" }, { transform: "perspective(500px) rotateY(360deg)" }], { duration: 900, delay: 120, easing: tok("--spring") || "cubic-bezier(.22,1,.36,1)" });
++    }
++  }
++  // The example shift pay counts up once. With reduced motion it just shows the number.
++  function countUp(el, to) {
++    if (!el) return;
++    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
++    const t0 = performance.now() + 350, dur = 900;
++    el.textContent = "£0.00";
++    const tick = now => {
++      const k = Math.min(1, Math.max(0, (now - t0) / dur)), e = 1 - Math.pow(1 - k, 3);
++      el.textContent = "£" + (to * e).toFixed(2);
++      if (k < 1 && document.body.contains(el)) requestAnimationFrame(tick);
++    };
++    requestAnimationFrame(tick);
+   }
+ 
+   function screenChoose() {
+@@ -141,7 +198,7 @@
+         ${pwField("authPw", up() ? "Choose a password" : "Password", up() ? `at least ${PW_MIN} characters` : "", up() ? "new-password" : "current-password")}
+         <div class="banner bad" id="authErr" hidden></div>
+         <button class="btn authbtn" type="submit" id="authGo">${up() ? "Create my account" : "Sign in"}</button>
+-        ${up() ? `<p class="obpriv" style="margin:0">By creating an account you agree to the <a href="#terms" data-info="terms">Terms of use</a> and to how we keep your data in our <a href="#privacy" data-info="privacy">privacy notice</a>.</p>` : `<button type="button" class="linkbtn2" id="pwForgot">Forgot your password?</button>`}
++        ${up() ? `<p class="obpriv" style="margin:0">By creating an account you confirm you're 18 or over and agree to the <a href="#terms" data-info="terms">Terms of use</a> and to how we keep your data in our <a href="#privacy" data-info="privacy">privacy notice</a>.</p>` : `<button type="button" class="linkbtn2" id="pwForgot">Forgot your password?</button>`}
+       </form>`;
+     $("#authBack").onclick = screenChoose;
+     wireShow();
+@@ -291,7 +348,7 @@
+           <input id="authId" ${k === "phone" ? 'type="tel" inputmode="tel" autocomplete="tel" placeholder="07700 900123"' : 'type="email" inputmode="email" autocomplete="email" autocapitalize="off" placeholder="you@example.com"'}></div>
+         <div class="banner bad" id="authErr" hidden></div>
+         <button class="btn authbtn" type="submit" id="authSend">Send my code</button>
+-        ${up() ? `<p class="obpriv" style="margin:0">By creating an account you agree to the <a href="#terms" data-info="terms">Terms of use</a> and to how we keep your data in our <a href="#privacy" data-info="privacy">privacy notice</a>.</p>` : ""}
++        ${up() ? `<p class="obpriv" style="margin:0">By creating an account you confirm you're 18 or over and agree to the <a href="#terms" data-info="terms">Terms of use</a> and to how we keep your data in our <a href="#privacy" data-info="privacy">privacy notice</a>.</p>` : ""}
+       </form>`;
+     $("#authBack").onclick = screenChoose;
+     setTimeout(() => $("#authId")?.focus(), 50);
+@@ -392,7 +449,7 @@
+           <input id="authId" type="email" inputmode="email" autocomplete="email" autocapitalize="off" placeholder="you@gmail.com"></div>
+         <div class="banner bad" id="authErr" hidden></div>
+         <button class="btn secondary authbtn gbtn" type="submit" id="authGo"><svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.8 1.1 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3 0 5.8 1.1 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>Continue</button>
+-        ${up() ? `<p class="obpriv" style="margin:0">By creating an account you agree to the <a href="#terms" data-info="terms">Terms of use</a> and to how we keep your data in our <a href="#privacy" data-info="privacy">privacy notice</a>.</p>` : ""}
++        ${up() ? `<p class="obpriv" style="margin:0">By creating an account you confirm you're 18 or over and agree to the <a href="#terms" data-info="terms">Terms of use</a> and to how we keep your data in our <a href="#privacy" data-info="privacy">privacy notice</a>.</p>` : ""}
+       </form>`;
+     $("#authBack").onclick = screenChoose;
+     setTimeout(() => $("#authId")?.focus(), 50);
+@@ -468,7 +525,8 @@
+   // ---- start ----
+   function needSignIn() {
+     document.body.classList.add("authing");
+-    const sy = document.querySelector("#sync span:last-child"); if (sy) sy.textContent = "Not signed in";
++    watchScreens();
++    const tc = document.querySelector('meta[name="theme-color"]'); if (tc) tc.content = "#FFF8E6";
+     const box = $("#view-auth"); if (box) box.hidden = false;
+     let out = false; try { out = sessionStorage.getItem("shiftbook:signedout") === "1"; sessionStorage.removeItem("shiftbook:signedout"); } catch (e) {}
+     screenWelcome();
+diff --git a/app/src/styles.css b/app/src/styles.css
+index f03c79f..d5a036f 100644
+--- a/app/src/styles.css
++++ b/app/src/styles.css
+@@ -476,3 +476,142 @@ body.authing .so{display:none}
+ .acctpause{display:flex;flex-direction:column;gap:10px;margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
+ .acctpause .btn{align-self:flex-start}
+ .linkinline{border:0;background:transparent;color:var(--day);font:inherit;font-weight:700;cursor:pointer;padding:0;text-decoration:underline}
++
++/* ===== Sign-up theme: light with gold. Only while signing in or setting up; the rest of the app keeps its look. ===== */
++body.authing,body.onboarding{
++  --g-bg:#FFF8E6; --g-card:#FFFFFF; --g-ink:#2B2113; --g-muted:#6B5D43; --g-line:#EBDDB8;
++  --g-gold:#E3A918; --g-gold-hi:#F2C23F; --g-gold-deep:#8A6200; --g-soft:#FBEBBD;
++  --bg:var(--g-bg); --surface:var(--g-card); --sunk:#FBF1D6; --line:var(--g-line);
++  --ink:var(--g-ink); --muted:var(--g-muted); --faint:#9A8A68; --focus:var(--g-gold-deep);
++  --day:var(--g-gold-deep); --day-soft:var(--g-soft); --brand:var(--g-gold); --c4:var(--g-gold);
++  --bad:#A8201A; --bad-soft:#FBE3DF; --night-soft:var(--g-soft); color-scheme:light}
++body.authing::before,body.onboarding::before{background:var(--g-bg)!important}
++
++/* header: same place, light ground, a bigger wordmark, no status text */
++body.authing .top,body.onboarding .top{background:var(--g-bg)!important;box-shadow:0 0 0 100vmax var(--g-bg);color:var(--g-ink);padding-block:18px 16px}
++body.authing .top::after,body.onboarding .top::after{height:3px;background:linear-gradient(90deg,var(--g-gold-hi),var(--g-gold) 50%,var(--g-gold-hi))}
++body.authing .brand .who,body.onboarding .brand .who,body.authing .sync,body.onboarding .sync{display:none!important}
++body.authing .top h1,body.onboarding .top h1{font-size:clamp(30px,8.5vw,38px);line-height:1;color:var(--g-ink)}
++body.authing .top h1 .wm,body.onboarding .top h1 .wm{color:var(--g-gold-deep)}
++body.authing .logo,body.onboarding .logo{width:52px;height:52px;border-radius:15px;box-shadow:0 0 0 2px var(--g-gold),0 4px 12px rgba(138,98,0,.22)}
++body.authing .brandmark,body.onboarding .brandmark{gap:12px}
++@media (min-width:1100px){
++  body.authing .wrap,body.onboarding .wrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));max-width:980px;margin:0 auto}
++  body.authing .top,body.onboarding .top{position:sticky!important;top:env(safe-area-inset-top,0px);left:auto;bottom:auto;width:auto;flex-direction:row!important;align-items:center!important;justify-content:flex-start!important;padding:18px 0 16px;overflow:visible;clip-path:inset(0 -100vmax)}
++  body.authing .top::after,body.onboarding .top::after{inset:auto -100vmax 0;width:auto;height:3px;background:linear-gradient(90deg,var(--g-gold-hi),var(--g-gold) 50%,var(--g-gold-hi))}
++  body.authing .wrap > section.view,body.onboarding .wrap > section.view{max-width:560px;margin-inline:auto}
++}
++
++/* no card chrome on the sign-up screens: the page itself is the screen */
++body.authing .card.onb,body.onboarding .card.onb{background:transparent;border:0;border-top:0;box-shadow:none;padding:0;max-width:520px;margin:0 auto}
++body.authing .card:not(.hero),body.onboarding .card:not(.hero){border-top-width:0}
++body.authing .obh,body.onboarding .obh{color:var(--g-ink);font-weight:700;letter-spacing:-.015em}
++
++/* buttons: gold primary, outlined secondary */
++body.authing .btn,body.onboarding .btn{background:linear-gradient(180deg,var(--g-gold-hi),var(--g-gold));color:var(--g-ink);border:0;box-shadow:0 1px 0 rgba(255,255,255,.55) inset,0 6px 14px rgba(138,98,0,.22);min-height:52px;transition:transform .16s ease-out,box-shadow .16s ease-out}
++body.authing .btn.secondary,body.onboarding .btn.secondary{background:transparent;border:1.5px solid var(--g-gold-deep);color:var(--g-gold-deep);box-shadow:none}
++body.authing .btn:active,body.onboarding .btn:active{transform:scale(.97)}
++@media (hover:hover){
++  body.authing .btn:hover,body.onboarding .btn:hover{box-shadow:0 1px 0 rgba(255,255,255,.55) inset,0 8px 18px rgba(138,98,0,.3)}
++  body.authing .btn.secondary:hover,body.onboarding .btn.secondary:hover{background:var(--g-soft)}
++}
++body.authing .btn:disabled,body.onboarding .btn:disabled{opacity:.55;transform:none}
++
++/* fields */
++body.authing input,body.authing select,body.onboarding input,body.onboarding select{background:var(--g-card);border:1.5px solid var(--g-line);color:var(--g-ink);transition:border-color .15s ease-out,box-shadow .15s ease-out}
++body.authing input:focus,body.authing select:focus,body.onboarding input:focus,body.onboarding select:focus{outline:0;border-color:var(--g-gold);box-shadow:0 0 0 4px rgba(227,169,24,.25)}
++body.authing .field>label,body.onboarding .field>label,body.authing .field>.lbl,body.onboarding .field>.lbl{color:var(--g-ink)}
++body.authing .pwshow{border:1.5px solid var(--g-line);color:var(--g-gold-deep);background:var(--g-card)}
++body.authing .obpriv a,body.authing .linkback,body.authing .linkbtn2,body.authing .linkinline,body.onboarding .obpriv a{color:var(--g-gold-deep)}
++body.authing .author::before,body.authing .author::after{background:var(--g-line)}
++body.authing .authdemo{background:var(--g-soft);border:1px dashed var(--g-gold)}
++body.onboarding .onbbar{background:var(--g-soft)}
++body.onboarding .onbbar i{background:linear-gradient(90deg,var(--g-gold),var(--g-gold-hi))}
++body.onboarding .obchips button,body.onboarding .obtypes button{border:1.5px solid var(--g-line);background:var(--g-card)}
++body.onboarding .obchips button[aria-pressed="true"],body.onboarding .obtypes button[aria-pressed="true"]{background:var(--g-soft);border-color:var(--g-gold);color:var(--g-ink);box-shadow:0 0 0 3px rgba(227,169,24,.2)}
++body.onboarding .obpreview{background:var(--g-soft);color:var(--g-ink)}
++body.onboarding .obpay{background:linear-gradient(135deg,#3A2A0E,#5A4115);color:#FFF3D1}
++body.onboarding .obpay b{color:var(--g-gold-hi)}
++
++/* welcome screen: fills the phone screen, actions stay within thumb reach */
++.welcome{display:flex;flex-direction:column;justify-content:space-between;gap:22px;min-height:calc(100dvh - 170px - env(safe-area-inset-top,0px))}
++.wbody{display:flex;flex-direction:column;gap:18px}
++.wh{font-size:clamp(30px,8.4vw,40px)!important;line-height:1.08;margin-top:4px}
++.wsub{margin:-8px 0 0;color:var(--g-muted,var(--muted));font-size:16.5px;max-width:34ch}
++.wcard{position:relative;align-self:stretch;padding:18px 18px 16px;border-radius:20px;color:#FFF3D1;background:linear-gradient(145deg,#3A2A0E,#5A4115);box-shadow:0 14px 30px rgba(90,65,21,.28);overflow:hidden;animation:wcardin .8s var(--spring) backwards}
++.wcard::after{content:"";position:absolute;right:-40px;top:-40px;width:140px;height:140px;border-radius:50%;background:radial-gradient(circle,rgba(242,194,63,.45),rgba(242,194,63,0) 70%)}
++.wtag{position:absolute;right:14px;top:14px;font-size:11.5px;font-weight:600;color:#FFE9AE;border:1px solid rgba(255,233,174,.45);border-radius:999px;padding:2px 9px;z-index:1}
++.wtop{display:flex;align-items:center;gap:8px;font-weight:600;font-size:14px;color:#FFE9AE}
++.wdot{width:9px;height:9px;border-radius:50%;background:var(--g-gold-hi);box-shadow:0 0 0 4px rgba(242,194,63,.25)}
++.wpay{font-size:46px;line-height:1.1;font-weight:600;color:#F7CB57;margin:10px 0 2px;letter-spacing:-.02em}
++.wmeta{font-size:14px;color:#E9D7A5}
++.wbar{height:6px;border-radius:999px;background:rgba(255,233,174,.18);margin-top:14px;overflow:hidden}
++.wbar i{display:block;height:100%;width:83%;border-radius:inherit;background:linear-gradient(90deg,var(--g-gold),var(--g-gold-hi));transform-origin:left;animation:wfill .9s .5s var(--spring) backwards}
++.wfeat{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:14px}
++.wfeat li{display:flex;gap:14px;align-items:center;background:none!important;padding:0!important;animation:wrise .55s var(--ease-out) backwards}
++.wfeat li:nth-child(1){animation-delay:.3s}.wfeat li:nth-child(2){animation-delay:.38s}.wfeat li:nth-child(3){animation-delay:.46s}
++.wico{flex:none;width:46px;height:46px;border-radius:14px;display:grid;place-items:center;background:var(--g-soft);color:var(--g-gold-deep);border:1px solid var(--g-line)}
++.wfeat b{display:block;font-size:16px;color:var(--g-ink)}
++.wfeat span span,.wfeat div>span{display:block;font-size:14px;color:var(--muted);line-height:1.35}
++.wact{display:flex;flex-direction:column;gap:12px;padding:6px 0 4px}
++@keyframes wrise{from{opacity:0;transform:translateY(14px)}}
++@keyframes wcardin{from{opacity:0;transform:translateY(28px) scale(.955)}}
++@keyframes wfill{from{transform:scaleX(0)}}
++
++/* time pickers: hour and minute in one pill */
++.tpick{display:flex;align-items:center;justify-content:center;gap:2px;height:56px;border-radius:14px;border:1.5px solid var(--g-line,var(--line));background:var(--surface);transition:border-color .15s ease-out,box-shadow .15s ease-out}
++.tpick:focus-within{border-color:var(--g-gold,var(--ink));box-shadow:0 0 0 4px rgba(227,169,24,.25)}
++.tpick select{appearance:none;-webkit-appearance:none;width:auto!important;min-width:52px;border:0!important;background:transparent!important;box-shadow:none!important;padding:8px 6px!important;text-align:center;text-align-last:center;font-family:var(--f-num);font-variant-numeric:tabular-nums;font-size:26px!important;font-weight:600;color:var(--ink);cursor:pointer;border-radius:10px!important}
++.tpick select:focus-visible{outline:2px solid var(--g-gold-deep,var(--focus));outline-offset:-2px}
++.tpick>span{font-family:var(--f-num);font-size:26px;font-weight:600;color:var(--g-gold-deep,var(--muted));padding-bottom:3px}
++html:has(body.authing),html:has(body.onboarding){--bg:#FFF8E6;background:#FFF8E6}
++
++/* ===== Motion system for the sign-up screens =====
++   Rules: only transform and opacity move. Springs (slight overshoot, like iOS) for things that travel,
++   ease-out for fades, 100ms for presses. With reduced motion on, everything below is switched off by the
++   global rule at the top, and every animated element rests in its finished state, so nothing is lost. */
++body.authing,body.onboarding{
++  --ease-out:cubic-bezier(.22,1,.36,1);
++  --press:cubic-bezier(.3,.7,.4,1);
++  --spring:cubic-bezier(.34,1.35,.64,1);
++  -webkit-tap-highlight-color:transparent}
++@supports (transition-timing-function:linear(0,1)){
++  body.authing,body.onboarding{--spring:linear(0,.047,.156,.293,.434,.565,.679,.774,.848,.905,.947,.975,.994,1.006,1.012,1.015,1.015,1.014,1.012,1.01,1.008,1.006,1.004,1.003,1.002,1.001,1.001,1,1,1,1)}
++}
++body.authing button,body.onboarding button,body.authing a,body.onboarding a{touch-action:manipulation}
++
++/* buttons: sink on press (fast), rise back on a spring */
++body.authing .btn,body.onboarding .btn{transition:transform .5s var(--spring),box-shadow .25s var(--ease-out),background-color .2s var(--ease-out);will-change:transform}
++body.authing .btn:active,body.onboarding .btn:active{transform:scale(.965);transition-duration:.09s,.09s,.2s;transition-timing-function:var(--press)}
++body.authing .btn.busy::before{content:"";display:inline-block;width:15px;height:15px;margin-right:10px;vertical-align:-2px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:wspin .7s linear infinite}
++@keyframes wspin{to{transform:rotate(360deg)}}
++
++/* errors arrive, they don't pop */
++body.authing .banner.bad:not([hidden]),body.onboarding .banner.bad:not([hidden]){animation:wbanner .3s var(--ease-out) backwards}
++@keyframes wbanner{from{opacity:0;transform:translateY(-6px)}}
++
++/* the example card's gold sheen: one pass, after the number has landed */
++.wcard::before{content:"";position:absolute;top:-25%;bottom:-25%;left:-45%;width:38%;opacity:0;pointer-events:none;z-index:1;
++  background:linear-gradient(90deg,rgba(255,236,170,0),rgba(255,236,170,.3),rgba(255,236,170,0));transform:skewX(-18deg);
++  animation:wsheen 1.1s 1.3s var(--ease-out)}
++@keyframes wsheen{0%{opacity:0;transform:translateX(0) skewX(-18deg)}12%{opacity:1}88%{opacity:1}100%{opacity:0;transform:translateX(420%) skewX(-18deg)}}
++
++/* feature icons draw themselves in, row by row (pathLength is set to 1 in auth.js) */
++.wico svg *{stroke-dasharray:1;stroke-dashoffset:0;animation:wdraw .9s var(--ease-out) backwards}
++.wfeat li:nth-child(1) .wico svg *{animation-delay:.45s}.wfeat li:nth-child(2) .wico svg *{animation-delay:.53s}.wfeat li:nth-child(3) .wico svg *{animation-delay:.61s}
++@keyframes wdraw{from{stroke-dashoffset:1}}
++
++/* coming back to the welcome page: no replay of the intro */
++.welcome.again .wcard,.welcome.again .wcard::before,.welcome.again .wbar i,.welcome.again .wfeat li,.welcome.again .wico svg *{animation:none!important}
++
++/* setup: the progress bar and chosen options settle on a spring */
++body.onboarding .onbbar i{transition:width .6s var(--spring)}
++body.onboarding .obchips button[aria-pressed="true"],body.onboarding .obtypes button[aria-pressed="true"]{animation:wpop .45s var(--spring)}
++body.onboarding .obchips button,body.onboarding .obtypes button{transition:background-color .2s var(--ease-out),border-color .2s var(--ease-out),box-shadow .25s var(--ease-out),transform .45s var(--spring)}
++body.onboarding .obchips button:active,body.onboarding .obtypes button:active{transform:scale(.96);transition-duration:.09s}
++@keyframes wpop{from{transform:scale(.94)}}
++body.onboarding .tpick select{transition:background-color .15s var(--ease-out)}
++@media (hover:hover){body.onboarding .tpick select:hover{background:var(--g-soft)!important}}
++.strow .tpick{height:52px}
++.strow .tpick select{font-size:22px!important;min-width:44px}
++.strow .tpick>span{font-size:22px}

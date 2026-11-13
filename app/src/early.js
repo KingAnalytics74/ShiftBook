@@ -13,7 +13,7 @@
   h.classList.add("boot");
   if (!signed) {
     h.classList.add("boot-light");
-    var tc = document.querySelector('meta[name="theme-color"]'); if (tc) tc.setAttribute("content", "#FFF8E6");
+    var tc = document.querySelector('meta[name="theme-color"]'); if (tc) tc.setAttribute("content", "#F9F8F4");
   }
   var done = false;
   window.SBReveal = function () {
