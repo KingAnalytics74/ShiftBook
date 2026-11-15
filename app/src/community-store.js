@@ -44,7 +44,9 @@
         safe(rpc("dm_blocked"), [])
       ]);
       if (!feed.error) {
-        st.posts = feed.data.map(r => ({ id: r.id, pid: r.author_id, mine: r.mine, nick: r.nickname, area: r.area, space: r.space, text: r.body, at: r.created_at, replyTo: r.reply_to }));
+        // likes is null until the database has the likes columns (supabase/schema.sql), which keeps the like button hidden
+        st.posts = feed.data.map(r => ({ id: r.id, pid: r.author_id, mine: r.mine, nick: r.nickname, area: r.area, space: r.space, text: r.body, at: r.created_at, replyTo: r.reply_to,
+          likes: typeof r.likes === "number" ? r.likes : null, liked: !!r.liked }));
         st.hidden = new Set(feed.data.filter(r => r.hidden).map(r => r.id));
       }
       if (!people.error) {
@@ -87,6 +89,7 @@
       report: (id, reason) => call("community_report", { p_id: id, p_reason: reason }),
       hide: id => call("community_hide", { p_id: id, p_hidden: true }),
       unhide: id => call("community_hide", { p_id: id, p_hidden: false }),
+      like: (id, on) => call("community_like", { p_id: id, p_on: !!on }),
       // profile
       async syncProfile({ nick, area }) {
         if (!nick) return;

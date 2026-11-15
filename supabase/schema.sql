@@ -89,6 +89,16 @@ create table if not exists public.community_reports (
   primary key (post_id, reporter_id)
 );
 
+-- Likes: one per person per post. Nobody reads this table directly; the feed shows how many likes a post has and
+-- whether you liked it, never who liked it. Likes go when the post or the account goes.
+create table if not exists public.community_likes (
+  post_id    uuid not null references public.community_posts (id) on delete cascade,
+  user_id    uuid not null references auth.users (id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (post_id, user_id)
+);
+create index if not exists community_likes_user_idx on public.community_likes (user_id, created_at desc);
+
 -- Add moderators by hand: insert into public.community_moderators (user_id) values ('<their user id>');
 create table if not exists public.community_moderators (
   user_id uuid primary key references auth.users (id) on delete cascade
@@ -111,6 +121,7 @@ alter table public.community_profiles   enable row level security;
 alter table public.community_posts      enable row level security;
 alter table public.community_reports    enable row level security;
 alter table public.community_moderators enable row level security;
+alter table public.community_likes      enable row level security;
 
 create or replace function public.community_is_moderator()
 returns boolean language sql stable security definer set search_path = public as $$
@@ -122,7 +133,9 @@ $$;
 create or replace view public.community_feed as
   select p.id, p.nickname, p.area, p.space, p.body, p.reply_to, p.created_at, p.hidden,
          (p.user_id = auth.uid()) as mine,
-         (select pr.id from public.community_profiles pr where pr.user_id = p.user_id) as author_id
+         (select pr.id from public.community_profiles pr where pr.user_id = p.user_id) as author_id,
+         (select count(*)::int from public.community_likes l where l.post_id = p.id) as likes,
+         exists (select 1 from public.community_likes l where l.post_id = p.id and l.user_id = auth.uid()) as liked
   from public.community_posts p
   where auth.uid() is not null
     and (not p.hidden or p.user_id = auth.uid() or public.community_is_moderator());
@@ -186,12 +199,30 @@ begin
   update public.community_posts set hidden = p_hidden where id = p_id;
 end; $$;
 
+-- Like or unlike a post you can see, as yourself. 300 likes an hour stops automated liking.
+create or replace function public.community_like(p_id uuid, p_on boolean)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  if auth.uid() is null then raise exception 'Not signed in'; end if;
+  if p_on then
+    if not exists (select 1 from public.community_posts where id = p_id and not hidden) then
+      raise exception 'That post is no longer available';
+    end if;
+    if (select count(*) from public.community_likes where user_id = auth.uid() and created_at > now() - interval '1 hour') >= 300 then
+      raise exception 'Too many likes. Try again later';
+    end if;
+    insert into public.community_likes (post_id, user_id) values (p_id, auth.uid()) on conflict do nothing;
+  else
+    delete from public.community_likes where post_id = p_id and user_id = auth.uid();
+  end if;
+end; $$;
+
 revoke all on function public.community_post(text, text, uuid, text, text), public.community_delete(uuid),
   public.community_report(uuid, text), public.community_reports(), public.community_hide(uuid, boolean),
-  public.community_is_moderator() from public, anon;
+  public.community_is_moderator(), public.community_like(uuid, boolean) from public, anon;
 grant execute on function public.community_post(text, text, uuid, text, text), public.community_delete(uuid),
   public.community_report(uuid, text), public.community_reports(), public.community_hide(uuid, boolean),
-  public.community_is_moderator() to authenticated;
+  public.community_is_moderator(), public.community_like(uuid, boolean) to authenticated;
 
 -- ============================================================================
 -- Profiles, private messages, messages to the Shiftbuck team, announcements

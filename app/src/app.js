@@ -1163,6 +1163,7 @@ startDeco(); // the wandering worm on the sign-in and setup pages
   //   post({space, text, replyTo, nick, area})   remove(id)   report(id, reason)   hide(id) / unhide(id) for moderators
   const CM_SPACES = [["all", "Everything"], ["area", "Near me"], ["pay", "Pay & sleep-ins"], ["rights", "Your rights at work"], ["rest", "Rest & wellbeing"], ["meet", "Meet-ups"], ["general", "General chat"]];
   const CM_LABEL = Object.fromEntries(CM_SPACES);
+  const CM_HEART = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.3s-7.4-4.4-9.2-9.1C1.5 7.6 4 4.6 7.2 4.6c2 0 3.6 1.1 4.8 2.8 1.2-1.7 2.8-2.8 4.8-2.8 3.2 0 5.7 3 4.4 6.6-1.8 4.7-9.2 9.1-9.2 9.1z"/></svg>`;
   const cm = { store: null, feed: { posts: [], hidden: new Set(), reports: [], people: new Map(), team: { thread: [], unread: 0 }, announcements: [], inbox: [], dms: { threads: [], blocked: new Set() } }, space: "all", replyTo: null, reporting: null, uid: null, isMod: false, isTeam: false, thread: null, sheet: null, marking: "", dmReporting: null, lastBubbles: "" };
   const cmNorm = v => String(v || "").trim().toLowerCase();
   const cmAgo = iso => { const m = Math.round((Date.now() - new Date(iso)) / 60000); if (m < 1) return "just now"; if (m < 60) return m + " min ago"; const h = Math.round(m / 60); if (h < 24) return h + " h ago"; const d = Math.round(h / 24); return d < 7 ? d + (d === 1 ? " day ago" : " days ago") : new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short" }); };
@@ -1200,7 +1201,7 @@ startDeco(); // the wandering worm on the sign-in and setup pages
   // Private carer-to-carer messages need the full app (Supabase), where only the two people can read them.
   const cmMsgId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
   function makeClaudeCommunityStore({ db, uid, isMod, isTeam, seenDoc }) {
-    let mine = { nick: "", area: "", since: "", posts: [] }, mineExists = false, loaded = false, pendingProfile = null;
+    let mine = { nick: "", area: "", since: "", posts: [], likes: [] }, mineExists = false, loaded = false, pendingProfile = null;
     let posts = [], people = new Map(), hidden = new Set(), reports = [], cb = () => { };
     let toTeam = [], fromTeam = [], teamSeen = "", ann = [], tTo = new Map(), tFrom = new Map();
     const byAt = (a, b) => a.at.localeCompare(b.at);
@@ -1217,7 +1218,7 @@ startDeco(); // the wandering worm on the sign-in and setup pages
         team: { thread, unread: fromTeam.filter(m => m.at > teamSeen).length }, announcements: ann, inbox: isTeam ? inbox() : [], dms: { threads: [], blocked: new Set() }
       });
     };
-    const save = () => { mineExists = true; return db.doc("community/" + uid).set({ nick: mine.nick, area: mine.area, since: mine.since || new Date().toISOString(), posts: mine.posts.slice(-200), updatedAt: new Date().toISOString() }); };
+    const save = () => { mineExists = true; return db.doc("community/" + uid).set({ nick: mine.nick, area: mine.area, since: mine.since || new Date().toISOString(), posts: mine.posts.slice(-200), likes: (mine.likes || []).slice(-1000), updatedAt: new Date().toISOString() }); };
     async function applyProfile(p) {
       if (!p || !p.nick) return;
       if (mineExists && mine.nick === p.nick && (mine.area || "") === (p.area || "")) return;
@@ -1229,11 +1230,14 @@ startDeco(); // the wandering worm on the sign-in and setup pages
         cb = onFeed;
         db.collection("community").limit(500).onSnapshot(snap => {
           posts = []; people = new Map();
+          // likes: each person keeps the ids of posts they like in their own doc; a post's count is everyone's total
+          const likeCount = new Map(), myLikes = new Set(((snap.docs.find(d => d.id === uid) || { data: () => ({}) }).data() || {}).likes || []);
+          snap.docs.forEach(d => new Set((d.data() || {}).likes || []).forEach(id => likeCount.set(id, (likeCount.get(id) || 0) + 1)));
           snap.docs.forEach(d => {
-            const x = d.data() || {}; if (d.id === uid) { mine = { nick: x.nick || "", area: x.area || "", since: x.since || "", posts: x.posts || [] }; mineExists = true; }
+            const x = d.data() || {}; if (d.id === uid) { mine = { nick: x.nick || "", area: x.area || "", since: x.since || "", posts: x.posts || [], likes: x.likes || [] }; mineExists = true; }
             const ps = x.posts || [];
             if (x.nick) people.set(d.id, { nick: x.nick, area: x.area || "", since: x.since || (ps[0] && ps[0].at) || "", posts: ps.length, me: d.id === uid, dmOpen: false });
-            ps.forEach(p => posts.push({ ...p, pid: d.id, nick: x.nick, area: x.area, mine: d.id === uid }));
+            ps.forEach(p => posts.push({ ...p, pid: d.id, nick: x.nick, area: x.area, mine: d.id === uid, likes: likeCount.get(p.id) || 0, liked: myLikes.has(p.id) }));
           });
           posts.sort((a, b) => b.at.localeCompare(a.at));
           if (!loaded) { loaded = true; if (pendingProfile) applyProfile(pendingProfile).catch(() => { }); }
@@ -1256,6 +1260,7 @@ startDeco(); // the wandering worm on the sign-in and setup pages
         await save();
       },
       async remove(id) { mine.posts = mine.posts.filter(p => p.id !== id && p.replyTo !== id); await save(); },
+      async like(id, on) { const l = new Set(mine.likes || []); if (on) l.add(id); else l.delete(id); mine.likes = [...l]; await save(); },
       async report(id, reason) {
         const ref = db.doc("reports/" + uid), cur = await ref.get();
         await ref.set({ ...((cur.exists && cur.data()) || {}), [id]: { reason, at: new Date().toISOString() } });
@@ -1306,7 +1311,7 @@ startDeco(); // the wandering worm on the sign-in and setup pages
       return `<article class="cmpost${p.mine ? " mine" : ""}">
         <div class="cmwho">${p.pid ? `<button type="button" class="cmnick" data-prof="${esc(p.pid)}">${esc(p.nick || "Carer")}</button>` : `<b>${esc(p.nick || "Carer")}</b>`}${p.area ? `<span>${esc(p.area)}</span>` : ""}<span>${cmAgo(p.at)}</span>${!isReply ? `<span class="cmtag">${esc(CM_LABEL[p.space] || "General chat")}</span>` : ""}${p.mine ? '<span class="cmtag">You</span>' : ""}${hiddenNote}</div>
         <div class="cmbody">${esc(p.text)}</div>
-        <div class="cmacts">${!isReply ? `<button type="button" data-reply="${esc(p.id)}">Reply${replies.length ? ` · ${replies.length}` : ""}</button>` : ""}${p.mine ? `<button type="button" class="danger" data-del="${esc(p.id)}">Delete</button>` : `<button type="button" data-report="${esc(p.id)}">Report</button>`}${cm.isMod && !p.mine ? `<button type="button" class="danger" data-hide="${esc(p.id)}">${cm.feed.hidden.has(p.id) ? "Unhide" : "Hide"}</button>` : ""}</div>
+        <div class="cmacts">${typeof p.likes === "number" && !cm.feed.hidden.has(p.id) ? `<button type="button" class="cmlike" data-like="${esc(p.id)}" aria-pressed="${!!p.liked}" aria-label="${p.liked ? "Unlike" : "Like"}${p.likes ? `, ${p.likes} like${p.likes === 1 ? "" : "s"}` : ""}">${CM_HEART}<span>${p.likes || "Like"}</span></button>` : ""}${!isReply ? `<button type="button" data-reply="${esc(p.id)}">Comment${replies.length ? ` · ${replies.length}` : ""}</button>` : ""}${p.mine ? `<button type="button" class="danger" data-del="${esc(p.id)}">Delete</button>` : `<button type="button" data-report="${esc(p.id)}">Report</button>`}${cm.isMod && !p.mine ? `<button type="button" class="danger" data-hide="${esc(p.id)}">${cm.feed.hidden.has(p.id) ? "Unhide" : "Hide"}</button>` : ""}</div>
         ${reporting}
         ${replies.length ? `<div class="cmreplies">${replies.map(r => card(r, true)).join("")}</div>` : ""}
       </article>`;
@@ -1323,9 +1328,9 @@ startDeco(); // the wandering worm on the sign-in and setup pages
     }
     const rp = cm.replyTo && all.find(p => p.id === cm.replyTo);
     $("#cmReplying").hidden = !rp; $("#cmSpaceWrap").hidden = !!rp;
-    $("#cmReplyTxt").textContent = rp ? `Replying to ${rp.nick}` : "";
-    $("#cmTextLbl").textContent = rp ? "Your reply" : "What's on your mind?";
-    $("#cmPost").textContent = rp ? "Reply" : "Post";
+    $("#cmReplyTxt").textContent = rp ? `Commenting on ${rp.nick}'s post` : "";
+    $("#cmTextLbl").textContent = rp ? "Your comment" : "What's on your mind?";
+    $("#cmPost").textContent = rp ? "Comment" : "Post";
     renderMessages(); cmRenderSheet();
   }
 
@@ -1463,7 +1468,7 @@ startDeco(); // the wandering worm on the sign-in and setup pages
     if (problem) { $("#cmErr").textContent = problem; $("#cmErr").hidden = false; return; }
     const me = cmMe(), parent = cm.replyTo && cm.feed.posts.find(p => p.id === cm.replyTo);
     $("#cmPost").disabled = true;
-    try { await cm.store.post({ space: parent ? parent.space : $("#cmSpace").value, text, replyTo: parent ? parent.id : null, nick: me.nick, area: me.area }); $("#cmText").value = ""; $("#cmCount").textContent = "0 / 1000"; cm.replyTo = null; toast(parent ? "Reply posted" : "Posted"); renderCommunity(); }
+    try { await cm.store.post({ space: parent ? parent.space : $("#cmSpace").value, text, replyTo: parent ? parent.id : null, nick: me.nick, area: me.area }); $("#cmText").value = ""; $("#cmCount").textContent = "0 / 1000"; cm.replyTo = null; toast(parent ? "Comment posted" : "Posted"); renderCommunity(); }
     catch (e2) { $("#cmErr").textContent = "That didn't post. Check your connection and try again."; $("#cmErr").hidden = false; }
     finally { $("#cmPost").disabled = false; }
   });
@@ -1481,6 +1486,14 @@ startDeco(); // the wandering worm on the sign-in and setup pages
     if (d.dmrep) { try { await cm.store.dmReport(d.id, d.dmrep); toast("Thanks. A moderator will look at it. You can also block them."); } catch (e2) { toast("That didn't send. Try again."); } cm.dmReporting = null; renderMessages(); return; }
     if (d.restrict) { try { await cm.store.dmRestrict(d.restrict); toast("They can no longer send private messages."); } catch (e2) { toast("Only moderators can do that."); } return; }
     if (d.unann) { try { await cm.store.removeAnnouncement(d.unann); toast("Announcement removed"); } catch (e2) { toast("Only the Shiftbuck team can do that."); } return; }
+    if (t.dataset.like) {
+      const id = t.dataset.like, p = cm.feed.posts.find(x => x.id === id); if (!p || !cm.store || !cm.store.like) return;
+      const on = !p.liked, flip = v => { p.liked = v; p.likes = Math.max(0, (p.likes || 0) + (v ? 1 : -1)); renderCommunity(); document.querySelector(`[data-like="${CSS.escape(id)}"]`)?.focus(); };
+      flip(on);
+      try { await cm.store.like(id, on); document.querySelector(`[data-like="${CSS.escape(id)}"]`)?.focus(); }   // the refresh after saving redraws the button
+      catch (e2) { flip(!on); toast("That didn't save. Try again."); }
+      return;
+    }
     if (t.dataset.reply) { cm.replyTo = t.dataset.reply; renderCommunity(); $("#cmComposer").scrollIntoView({ block: "center" }); $("#cmText").focus({ preventScroll: true }); return; }
     if (t.dataset.del) { try { await cm.store.remove(t.dataset.del); toast("Post deleted"); } catch (e2) { toast("That didn't delete. Try again."); } return; }
     if (t.dataset.report) { cm.reporting = t.dataset.report; renderCommunity(); return; }

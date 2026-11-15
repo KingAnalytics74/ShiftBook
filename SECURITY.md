@@ -13,7 +13,8 @@ If you think you've found a security problem, **don't open a public GitHub issue
 - Community, message and team tables can't be read directly. Everything goes through views that never show user ids, and through functions that check who is asking. Moderator tools check `community_is_moderator()`.
 - Posts always go out under the poster's own community profile, so nobody can post as another carer.
 - Each document is capped at 256 KB, so one account can't fill the database.
-- Rate limits: 20 posts an hour, 30 private messages an hour, 10 new conversations a day, 20 messages to the team an hour.
+- Likes show only a count and whether you liked a post, never who did. The likes table can't be read directly.
+- Rate limits: 300 likes an hour, 20 posts an hour, 30 private messages an hour, 10 new conversations a day, 20 messages to the team an hour.
 
 **Sign-in**
 - Passwords are stored by Supabase Auth as a hash, never as typed. They must be at least 8 characters and not an obvious one. Reset links expire after an hour.

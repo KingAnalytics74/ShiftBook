@@ -53,13 +53,15 @@ All of these tables have row-level security on and no policies: the app reaches 
 
 `community_feed` now also returns `author_id` (the author's public profile id) so tapping a nickname opens their profile.
 `community_post` stores the poster's own profile nickname and area (creating the profile on a first post), never a nickname sent by the app.
+
+**Likes (added 15 Nov 2026):** `community_likes` `(post_id, user_id, created_at)`, one row per person per post, removed with the post or the account. Nobody reads the table: `community_feed` adds `likes` (how many) and `liked` (whether you did), never who liked a post. People like or unlike only through `community_like(p_id, p_on)`, as themselves, on posts that aren't hidden, at most 300 likes an hour. Comments are posts with `reply_to` set (shown as "Comment" in the app).
 Deleting an account removes the person's profile, messages and blocks through the `auth.users` cascade.
 
 ## Profiles and messages (Claude version)
 
 The Claude-hosted pilot can't restrict a document to two people, so it has profiles and team messages but not private carer-to-carer messages.
 
-- `community/<id>` `{nick, area, since, posts[]}` — the public profile and posts
+- `community/<id>` `{nick, area, since, posts[], likes[]}` — the public profile, posts, and ids of posts this person likes (counts add up everyone's)
 - `toTeam/<id>` `{nick, area, msgs[]}` — written by that carer; read by them and the team (people with edit access)
 - `fromTeam/<id>` `{msgs[], teamSeenAt}` — written by the team; read by that carer
 - `announce/all` `{items[]}` — written by the team; read by everyone

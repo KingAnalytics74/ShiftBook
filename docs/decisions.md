@@ -10,3 +10,4 @@
 - 2026-11-01: App connected to the live Supabase project (shiftbook, London). Email codes, email and password on; text-message codes off until an SMS provider is set up.
 - 2026-11-01: shiftbuck.com is live on Vercel. The old kinganalytics74.github.io/ShiftBook address now forwards to shiftbuck.com (app/src/guard.js), keeping the page, query and #part so earlier sign-in and reset links work. Docs updated.
 - 2026-11-03: Switched the app's Google Analytics to the shiftbuck.com data stream, G-LKRQBCE20K (G-7MZ433YNQC is the WesTech site's). Same consent rules.
+- 2026-11-15: Community likes and comments. Likes: new `community_likes` table, `community_like` function and `likes`/`liked` columns on `community_feed` (supabase/schema.sql; **needs Data Analyst sign-off, then running on the live project**; until then the app hides the like button). Comments: the existing replies, now labelled "Comment" with a count. Post buttons are 44px tap targets.
