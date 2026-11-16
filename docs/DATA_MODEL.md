@@ -4,7 +4,7 @@ All of a user's data lives under `data/users/<userId>/`. Paths alternate collect
 
 | Path | Type | Fields |
 |---|---|---|
-| `data/users/<id>/main` | document | `name`, `role`, `hourlyRate`, `sleepInRate`, `periodStartDay` (1–28), `serviceUsers[]`, `pattern` `{dayStart, dayHours, breakHrs, sleepStart, sleepEnd}` |
+| `data/users/<id>/main` | document | `name`, `role`, `hourlyRate`, `sleepInRate`, `periodStartDay` (1–28), `serviceUsers[]` (workplace labels such as "Site 1"; the key keeps its old name so older data still loads, and it must never hold people's names), `pattern` `{dayStart, dayHours, breakHrs, sleepStart, sleepEnd}` |
 | `data/users/<id>/profile` | document | `ageGroup` (`18-24` … `65+`, `na`), `sex` (`female` \| `male` \| `other` \| null), `sexOther`, `area` (the council label chosen from the list in `app/src/core/areas-data.js`, e.g. `Charnwood, Leicestershire`, or `Outside the UK`), `areaCode` (its ONS code, e.g. `E07000130`, or `OUTSIDE`; absent on older profiles that typed their area), `employer` \| null, `nickname`, `createdAt`. Only `nickname` is ever shown to other users. |
 | `data/users/<id>/account` | document | `status` (`active` \| `paused`), `since` |
 | `data/users/<id>/money` | document | `employment` (`paye` \| `self`), `taxCode` (`1257L` \| `BR`), `pensionPct`, `studentLoan` (`none`,`p1`,`p2`,`p4`,`p5`,`pg`), `pots[]` |

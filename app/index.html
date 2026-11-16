@@ -143,11 +143,11 @@
           <p class="obpreview" id="obPatPrev"></p>
         </div>
         <div class="obstep" data-step="6" hidden>
-            <h2 class="obh">Who do you support?</h2>
-            <p class="obsub">First names or initials only, separated by commas. You can skip this and add people as you
-              log shifts.</p>
-            <div class="field"><label for="uUsers">Service users <span class="hint">optional</span></label><input
-                type="text" id="uUsers" placeholder="e.g. Alex, S.B."></div>
+            <h2 class="obh">Where do you work?</h2>
+            <p class="obsub">Short names for your workplaces, separated by commas. Never the names or addresses of the
+              people you support. You can skip this and add workplaces as you log shifts.</p>
+            <div class="field"><label for="uUsers">Workplaces <span class="hint">optional</span></label><input
+                type="text" id="uUsers" placeholder="e.g. Site 1, Day centre, Warehouse B"></div>
           </div>
           <div class="obstep" data-step="7" hidden>
             <h2 class="obh">Log your first shift</h2>
@@ -220,9 +220,9 @@
           </div>
         </div>
         <div class="card">
-          <h2>Shifts by service user</h2>
+          <h2>Shifts by workplace</h2>
           <div class="hbars" id="users"></div>
-          <p class="hint" style="margin:10px 0 0">Shifts with several people count once for each person.</p>
+          <p class="hint" style="margin:10px 0 0">A shift at more than one workplace counts once for each.</p>
         </div>
       </div>
       <div class="card restcard" id="restCard">
@@ -292,10 +292,10 @@
             <input type="date" id="fDate" required>
             <div class="banner info" id="editNote" hidden></div>
           </div>        <div class="field" id="fUsersField">
-          <span class="lbl">Service user(s)</span>
+          <span class="lbl">Workplace <span class="hint">optional · never a person's name</span></span>
             <div class="chips" id="fUsers"></div>
             <div class="row2" id="addUserRow" hidden>
-              <input type="text" id="fNewUser" placeholder="New name" aria-label="New service user name">
+              <input type="text" id="fNewUser" placeholder="e.g. Site 1" aria-label="New workplace">
               <button type="button" class="btn secondary" id="addUserBtn">Add</button>
             </div>
           </div>
@@ -398,15 +398,15 @@
           <div class="field"><label for="sSleep">Sleep-in rate (£/night)</label><input type="number" id="sSleep"
               step="0.01" min="0"></div>
           <div class="field"><label for="sStart">Pay month starts on day <span class="hint">1 to 31 · 31 = last day of the month</span></label><input type="number" id="sStart" min="1" max="31" inputmode="numeric"></div>
-          <div class="field"><label for="sUsers">Service users <span class="hint">initials or a short code,
-                comma-separated</span></label><input type="text" id="sUsers"></div>
-          <div class="field" style="grid-column:1/-1"><span class="lbl">Rename someone in every shift</span>
-            <div class="row2"><select id="rnFrom" aria-label="Name to change"></select><input type="text" id="rnTo"
-                maxlength="20" autocomplete="off" placeholder="New initials or code, e.g. Zee" aria-label="New name">
+          <div class="field"><label for="sUsers">Workplaces <span class="hint">short names, comma-separated,
+                never a person's name</span></label><input type="text" id="sUsers"></div>
+          <div class="field" style="grid-column:1/-1"><span class="lbl">Rename a workplace in every shift</span>
+            <div class="row2"><select id="rnFrom" aria-label="Workplace to change"></select><input type="text" id="rnTo"
+                maxlength="20" autocomplete="off" placeholder="e.g. Site 2" aria-label="New workplace name">
             </div>
             <div class="actions" style="margin-top:8px"><button type="button" class="btn secondary" id="rnBtn">Rename in
                 all shifts</button></div>
-            <span class="hint">Use initials or a short code, never a full name. Old shifts change too.</span>
+            <span class="hint">Old shifts change too. If you added people's names before, rename them to a workplace here.</span>
           </div>
           <div class="field"><label for="sWork">Kind of work</label><select id="sWork"><option value="care">Care or support work</option><option value="other">Factory, warehouse or other</option></select></div>
         <div class="field" style="grid-column:1/-1"><span class="lbl">Your shift types</span>
@@ -709,16 +709,16 @@
           <li>How you sign in: your mobile number or email address and, if you choose one, a password. If you continue
             with Google, Google tells us your email address and name, and nothing else. Your password is only ever kept
             scrambled (hashed) by Supabase, so nobody at Shiftbuck can read it.</li>
-          <li>Your shifts: dates, start and finish times, shift type, hours, breaks, sleep-ins, any shift rate, notes, and the service users you choose to add.</li>
+          <li>Your shifts: dates, start and finish times, shift type, hours, breaks, sleep-ins, any shift rate, notes, and the workplace labels you choose to add.</li>
           <li>Payslip figures you type in, your tax settings, your spending plan and spending amounts.</li>
           <li>In the community: your public profile (nickname and area only), your posts, and messages you send.
             Messages to the Shiftbuck team are read only by you and the team.</li>
         </ul>
         <p>Shiftbuck does <b>not</b> ask for your bank details, National Insurance number, address or date of birth, and
           it isn't connected to your bank.</p>
-        <h3>Service users</h3>
-        <p>Please use <b>first names or initials only</b> for the people you support. Don't add health details or other
-          personal information about them in notes.</p>
+        <h3>The people you support</h3>
+        <p>Shiftbuck never needs any details about the people you support. Please don't add their names, addresses,
+          health details or other personal information anywhere in Shiftbuck, including notes.</p>
         <h3>Where your data is kept and who can see it</h3>
         <p>When you sign in, your data is kept in Shiftbuck's database, run on <b>Supabase</b>. It's tied to your
           account and locked so that only you can read or change it. Supabase stores and processes it for us under <a
@@ -924,9 +924,9 @@
             same data. In demo mode, data stays on one device.</div>
         </details>
         <details class="faq">
-          <summary>Should I put service users' full names in?</summary>
-          <div>No. Use first names or initials only. Shiftbuck only needs to tell your service users apart, and it's
-            kinder to their privacy.</div>
+          <summary>Should I add the people I support?</summary>
+          <div>No. Shiftbuck only needs your shifts, not who they were with. If you work in more than one place, add a
+            short workplace name instead, like "Site 1" or "Day centre". Never a person's name or a house address.</div>
         </details>
         <details class="faq">
           <summary>Does it work for weekly pay, Scotland or two jobs?</summary>
