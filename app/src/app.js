@@ -641,6 +641,31 @@ startDeco(); // the wandering worm on the sign-in and setup pages
     finally { $("#rnBtn").disabled = false; }
   };
 
+  // Remove a workplace (or a name added before workplaces) from the list and from every shift.
+  // The shifts themselves stay. First tap asks, second tap within 5 seconds removes.
+  let rmArmed = null, rmT;
+  const rmReset = () => { rmArmed = null; clearTimeout(rmT); $("#rmBtn").textContent = "Remove from all shifts"; };
+  $("#rnFrom").addEventListener("change", rmReset);
+  $("#rmBtn").onclick = async () => {
+    const from = $("#rnFrom").value;
+    if (!from) return;
+    if (!state.db) { toast("Removing isn't available in this view"); return; }
+    if (rmArmed !== from) { rmArmed = from; $("#rmBtn").textContent = `Tap again to remove "${from}"`; clearTimeout(rmT); rmT = setTimeout(rmReset, 5000); return; }
+    rmReset(); $("#rmBtn").disabled = true;
+    try {
+      let n = 0;
+      for (const [k, s] of state.shifts) {
+        if (!(s.users || []).includes(from)) continue;
+        await S.shifts().doc(k).set({ ...s, users: s.users.filter(u => u !== from), updatedAt: new Date().toISOString() }); n++;
+      }
+      const next = { ...state.cfg, serviceUsers: (state.cfg.serviceUsers || []).filter(u => u !== from) };
+      if (next.userPlaces && next.userPlaces[from] != null) { const m = { ...next.userPlaces }; delete m[from]; next.userPlaces = m; }
+      await S.main().set(next);
+      toast(`Removed "${from}" from ${n} shift${n === 1 ? "" : "s"}`);
+    } catch (e) { toast("That didn't finish. Try again."); }
+    finally { $("#rmBtn").disabled = false; }
+  };
+
   // ---------- money ----------
   const MONEY_DEFAULTS = { employment: "paye", taxCode: "1257L", pensionPct: 4, studentLoan: "none", pots: [] };
   const KIND = { need: "Needs", want: "Wants", save: "Savings" };
