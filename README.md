@@ -10,8 +10,8 @@ Powered by **WesTech Innovation**.
 
 - **Sign in the way that suits you:** a 6-digit code by text or email, an email and password (with a reset link if it's forgotten), or Google / Apple. People stay signed in on their own phone.
 - **Quick setup:** one question per screen (name, age group and sex, area, employer and community nickname, pay, pay month, usual shifts, who you support), then log a first shift and see what it pays.
-- **Log shifts in seconds:** one-tap shift types (Day 08:00–20:00, Sleep-in 20:00–08:00, Day + sleep-in), service users, breaks and notes.
-- **Pay analytics:** gross pay, an earnings build-up chart, weekly earnings, earnings by day of the week, a shift calendar and shifts by service user.
+- **Log shifts in seconds:** one-tap shift types (Day 08:00–20:00, Sleep-in 20:00–08:00, Day + sleep-in), an optional workplace, breaks and notes.
+- **Pay analytics:** gross pay, an earnings build-up chart, weekly earnings, earnings by day of the week, a shift calendar and shifts by workplace.
 - **Take-home estimate:** UK income tax (any tax code), employee National Insurance, workplace pension and student loan, using 2026/27 rates. It matches a real payslip to the penny.
 - **Payslip check:** compare a payslip line by line with your logged shifts.
 - **Rest check:** red when you're not resting enough (7+ days in a row, more than 48 hours in 7 days, or about 36 hours on duty around a sleep-in).

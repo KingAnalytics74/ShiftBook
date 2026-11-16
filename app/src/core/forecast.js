@@ -2,7 +2,7 @@ import { ymd, parse, addDays } from "./dates.js";
 import { hasDayHrs, worked, isNight } from "./restCheck.js";
 
 // Predicts the next 7 days from the last 8 weeks: how often each weekday was worked,
-// the most common shift type on that weekday, and the usual hours, break and service users.
+// the most common shift type on that weekday, and the usual hours, break and workplaces.
 export const FC_WEEKS = 8;
 // A saved shift type ("Waking night", "Early"...) wins; older shifts without one are grouped by what they were.
 export const shiftKind = s => s.type || (s.sleepIn && hasDayHrs(s) ? "Day + sleep-in" : s.sleepIn ? "Sleep-in" : isNight(s) ? "Night" : "Day shift");

@@ -4,7 +4,7 @@
  *
  * MULTI-USER EDITION: every path below lives under the viewer's private subtree data/users/<id>/
  * DATA MODEL (artifact db)
- *   main          {name, role, hourlyRate, sleepInRate, periodStartDay, serviceUsers[], busFare, workType, shiftTypes[]}
+ *   main          {name, role, hourlyRate, sleepInRate, periodStartDay, serviceUsers[] (workplace labels; key kept for old data), busFare, workType, shiftTypes[]}
  *                 shiftTypes[]: {name, paid: hours|sleep|both, start, end, hours?, breakHrs, rate?}
  *   money         {employment: "paye"|"self", taxCode: "1257L"|"BR", pensionPct, studentLoan, pots[]}
  *                 pot = {id, name, mode: "pct"|"fixed", value, kind: "need"|"want"|"save"}
@@ -333,7 +333,7 @@ startDeco(); // the wandering worm on the sign-in and setup pages
 
   function renderSheet(p, sm) {
     const t = sm.t;
-    let h = `<thead><tr><th>Date</th><th>Day</th><th>Time</th><th>Service user(s)</th><th>Sleep-in</th><th>Paid hrs</th><th>Break</th><th>Net hrs</th><th>Hourly £</th><th>Sleep-in £</th><th>Total £</th><th>Status</th></tr></thead><tbody>`;
+    let h = `<thead><tr><th>Date</th><th>Day</th><th>Time</th><th>Workplace</th><th>Sleep-in</th><th>Paid hrs</th><th>Break</th><th>Net hrs</th><th>Hourly £</th><th>Sleep-in £</th><th>Total £</th><th>Status</th></tr></thead><tbody>`;
     sm.rows.forEach(r => {
       const wk = r.date.getDay() === 0 || r.date.getDay() === 6;
       if (!r.s) { h += `<tr class="off clickable${wk ? " wkend" : ""}" data-date="${r.key}"><td>${fmt(r.date, { day: "2-digit", month: "short" })}</td><td>${fmt(r.date, { weekday: "short" })}</td><td></td><td>Day off</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>`; return; }
@@ -372,7 +372,7 @@ startDeco(); // the wandering worm on the sign-in and setup pages
   // ---------- log form ----------
   function renderUserChips() {
     const all = new Set([...(state.cfg.serviceUsers || []), ...state.form.users]);
-    $("#fUsers").innerHTML = [...all].map(u => `<button type="button" class="chip" aria-pressed="${state.form.users.has(u)}" data-u="${esc(u)}">${esc(u)}</button>`).join("") + `<button type="button" class="chip ghost" id="addUserToggle">+ Other</button>`;
+    $("#fUsers").innerHTML = [...all].map(u => `<button type="button" class="chip" aria-pressed="${state.form.users.has(u)}" data-u="${esc(u)}">${esc(u)}</button>`).join("") + `<button type="button" class="chip ghost" id="addUserToggle">+ Add workplace</button>`;
   }
   $("#fUsers").addEventListener("click", e => {
     const b = e.target.closest("button"); if (!b) return;
@@ -383,7 +383,6 @@ startDeco(); // the wandering worm on the sign-in and setup pages
   $("#fNewUser").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); $("#addUserBtn").click(); } });
   function renderPresets() {
     $("#fPreset").innerHTML = shiftTypes().map((t, i) => `<button type="button" data-pre="${i}" aria-pressed="${state.form.type === t.name}">${esc(t.name)} · ${esc(t.start)}–${esc(t.end)}</button>`).join("");
-    $("#fUsersField").hidden = !isCare();
     $("#fRateHint").textContent = `blank = your usual ${gbp(Number(state.cfg.hourlyRate) || 0)}`;
   }
   function applyType(t) {
@@ -466,7 +465,6 @@ startDeco(); // the wandering worm on the sign-in and setup pages
 
   function validate(s) {
     if (!s.date) return "Pick the shift date.";
-    if (isCare() && !s.users.length) return "Pick at least one service user.";
     if (s.dayHours == null && !s.sleepIn) return "Add paid hours, or mark it as a sleep-in.";
     if (s.dayHours != null && (s.dayHours < 0 || s.dayHours > 24)) return "Paid hours must be between 0 and 24.";
     if (s.breakHrs != null && s.dayHours == null) return "A break needs paid hours too.";
@@ -479,7 +477,7 @@ startDeco(); // the wandering worm on the sign-in and setup pages
 
   async function syncJotform(s) {
     if (!state.mcp) { setSync("ok", "Saved · private to you"); return; }
-    const qa = [{ question_text: "Shift date", answer: s.date }, { question_text: "Service user(s)", answer: s.users.join(", ") }, { question_text: "Sleep-in?", answer: s.sleepIn ? "Yes" : "No" }];
+    const qa = [{ question_text: "Shift date", answer: s.date }, { question_text: "Workplace", answer: s.users.join(", ") }, { question_text: "Sleep-in?", answer: s.sleepIn ? "Yes" : "No" }];
     if (s.start && s.end) qa.push({ question_text: "Shift times", answer: `${s.type ? s.type + " " : ""}${s.start}–${s.end}` });
     if (s.dayHours != null) qa.push({ question_text: "Day hours", answer: String(s.dayHours) });
     if (s.breakHrs != null) qa.push({ question_text: "Break (hours)", answer: String(s.breakHrs) });
@@ -531,7 +529,7 @@ startDeco(); // the wandering worm on the sign-in and setup pages
     const name = (state.cfg.name || "").trim();
     const head = [["Employee", q(name || "Not set")], ["Role", q(state.cfg.role || "")],
     ["Pay period", `${ymd(p.start)} to ${ymd(p.end)}`], ["Hourly rate", state.cfg.hourlyRate], ["Sleep-in rate", state.cfg.sleepInRate], []].map(r => r.join(","));
-    const lines = [...head, ["Date", "Day", "Shift", "Start", "Finish", "Service user(s)", "Sleep-in", "Paid hours", "Break", "Net hours", "Hourly pay", "Sleep-in pay", "Total", "Notes"].join(",")];
+    const lines = [...head, ["Date", "Day", "Shift", "Start", "Finish", "Workplace", "Sleep-in", "Paid hours", "Break", "Net hours", "Hourly pay", "Sleep-in pay", "Total", "Notes"].join(",")];
     sm.rows.forEach(r => { const s = r.s, c = r.c; lines.push([r.key, fmt(r.date, { weekday: "short" }), s?.type ? q(s.type) : "", s?.start || "", s?.end || "", s ? q((s.users || []).join(", ")) : "Day off", s ? (s.sleepIn ? "Y" : "N") : "", s?.dayHours ?? "", s?.breakHrs ?? "", c ? c.net : "", c ? c.hourly.toFixed(2) : "", c ? c.sleep.toFixed(2) : "", c ? c.total.toFixed(2) : "", s?.notes ? q(s.notes) : ""].join(",")); });
     lines.push(["TOTAL", "", "", "", "", "", sm.t.sleepIns, sm.t.dayHours, sm.t.breaks, sm.t.net, sm.t.hourly.toFixed(2), sm.t.sleep.toFixed(2), sm.t.gross.toFixed(2), ""].join(","));
     return { text: lines.join("\n"), name: `Timesheet_${(name || "worker").replace(/[^A-Za-z0-9]+/g, "_").replace(/^_|_$/g, "")}_${ymd(p.start)}_to_${ymd(p.end)}.csv` };
@@ -602,7 +600,7 @@ startDeco(); // the wandering worm on the sign-in and setup pages
     $("#sStart").value = state.cfg.periodStartDay; $("#sUsers").value = (state.cfg.serviceUsers || []).join(", ");
     {
       const names = [...new Set([...(state.cfg.serviceUsers || []), ...[...state.shifts.values()].flatMap(s => s.users || [])])].sort((a, b) => a.localeCompare(b));
-      const cur = $("#rnFrom").value; $("#rnFrom").innerHTML = names.length ? names.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join("") : `<option value="">No names yet</option>`;
+      const cur = $("#rnFrom").value; $("#rnFrom").innerHTML = names.length ? names.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join("") : `<option value="">No workplaces yet</option>`;
       if (names.includes(cur)) $("#rnFrom").value = cur;
     }
     $("#sFare").value = state.cfg.busFare || "";
@@ -620,11 +618,11 @@ startDeco(); // the wandering worm on the sign-in and setup pages
     try { await S.main().set({ ...state.cfg, ...next }); toast("Settings saved"); } catch (e2) { toast("Settings didn't save"); }
   });
 
-  // Rename a service user everywhere: the list in settings and every shift that names them
+  // Rename a workplace everywhere: the list in settings and every shift that names it
   $("#rnBtn").onclick = async () => {
     const from = $("#rnFrom").value, to = $("#rnTo").value.trim();
     if (!from) return;
-    if (!to) { toast("Type the new initials or code"); $("#rnTo").focus(); return; }
+    if (!to) { toast("Type the new workplace name"); $("#rnTo").focus(); return; }
     if (to === from) { toast("That's the same name"); return; }
     if (!state.db) { toast("Renaming isn't available in this view"); return; }
     $("#rnBtn").disabled = true;
@@ -641,6 +639,31 @@ startDeco(); // the wandering worm on the sign-in and setup pages
       $("#rnTo").value = ""; toast(`${from} is now ${to} in ${n} shift${n === 1 ? "" : "s"}`);
     } catch (e) { toast("That didn't finish. Try again."); }
     finally { $("#rnBtn").disabled = false; }
+  };
+
+  // Remove a workplace (or a name added before workplaces) from the list and from every shift.
+  // The shifts themselves stay. First tap asks, second tap within 5 seconds removes.
+  let rmArmed = null, rmT;
+  const rmReset = () => { rmArmed = null; clearTimeout(rmT); $("#rmBtn").textContent = "Remove from all shifts"; };
+  $("#rnFrom").addEventListener("change", rmReset);
+  $("#rmBtn").onclick = async () => {
+    const from = $("#rnFrom").value;
+    if (!from) return;
+    if (!state.db) { toast("Removing isn't available in this view"); return; }
+    if (rmArmed !== from) { rmArmed = from; $("#rmBtn").textContent = `Tap again to remove "${from}"`; clearTimeout(rmT); rmT = setTimeout(rmReset, 5000); return; }
+    rmReset(); $("#rmBtn").disabled = true;
+    try {
+      let n = 0;
+      for (const [k, s] of state.shifts) {
+        if (!(s.users || []).includes(from)) continue;
+        await S.shifts().doc(k).set({ ...s, users: s.users.filter(u => u !== from), updatedAt: new Date().toISOString() }); n++;
+      }
+      const next = { ...state.cfg, serviceUsers: (state.cfg.serviceUsers || []).filter(u => u !== from) };
+      if (next.userPlaces && next.userPlaces[from] != null) { const m = { ...next.userPlaces }; delete m[from]; next.userPlaces = m; }
+      await S.main().set(next);
+      toast(`Removed "${from}" from ${n} shift${n === 1 ? "" : "s"}`);
+    } catch (e) { toast("That didn't finish. Try again."); }
+    finally { $("#rmBtn").disabled = false; }
   };
 
   // ---------- money ----------
@@ -1039,8 +1062,8 @@ startDeco(); // the wandering worm on the sign-in and setup pages
     return true;
   }
   const obGo = n => { const prev = obStep; obStep = Math.max(OB_FIRST, Math.min(OB_LAST, n)); obRender(); obEnter(obStep >= prev ? 1 : -1); const f = document.querySelector(`.obstep[data-step="${obStep}"] input`); if (f && obStep) setTimeout(() => f.focus({ preventScroll: true }), 50); window.scrollTo({ top: 0 }); };
-  $("#obNext").onclick = () => { if (obCheck()) obGo(obStep + 1 + (obStep === 5 && obWork !== "care" ? 1 : 0)); };
-  $("#obBack").onclick = () => obGo(obStep - 1 - (obStep === 7 && obWork !== "care" ? 1 : 0));
+  $("#obNext").onclick = () => { if (obCheck()) obGo(obStep + 1); };
+  $("#obBack").onclick = () => obGo(obStep - 1);
   $("#setupForm").addEventListener("keydown", e => { if (e.key === "Enter" && e.target.tagName === "INPUT" && obStep < OB_LAST) { e.preventDefault(); $("#obNext").click(); } });
   $("#obTypes").addEventListener("click", e => { const b = e.target.closest("[data-t]"); if (!b) return; obType = b.dataset.t === "none" ? "none" : Number(b.dataset.t); obRender(); });
   ["uName", "uRole", "uRate", "uSleep", "uDay", "uUsers"].forEach(id => $("#" + id).addEventListener("input", obRender));
@@ -1050,7 +1073,7 @@ startDeco(); // the wandering worm on the sign-in and setup pages
     const name = obVal("uName"), rate = Number($("#uRate").value), sleep = Number($("#uSleep").value) || 0, day = Number($("#uDay").value);
     if (!name || !(rate > 0) || !(day >= 1 && day <= 31)) { obGo(!name ? 1 : !(rate > 0) ? 3 : 4); obCheck(); return; }
     if (!obVal("uNick")) { obGo(2); obCheck(); return; }
-    const types = obTypesChosen().map(t => ({ ...t })), t0 = types[obType], users = obWork === "care" ? obVal("uUsers").split(",").map(x => x.trim()).filter(Boolean) : [], pay = obShiftPay();
+    const types = obTypesChosen().map(t => ({ ...t })), t0 = types[obType], users = obVal("uUsers").split(",").map(x => x.trim()).filter(Boolean), pay = obShiftPay();
     $("#setupBtn").disabled = true; $("#setupErr").hidden = true;
     try {
       await S.money().set({ ...MONEY_DEFAULTS, pots: STARTER_POTS });
@@ -1073,7 +1096,7 @@ startDeco(); // the wandering worm on the sign-in and setup pages
 
   // ---------- forecast ----------
   // Predicts the next 7 days from the last 8 weeks: how often each weekday was worked,
-  // the most common shift type on that weekday, and the usual hours, break and service users.
+  // the most common shift type on that weekday, and the usual hours, break and workplaces.
   const forecast = () => forecastCore(state.shifts, todayStr, calc);
 
   function renderForecast() {
@@ -1171,16 +1194,14 @@ startDeco(); // the wandering worm on the sign-in and setup pages
   const cmNickFor = area => ["NightOwl", "SleepIn", "EarlyBird", "KindHands", "TeaBreak", "LongShift", "CalmCarer", "SteadyHand", "QuietHero", "DayShift"][Math.floor(Math.random() * 10)] + "_" + ((area || "").replace(/[^A-Za-z]/g, "").slice(0, 6) || String(Math.floor(10 + Math.random() * 89)));
 
   // Stops the most common ways a post could identify someone: postcodes, phone numbers,
-  // emails, street addresses and the names of the people this carer supports.
+  // emails, street addresses and the names of this person's workplaces.
   function cmCheck(text, opts = {}) {
     const t = String(text || "").trim();
     if (!t) return "Write something first.";
     if (opts.dm) {
-      // private messages may carry the sender's own contact details, but never a postcode or the people they support
+      // private messages may carry the sender's own contact details and workplace, but never a postcode
       if (/\b[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}\b/i.test(t)) return "Take out the postcode. Don't share where someone lives in a message.";
-      const nm = (state.cfg.serviceUsers || []).map(n => String(n).trim()).filter(n => n.replace(/\./g, "").length >= 2);
-      const h2 = nm.find(n => new RegExp("(^|[^A-Za-z])" + n.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "([^A-Za-z]|$)", "i").test(t));
-      return h2 ? `Take out "${h2}". Never name the people you support, even in a private message.` : null;
+      return null;
     }
     if (/\b[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}\b/i.test(t)) return "Take out the postcode. Posts can't include addresses.";
     if (/(\+44\s?|\b0)\d[\d\s-]{8,12}\d\b/.test(t)) return "Take out the phone number. Share contact details privately, not in a post.";
@@ -1188,7 +1209,7 @@ startDeco(); // the wandering worm on the sign-in and setup pages
     if (/\b\d{1,4}[a-z]?\s+[A-Z][a-z]+(\s+[A-Z][a-z]+)?\s+(Road|Rd|Street|St|Avenue|Ave|Close|Court|Ct|Lane|Ln|Drive|Dr|Grove|Way|Gate|Crescent|Place|Terrace|Gardens|Hill)\b/.test(t)) return "Take out the address. Never post where someone lives or works.";
     const names = (state.cfg.serviceUsers || []).map(n => String(n).trim()).filter(n => n.replace(/\./g, "").length >= 2);
     const hit = names.find(n => new RegExp("(^|[^A-Za-z])" + n.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "([^A-Za-z]|$)", "i").test(t));
-    if (hit) return `Take out "${hit}". Never name the people you support, even by first name or initials.`;
+    if (hit) return `Take out "${hit}". Posts can't name your workplace.`;
     return null;
   }
 

@@ -63,7 +63,7 @@ Four starter tasks, in priority order. Copy each into a GitHub issue. Each one i
 
 **Do:**
 - Keep the list in one place (a table in the database the moderators can edit, or a file to start with).
-- Check posts and private messages against it before sending, alongside the existing checks for phone numbers, postcodes and service users' names.
+- Check posts and private messages against it before sending, alongside the existing checks for phone numbers, postcodes and workplace names.
 - For scam phrases ("pay for sponsorship", "certificate of sponsorship for sale"), block the post or message and explain why in plain words.
 - For slurs, block it and say it breaks the community rules.
 - Don't show the matched word list to users.

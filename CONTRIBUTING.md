@@ -55,7 +55,7 @@ python3 -m http.server 3000
 - [ ] No errors in the browser console, including "Refused to load" messages from the Content Security Policy
 - [ ] Text people type is shown with `esc()` or `textContent`, never put into HTML as it is
 - [ ] Pay figures checked by hand for at least one shift (hours × rate + sleep-in)
-- [ ] Nothing a user types can identify a service user in shared places (posts, messages)
+- [ ] Nothing asks for, stores or shows details about the people carers support (names, addresses, health)
 - [ ] `docs/DATA_MODEL.md` updated if you changed what is stored
 - [ ] Privacy notice updated if you collect something new
 
