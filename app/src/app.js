@@ -56,7 +56,7 @@ startDeco(); // the wandering worm on the sign-in and setup pages
       { name: "Twilight", paid: "hours", start: "17:00", end: "22:00", breakHrs: 0 }
     ]
   };
-  const OB_PICK = { care: ["Long day", "Sleep-in", "Day + sleep-in"], other: ["Early", "Late", "Night"] };
+  const OB_PICK = { care: ["Long day", "Sleep-in", "Day + sleep-in", "Waking night"], other: ["Early", "Late", "Night"] };
   const toMin = t => { const [a, b] = String(t || "0:0").split(":").map(Number); return a * 60 + (b || 0); };
   // hours from start to finish; a finish at or before the start is the next day
   const spanHrs = (a, b) => { if (!a || !b) return 0; let m = toMin(b) - toMin(a); if (m <= 0) m += 1440; return Math.round(m / 15) / 4; };
@@ -68,7 +68,8 @@ startDeco(); // the wandering worm on the sign-in and setup pages
     return [
       { name: "Day", paid: "hours", start: P.dayStart, end: addHrs(P.dayStart, P.dayHours), breakHrs: P.breakHrs },
       { name: "Sleep-in", paid: "sleep", start: P.sleepStart, end: P.sleepEnd, breakHrs: 0 },
-      { name: "Day + sleep-in", paid: "both", start: P.dayStart, end: P.sleepEnd, hours: P.dayHours, breakHrs: P.breakHrs }
+      { name: "Day + sleep-in", paid: "both", start: P.dayStart, end: P.sleepEnd, hours: P.dayHours, breakHrs: P.breakHrs },
+      { name: "Waking night", paid: "hours", start: P.sleepStart, end: P.sleepEnd, breakHrs: 0 }
     ];
   }
   const addHrs = (hhmm, h) => { const [a, b] = hhmm.split(":").map(Number), m = ((a * 60 + b + Math.round(h * 60)) % 1440 + 1440) % 1440; return pad(Math.floor(m / 60)) + ":" + pad(m % 60); };
