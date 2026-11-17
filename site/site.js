@@ -1,5 +1,4 @@
-// Shiftbuck homepage: scroll reveals, the mobile menu, the pay count-up and the wandering worm. Nothing here is needed to read the page.
-import { startDeco } from "../app/src/deco.js";
+// Shiftbuck homepage: scroll reveals, the mobile menu, the pay count-up and the rolling coin. Nothing here is needed to read the page.
 
 const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -37,13 +36,3 @@ if (pay && !reduce) {
 // the coin rolls along the trust strip once it is on screen
 const strip = document.querySelector(".strip");
 if (strip && !reduce) new IntersectionObserver((es, o) => { if (es[0].isIntersecting) { strip.classList.add("go"); o.disconnect(); } }, { threshold: .5 }).observe(strip);
-
-// the worm: only moves while its block is on screen
-function worm(box, host) {
-  if (!box) return;
-  const io = new IntersectionObserver(es => host.classList.toggle("live", es[0].isIntersecting), { threshold: 0 });
-  io.observe(host);
-  startDeco(box, () => host.classList.contains("live"), host);
-}
-const hero = document.getElementById("hero");
-worm(hero && hero.querySelector(".deco"), hero);

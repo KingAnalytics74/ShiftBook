@@ -26,9 +26,7 @@ import { parseTaxCode, deductions } from "./core/tax.js";
 import { forecast as forecastCore, shiftKind } from "./core/forecast.js";
 import { resolveArea } from "./core/areas.js";
 import { mountAreaPicker } from "./area-picker.js";
-import { startDeco } from "./deco.js";
 
-startDeco(); // the wandering worm on the sign-in and setup pages
 
 (() => {
   if (!document.documentElement.lang) document.documentElement.lang = "en-GB";
@@ -94,8 +92,38 @@ startDeco(); // the wandering worm on the sign-in and setup pages
     const sm = summarise(p);
     $("#who").textContent = [state.cfg.name, state.cfg.role].filter(Boolean).join(" · ") || "Support Worker";
     $("#periodLabel").innerHTML = `${fmt(p.start, { day: "numeric", month: "short" })} – ${fmt(p.end, { day: "numeric", month: "short", year: "numeric" })}<small>${state.offset === 0 ? "Current pay period" : state.offset < 0 ? Math.abs(state.offset) + " period" + (state.offset < -1 ? "s" : "") + " ago" : "Upcoming"}</small>`;
-    renderOverview(p, sm); renderSheet(p, sm); renderMoney(p, sm); renderForecast();
+    renderOverview(p, sm); renderSheet(p, sm); renderMoney(p, sm); renderForecast(); renderRecent(sm); renderProfile();
   }
+
+  // Profile: who you are, this pay period at a glance, and everything saved about you.
+  function renderProfile() {
+    const c = state.cfg, name = (c.name || "").trim(), p0 = periodFor(new Date(), 0), t = summarise(p0).t;
+    $("#pfAvatar").textContent = (name[0] || "S").toUpperCase();
+    $("#pfName").textContent = name || "Your name"; $("#pfRole").textContent = c.role || "Support Worker";
+    $("#pfPeriod").textContent = `${fmt(p0.start, { day: "numeric", month: "short" })} – ${fmt(p0.end, { day: "numeric", month: "short", year: "numeric" })}`;
+    $("#pfGross").textContent = gbp(t.gross); $("#pfShifts").textContent = t.shifts; $("#pfHours").textContent = hrs(t.net); $("#pfSleeps").textContent = t.sleepIns;
+    let n = 0, h = 0, g = 0, first = "";
+    state.shifts.forEach((s, k) => { if (k > todayStr) return; const x = calc(s); n++; h += x.net; g += x.total; if (!first || k < first) first = k; });
+    $("#pfAll").textContent = n ? `Since ${fmt(new Date(first + "T12:00:00"), { day: "numeric", month: "short", year: "numeric" })}: ${n} shift${n === 1 ? "" : "s"}, ${hrs(h)} paid hours, ${gbp(g)} before tax.` : "Once you log shifts, your totals since you started show here.";
+    const work = $("#sWork option[value=\"" + (c.workType || "care") + "\"]"), pr = state.profile || {}, who = $("#acctWho") ? $("#acctWho").textContent : "";
+    const users = (c.serviceUsers || []).length;
+    const row = (k, v) => v ? `<div><dt>${k}</dt><dd>${esc(v)}</dd></div>` : "";
+    $("#pfDetails").innerHTML = [
+      row("Kind of work", work ? work.textContent : ""), row("Hourly rate", gbp(c.hourlyRate) + " an hour"),
+      isCare() ? row("Sleep-in rate", gbp(c.sleepInRate) + " a night") : "",
+      row("Pay month starts", "Day " + c.periodStartDay), row("Bus fare", Number(c.busFare) > 0 ? gbp(c.busFare) + " a shift" : ""),
+      row("Service users", users ? users + " saved" : ""),
+      row("Council area", pr.area || ""), row("Community nickname", pr.nickname || ""),
+      row("Signed in", who && who !== "Signed in" ? who.replace(/^Signed in (as|with)\s*/i, "") : "")
+    ].join("") || "<p class=\"hint\">Nothing saved yet.</p>";
+  }
+
+  function renderRecent(sm) {
+    const rows = sm.rows.filter(r => r.s && r.key <= todayStr).slice(-5).reverse();
+    $("#recent").innerHTML = rows.length ? rows.map(r => `<button type="button" class="rrow" data-date="${r.key}"><span class="rd"><b>${fmt(r.date, { weekday: "short" })}</b>${fmt(r.date, { day: "numeric", month: "short" })}</span><span class="rt">${esc(shiftKind(r.s))}${r.s.start && r.s.end ? ` · ${esc(r.s.start)}–${esc(r.s.end)}` : ""}</span><span class="rp">${gbp(r.c ? r.c.total : 0)}</span></button>`).join("")
+      : `<p class="hint" style="margin:0">No shifts logged in this pay period yet. Tap <b>Log shift</b> to add one.</p>`;
+  }
+  $("#recent").addEventListener("click", e => { const b = e.target.closest("button[data-date]"); if (b) { openLog(b.dataset.date); show("log"); } });
 
   function renderOverview(p, sm) {
     const t = sm.t;
@@ -351,16 +379,38 @@ startDeco(); // the wandering worm on the sign-in and setup pages
   }
 
   // ---------- views ----------
-  function show(view) {
+  // Five screens: Overview, Stats (five panes under pills), Community, Settings (the gear) and Log shift (the + button).
+  const VIEWS = ["overview", "stats", "community", "settings", "profile", "log"], PANES = ["earnings", "takehome", "spending", "forecast", "sheet"];
+  // saved from older versions of the app, when these were tabs of their own
+  const LEGACY = { sheet: ["stats", "sheet"], money: ["stats", "takehome"], forecast: ["stats", "forecast"] };
+  function setPane(name) {
+    if (!PANES.includes(name)) name = "earnings";
+    state.pane = name;
+    PANES.forEach(n => { $("#pane-" + n).hidden = n !== name; const b = $("#pill-" + n); b.setAttribute("aria-selected", String(n === name)); b.tabIndex = n === name ? 0 : -1; });
+    try { localStorage.setItem("sb.pane", name); } catch (e) { }
+  }
+  function show(view, pane) {
     if (state.needsSetup) return;
+    if (LEGACY[view]) [view, pane] = LEGACY[view];
+    if (!VIEWS.includes(view)) view = "overview";
     state.view = view;
-    ["overview", "log", "sheet", "money", "forecast", "community"].forEach(v => { $("#view-" + v).hidden = v !== view; });
+    document.body.dataset.view = view;
+    VIEWS.forEach(v => { $("#view-" + v).hidden = v !== view; });
+    if (view === "stats") setPane(pane || state.pane);
     if (view === "community") renderCommunity();
     document.querySelectorAll("[data-view]").forEach(b => b.setAttribute("aria-selected", String(b.dataset.view === view)));
+    $("#gear").setAttribute("aria-current", view === "settings" ? "page" : "false");
     try { localStorage.setItem("sb.view", view); } catch (e) { }
     window.scrollTo({ top: 0 });
   }
-  document.querySelectorAll("[data-view]").forEach(b => b.addEventListener("click", () => { if (b.dataset.view === "log" && !state.editing) openLog(todayStr); show(b.dataset.view); }));
+  document.querySelectorAll("[data-view],[data-go]").forEach(b => b.addEventListener("click", () => { const v = b.dataset.view || b.dataset.go; if (v === "log" && !state.editing) openLog(todayStr); show(v); }));
+  // pills, and the links on Overview that jump to a pane
+  $("#pills").addEventListener("click", e => { const b = e.target.closest("[data-pane]"); if (b) setPane(b.dataset.pane); });
+  $("#pills").addEventListener("keydown", e => {
+    const i = PANES.indexOf(state.pane), d = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
+    if (!d) return; e.preventDefault(); const n = PANES[(i + d + PANES.length) % PANES.length]; setPane(n); $("#pill-" + n).focus();
+  });
+  document.addEventListener("click", e => { const g = e.target.closest("[data-gopane]"); if (g) show("stats", g.dataset.gopane); });
   $("#prev").onclick = () => { state.offset--; render(); };
   $("#next").onclick = () => { state.offset++; render(); };
   $("#cal").addEventListener("click", e => { const b = e.target.closest("button[data-date]"); if (b) { openLog(b.dataset.date); show("log"); } });
@@ -368,7 +418,7 @@ startDeco(); // the wandering worm on the sign-in and setup pages
 
   let toastT;
   function toast(msg) { const t = $("#toast"); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => (t.hidden = true), 3200); }
-  function setSync(cls, text) { $("#sync").innerHTML = `<span class="dot ${cls}"></span><span>${esc(text)}</span>`; }
+  function setSync(cls, text) { const el = $("#sync"); el.innerHTML = `<span class="dot ${cls}"></span><span>${esc(text)}</span>`; el.title = text; }
 
   // ---------- log form ----------
   function renderUserChips() {
@@ -946,10 +996,10 @@ startDeco(); // the wandering worm on the sign-in and setup pages
   function setupMode(on) {
     if (on && typeof obGo === "function" && !document.querySelector("#view-setup:not([hidden])")) obGo(OB_FIRST);
     document.querySelectorAll("section.view").forEach(v => { v.hidden = on ? v.id !== "view-setup" : v.id !== "view-" + state.view; });
-    document.querySelectorAll(".tabs, .bottombar, .period").forEach(el => { el.hidden = on; });
+    document.querySelectorAll(".tabs, .bottombar, .period, .fab, .gear").forEach(el => { el.hidden = on; });
     document.body.classList.toggle("onboarding", on);
     if (window.SBReveal) SBReveal();
-    const tc = document.querySelector('meta[name="theme-color"]'); if (tc) tc.content = on ? "#F9F8F4" : "#0F5C3C";
+    const tc = document.querySelector('meta[name="theme-color"]'); if (tc) tc.content = on ? "#EDF7FC" : "#3E4095";
   }
   // ---------- first-time setup: one question per screen ----------
   // ---------- profile: age group, sex, area, employer, community nickname ----------
@@ -1105,7 +1155,8 @@ startDeco(); // the wandering worm on the sign-in and setup pages
     if (!f.days.length) {
       $("#fcRange").textContent = "Next 7 days"; $("#fcPay").textContent = "–";
       $("#fcLegend").innerHTML = "<span>Log a few weeks of shifts and Shiftbuck will predict your next week.</span>";
-      $("#fcList").innerHTML = ""; $("#fcBasis").textContent = ""; $("#fcRestText").textContent = ""; $("#fcRestPill").textContent = ""; return;
+      $("#fcList").innerHTML = ""; $("#fcBasis").textContent = ""; $("#fcRestText").textContent = ""; $("#fcRestPill").textContent = "";
+      $("#ovNextPay").textContent = "–"; $("#ovNextPill").textContent = ""; $("#ovNextText").textContent = "Log a few weeks of shifts and Shiftbuck will predict your next week."; return;
     }
     const likely = f.days.filter(x => x.existing || x.p >= 0.5);
     const expected = f.days.reduce((a, x) => a + (x.existing ? x.pay : x.p * x.pay), 0), ifLikely = likely.reduce((a, x) => a + x.pay, 0);
@@ -1127,6 +1178,8 @@ startDeco(); // the wandering worm on the sign-in and setup pages
     const lvl = red.length ? "red" : amber.length ? "amber" : "ok", worst = red[0] || amber[0];
     $("#fcRestCard").className = "card restcard lvl-" + lvl; $("#fcRestPill").className = "rpill " + lvl;
     $("#fcRestPill").textContent = lvl === "red" ? "⚠ Not resting enough" : lvl === "amber" ? "Watch your rest" : "✓ Well rested";
+    $("#ovNextPay").textContent = gbp(expected); $("#ovNextPill").className = "rpill " + lvl; $("#ovNextPill").textContent = $("#fcRestPill").textContent;
+    $("#ovNextText").textContent = `Expected pay, ${f0(f.days[0].d)} – ${f0(f.days[6].d)}. ${worst ? "Watch your rest." : "Rest looks fine."}`;
     $("#fcRestText").innerHTML = worst ? `If the likely shifts happen: ${worst.r.reasons[0]} on ${f0(worst.x.d)}. Try to keep a full day off this week.` : "If the likely shifts happen, you'll still get regular days off.";
   }
   $("#fcList").addEventListener("click", e => {
@@ -1538,7 +1591,7 @@ startDeco(); // the wandering worm on the sign-in and setup pages
   });
 
   // ---------- boot ----------
-  try { const v = localStorage.getItem("sb.view"); if (v && v !== "log") show(v); } catch (e) { }
+  try { state.pane = localStorage.getItem("sb.pane") || "earnings"; const v = localStorage.getItem("sb.view"); if (v && v !== "log") show(v); } catch (e) { }
   openLog(todayStr); fillSettings(); render();
 
   (async () => {
