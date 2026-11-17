@@ -1,7 +1,7 @@
 /*
- * analytics.js — Google Analytics (G-LKRQBCE20K), only after the person says yes.
+ * analytics.js — Google Analytics (G-LKRQBCE20K) and Microsoft Clarity (zf9j8mgk7b), only after the person says yes.
  *
- * Nothing is requested from Google until "Accept" is tapped on the cookie banner. The choice is kept in
+ * Nothing is requested from Google or Microsoft until "Accept" is tapped on the cookie banner. The choice is kept in
  * this browser (shiftbuck:analytics = "yes" | "no") and can be changed any time from "Cookie settings"
  * in the footer. Saying no after yes clears Google's cookies and reloads the page.
  *
@@ -9,9 +9,13 @@
  * features (signals, ad personalisation, ad storage) stay off. The address sent to Google is the page
  * without its #hash or query string, because sign-in and password-reset links carry private codes there;
  * only ad campaign tags (utm_*, gclid) are kept so you can see which ads bring people in.
+ *
+ * Clarity records clicks, taps and scrolling to show where people get stuck. Every bit of text on every screen
+ * is masked (data-clarity-mask on <body>), so recordings show the layout and taps but never pay, payslips,
+ * messages, names or anything typed. Its advertising use is switched off with Clarity's consent signal.
  */
 (function () {
-  var ID = "G-LKRQBCE20K", KEY = "shiftbuck:analytics";
+  var ID = "G-LKRQBCE20K", CLARITY = "zf9j8mgk7b", KEY = "shiftbuck:analytics";
   var get = function () { try { return localStorage.getItem(KEY); } catch (e) { return null; } };
   var set = function (v) { try { localStorage.setItem(KEY, v); } catch (e) {} };
   var $ = function (id) { return document.getElementById(id); };
@@ -32,13 +36,21 @@
       allow_google_signals: false, allow_ad_personalization_signals: false });
     var s = document.createElement("script"); s.async = true; s.src = "https://www.googletagmanager.com/gtag/js?id=" + ID;
     document.head.appendChild(s);
+    loadClarity();
+  }
+  function loadClarity() {
+    if (document.body) document.body.setAttribute("data-clarity-mask", "True");
+    window.clarity = window.clarity || function () { (window.clarity.q = window.clarity.q || []).push(arguments); };
+    window.clarity("consentv2", { ad_Storage: "denied", analytics_Storage: "granted" });
+    var c = document.createElement("script"); c.async = true; c.src = "https://www.clarity.ms/tag/" + CLARITY;
+    document.head.appendChild(c);
   }
   function clearGoogleCookies() {
     var host = location.hostname, parts = host.split("."), domains = ["", host];
     for (var i = 1; i < parts.length - 1; i++) domains.push("." + parts.slice(i).join("."));
     document.cookie.split(";").forEach(function (c) {
       var name = c.split("=")[0].trim();
-      if (!/^_ga/.test(name)) return;
+      if (!/^(_ga|_clck|_clsk)/.test(name)) return;
       domains.forEach(function (d) { document.cookie = name + "=; Max-Age=0; path=/" + (d ? "; domain=" + d : ""); });
     });
   }

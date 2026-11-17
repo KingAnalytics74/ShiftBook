@@ -4,9 +4,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <!-- Security: only this site's scripts run, plus Google Analytics after cookie consent; data goes only to Supabase. See SECURITY.md. -->
+  <!-- Security: only this site's scripts run, plus Google Analytics and Microsoft Clarity after cookie consent; data goes only to Supabase. See SECURITY.md. -->
   <meta http-equiv="Content-Security-Policy"
-    content="default-src 'self'; script-src 'self' https://www.googletagmanager.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.google-analytics.com https://www.googletagmanager.com; font-src 'self'; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests">
+    content="default-src 'self'; script-src 'self' https://www.googletagmanager.com https://www.clarity.ms https://scripts.clarity.ms; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.google-analytics.com https://www.googletagmanager.com https://*.clarity.ms https://c.bing.com; font-src 'self'; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com https://*.clarity.ms https://c.bing.com; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests">
   <meta name="referrer" content="same-origin">
   <style id="antiframe">
     html {
@@ -25,7 +25,7 @@
   <link rel="stylesheet" href="src/styles.css">
 </head>
 
-<body>
+<body data-clarity-mask="True">
 <div class="deco" aria-hidden="true"><b class="glow g1"></b><b class="glow g2"></b>
   <i class="sh s1" style="width:44px;height:44px;--fl:9s;--sp:46s;--dl:0.1s;--dx:-14px;--dy:18px;--dir:1"><svg viewBox="0 0 100 100"><path d="M50 12 90 84H10Z" fill="#1B1D4E" stroke="#1B1D4E" stroke-width="10" stroke-linejoin="round"/></svg></i>
   <i class="sh s2" style="width:30px;height:30px;--fl:11s;--sp:38s;--dl:0.35s;--dx:12px;--dy:-16px;--dir:-1"><svg viewBox="0 0 100 100"><path d="M50 12 90 84H10Z" fill="#1B1D4E" stroke="#1B1D4E" stroke-width="10" stroke-linejoin="round"/></svg></i>
@@ -805,11 +805,17 @@
           to Google. You can change your mind any time with <b>Cookie settings</b> at the bottom of every screen. Google
           processes this under <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">its own
             privacy policy</a>.</p>
+        <p><b>Microsoft Clarity, only if you say yes.</b> The same Accept also turns on Microsoft Clarity, which records
+          how people move around the app (taps, clicks and scrolling) so we can see where it's confusing. All text on
+          screen is hidden in these recordings, so Microsoft never sees your pay, payslips, messages, name or anything
+          you type, and its advertising use is turned off. Microsoft processes this under
+          <a href="https://privacy.microsoft.com/privacystatement" target="_blank" rel="noopener">its own privacy
+            statement</a>. No thanks, or changing your mind in <b>Cookie settings</b>, turns it off too.</p>
         <p>Shiftbuck doesn't use cookies for advertising. It keeps a few things in
           your browser: which tab you last had open, so the app opens where you left off. When you're signed in it also
           keeps your sign-in session, so you stay signed in; in demo mode it keeps all your Shiftbuck data in this
           browser. It also remembers your cookie choice. Fonts and code come from Shiftbuck's own site. Apart from Google
-          Analytics when you've said yes, the only other service Shiftbuck talks to is Supabase, which stores your
+          Analytics and Microsoft Clarity when you've said yes, the only other service Shiftbuck talks to is Supabase, which stores your
           data.</p>
         <h3>Why we use it</h3>
         <p>Only to give you the app: working out your pay, take-home, rest check, charts and money plan. Your
@@ -1035,8 +1041,8 @@
   </nav>
   <div class="toast" id="toast" hidden></div>
   <div class="consent" id="consent" role="region" aria-label="Cookie choice" hidden>
-    <p><b>Help us improve Shiftbuck?</b> We'd like to count visits with Google Analytics, which sets cookies. We never
-      send your shifts, pay or account details. <a href="#privacy" data-info="privacy">How your data is kept</a></p>
+    <p><b>Help us improve Shiftbuck?</b> We'd like to count visits with Google Analytics and see where people get stuck
+      with Microsoft Clarity. Both set cookies. We never send your shifts, pay or account details. <a href="#privacy" data-info="privacy">How your data is kept</a></p>
     <div class="consentbtns"><button type="button" class="btn secondary" id="consentYes">Accept</button><button
         type="button" class="btn secondary" id="consentNo">No thanks</button></div>
   </div>
