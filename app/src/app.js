@@ -783,7 +783,9 @@ import { mountAreaPicker } from "./area-picker.js";
       return `<tr><td>${label}</td><td class="num">${f(slip)}</td><td class="num">${f(est)}</td><td class="num ${ok ? "okc" : "badc"}">${ok ? "✓ matches" : (diff > 0 ? "+" : "−") + f(Math.abs(diff))}</td></tr>`;
     };
     const head = `<thead><tr><th></th><th>Payslip</th>${app ? "<th>Your shifts</th><th>Difference</th>" : ""}</tr></thead>`;
-    const body = [row("Hours paid", ps.hours, app?.hours, hF), row("Gross pay", ps.gross, app?.gross), row("Income tax", ps.tax, app?.tax), row("National Insurance", ps.ni, app?.ni), row("Pension", ps.pension, app?.pension), row("Net pay", ps.net, app?.net)].join("");
+    const nF = v => String(v);
+    const counts = [ps.sleepIns != null ? row("Sleep-ins", ps.sleepIns, sm.t.shifts ? sm.t.sleepIns : null, nF) : "", ps.wakingNights != null ? row("Waking nights", ps.wakingNights, sm.t.shifts ? sm.t.wakingNights : null, nF) : ""].join("");
+    const body = [row("Hours paid", ps.hours, app?.hours, hF), counts, row("Gross pay", ps.gross, app?.gross), row("Income tax", ps.tax, app?.tax), row("National Insurance", ps.ni, app?.ni), row("Pension", ps.pension, app?.pension), row("Net pay", ps.net, app?.net)].join("");
     // deductions re-worked on the payslip's own gross: proves the tax engine independently of hours
     const own = deductions(ps.gross, state.money);
     const checks = [["Income tax", ps.tax, own.tax], ["National Insurance", ps.ni, own.ni], ["Pension", ps.pension, own.pension]];
@@ -795,12 +797,15 @@ import { mountAreaPicker } from "./area-picker.js";
       const more = app.gross - ps.gross;
       notes += `<div class="banner ${more > 0 ? "bad" : "warn"}" style="margin-top:8px">${more > 0 ? `Your logged shifts come to <b>${gbp(more)}</b> more than this payslip.` : `This payslip is <b>${gbp(-more)}</b> more than your logged shifts. A shift may be missing from Shiftbuck.`}${more > 0 && !(ps.sleepPay > 0) && sm.t.sleep > 0 ? ` The payslip shows no sleep-in pay, but you logged ${sm.t.sleepIns} sleep-ins worth ${gbp(sm.t.sleep)}. Ask payroll how sleep-ins are being paid.` : more > 0 ? " Check for hours that weren't paid." : ""}</div>`;
     }
+    if (app && ps.wakingNights != null && ps.wakingNights < sm.t.wakingNights) notes += `<div class="banner bad" style="margin-top:8px">You logged <b>${sm.t.wakingNights}</b> waking night${sm.t.wakingNights === 1 ? "" : "s"}, but this payslip shows ${ps.wakingNights}. Ask payroll whether one is missing.</div>`;
+    if (app && ps.sleepIns != null && ps.sleepIns < sm.t.sleepIns) notes += `<div class="banner bad" style="margin-top:8px">You logged <b>${sm.t.sleepIns}</b> sleep-in${sm.t.sleepIns === 1 ? "" : "s"}, but this payslip shows ${ps.sleepIns}. Ask payroll whether one is missing.</div>`;
     $("#payBody").innerHTML = `<div class="tablewrap" style="margin-bottom:10px"><table class="paytable">${head}<tbody>${body}</tbody></table></div>${notes}${ps.payDate ? `<p class="hint" style="margin:8px 0 0">Paid ${fmt(parse(ps.payDate), { day: "numeric", month: "long", year: "numeric" })}.</p>` : ""}`;
   }
   $("#payEdit").onclick = () => {
     const key = state.moneyKey, ps = state.payslips.get(key) || {};
     state.payEditing = key;
     $("#pDate").value = ps.payDate || ""; $("#pHours").value = ps.hours ?? ""; $("#pGross").value = ps.gross ?? ""; $("#pSleep").value = ps.sleepPay ?? 0;
+    $("#pSleepN").value = ps.sleepIns ?? ""; $("#pWaking").value = ps.wakingNights ?? "";
     $("#pTax").value = ps.tax ?? ""; $("#pNi").value = ps.ni ?? ""; $("#pPension").value = ps.pension ?? ""; $("#pNet").value = ps.net ?? "";
     $("#payErr").hidden = true; render();
   };
@@ -808,8 +813,9 @@ import { mountAreaPicker } from "./area-picker.js";
   $("#payForm").addEventListener("submit", async e => {
     e.preventDefault();
     const n = id => $(id).value === "" ? null : Number($(id).value);
-    const d = { payDate: $("#pDate").value || null, hours: n("#pHours"), gross: n("#pGross"), sleepPay: n("#pSleep") || 0, tax: n("#pTax"), ni: n("#pNi"), pension: n("#pPension") || 0, net: n("#pNet") };
+    const d = { payDate: $("#pDate").value || null, hours: n("#pHours"), gross: n("#pGross"), sleepPay: n("#pSleep") || 0, sleepIns: n("#pSleepN"), wakingNights: n("#pWaking"), tax: n("#pTax"), ni: n("#pNi"), pension: n("#pPension") || 0, net: n("#pNet") };
     if ([d.hours, d.gross, d.tax, d.ni, d.net].some(v => v == null || isNaN(v))) { $("#payErr").textContent = "Fill in hours, gross pay, income tax, National Insurance and net pay as they appear on the payslip."; $("#payErr").hidden = false; return; }
+    if ([d.sleepIns, d.wakingNights].some(v => v != null && (isNaN(v) || v < 0 || v > 62 || !Number.isInteger(v)))) { $("#payErr").textContent = "Enter sleep-ins and waking nights as whole numbers, or leave them blank."; $("#payErr").hidden = false; return; }
     if (!state.db) { $("#payErr").textContent = "Payslips can't be saved in this view."; $("#payErr").hidden = false; return; }
     try { await payCol().doc(state.payEditing).set(d); state.payEditing = null; toast("Payslip saved"); render(); }
     catch (e2) { $("#payErr").textContent = "The payslip didn't save. Try again."; $("#payErr").hidden = false; }

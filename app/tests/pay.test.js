@@ -33,4 +33,15 @@ test("summarise totals a period", () => {
     assert.equal(s.t.sleepIns, 1);
     assert.equal(s.t.fares, 3);
     assert.equal(s.users.get("A").shifts, 2);
+});test("summarise counts waking nights by shift type", () => {
+    const shifts = new Map([
+        ["2026-10-27", { date: "2026-10-27", type: "Waking night", dayHours: 12, breakHrs: 0 }],
+        ["2026-10-28", { date: "2026-10-28", type: "Sleep-in", dayHours: null, sleepIn: true }],
+        ["2026-10-29", { date: "2026-10-29", type: "Waking Nights (Flat 2)", dayHours: 10, breakHrs: 0 }],
+        ["2026-10-30", { date: "2026-10-30", type: "Long day", dayHours: 12, breakHrs: 2 }],
+    ]);
+    const p = { start: new Date(2026, 9, 26), end: new Date(2026, 10, 25) };
+    const t = summarise(p, shifts, cfg, today).t;
+    assert.equal(t.wakingNights, 2);
+    assert.equal(t.sleepIns, 1);
 });
