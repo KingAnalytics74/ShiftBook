@@ -26,6 +26,7 @@ import { parseTaxCode, deductions } from "./core/tax.js";
 import { forecast as forecastCore, shiftKind } from "./core/forecast.js";
 import { resolveArea } from "./core/areas.js";
 import { mountAreaPicker } from "./area-picker.js";
+import "./timepicker.js";
 
 
 (() => {
@@ -92,7 +93,7 @@ import { mountAreaPicker } from "./area-picker.js";
     const sm = summarise(p);
     $("#who").textContent = [state.cfg.name, state.cfg.role].filter(Boolean).join(" · ") || "Support Worker";
     $("#periodLabel").innerHTML = `${fmt(p.start, { day: "numeric", month: "short" })} – ${fmt(p.end, { day: "numeric", month: "short", year: "numeric" })}<small>${state.offset === 0 ? "Current pay period" : state.offset < 0 ? Math.abs(state.offset) + " period" + (state.offset < -1 ? "s" : "") + " ago" : "Upcoming"}</small>`;
-    renderOverview(p, sm); renderSheet(p, sm); renderMoney(p, sm); renderForecast(); renderRecent(sm); renderProfile();
+    renderOverview(p, sm); renderSheet(p, sm); renderMoney(p, sm); renderForecast(); renderRecent(sm); renderProfile(); renderHello(sm);
   }
 
   // Profile: who you are, this pay period at a glance, and everything saved about you.
@@ -389,6 +390,30 @@ import { mountAreaPicker } from "./area-picker.js";
     PANES.forEach(n => { $("#pane-" + n).hidden = n !== name; const b = $("#pill-" + n); b.setAttribute("aria-selected", String(n === name)); b.tabIndex = n === name ? 0 : -1; });
     try { localStorage.setItem("sb.pane", name); } catch (e) { }
   }
+  // ---------- hello, and the money counting up ----------
+  function renderHello(sm) {
+    const el = $("#helloTxt"); if (!el) return;
+    const first = String(state.cfg.name || "").trim().split(/\s+/)[0];
+    el.textContent = first ? `Hello, ${first}` : "Hello";
+    if (!state._cu && sm && sm.t && sm.t.gross > 0) { state._cu = true; countUp($("#view-" + state.view)); }
+  }
+  function countUp(root) {
+    if (!root || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    root.querySelectorAll(".hero .big, .pfstat b").forEach(el => {
+      const txt = el.textContent.trim(), m = txt.match(/^(£)(-?[\d,]+(?:\.\d\d)?)$/);
+      if (!m) return;
+      const to = parseFloat(m[2].replace(/,/g, "")), dec = (m[2].split(".")[1] || "").length, t0 = performance.now();
+      if (!(to > 0)) return;
+      let last = "";
+      const step = t => {
+        if (last && el.textContent !== last) return; // something else updated it: leave it alone
+        const p = Math.min(1, (t - t0) / 900), e = 1 - Math.pow(1 - p, 3);
+        last = p < 1 ? m[1] + (to * e).toLocaleString("en-GB", { minimumFractionDigits: dec, maximumFractionDigits: dec }) : txt;
+        el.textContent = last; if (p < 1) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    });
+  }
   function show(view, pane) {
     if (state.needsSetup) return;
     if (LEGACY[view]) [view, pane] = LEGACY[view];
@@ -402,6 +427,7 @@ import { mountAreaPicker } from "./area-picker.js";
     $("#gear").setAttribute("aria-current", view === "settings" ? "page" : "false");
     try { localStorage.setItem("sb.view", view); } catch (e) { }
     window.scrollTo({ top: 0 });
+    countUp($("#view-" + view));
   }
   document.querySelectorAll("[data-view],[data-go]").forEach(b => b.addEventListener("click", () => { const v = b.dataset.view || b.dataset.go; if (v === "log" && !state.editing) openLog(todayStr); show(v); }));
   // pills, and the links on Overview that jump to a pane
@@ -1011,23 +1037,13 @@ import { mountAreaPicker } from "./area-picker.js";
   // ---------- profile: age group, sex, area, employer, community nickname ----------
   const NICK_A = ["NightOwl", "SleepIn", "EarlyBird", "KindHands", "TeaBreak", "LongShift", "CalmCarer", "SteadyHand", "QuietHero", "DayShift"];
   const nickFor = area => NICK_A[Math.floor(Math.random() * NICK_A.length)] + "_" + ((area || "").replace(/[^A-Za-z]/g, "").slice(0, 6) || String(Math.floor(10 + Math.random() * 89)));
-  mountAreaPicker($("#uArea"));
-  $("#uNickGen").onclick = () => { $("#uNick").value = nickFor(obVal("uArea")); obRender(); };
-  ["uArea", "uEmployer", "uNick"].forEach(id => $("#" + id).addEventListener("input", () => { $("#setupErr").hidden = true; }));
   function profileCheck() {
     const err = m => { $("#setupErr").textContent = m; $("#setupErr").hidden = false; return false; };
-    if (obStep === 2) {
-      if (!resolveArea(obVal("uArea"))) return err("Pick your council from the list. Start typing its name.");
-      const n = obVal("uNick"), first = obVal("uName").toLowerCase();
-      if (!/^[A-Za-z0-9_]{3,20}$/.test(n)) return err("Pick a nickname of 3 to 20 letters, numbers or _ with no spaces. Tap Suggest one for ideas.");
-      if (first.length > 2 && n.toLowerCase().includes(first)) return err("Pick a nickname without your real name in it, so other carers can't tell who you are.");
-    }
     return true;
   }
-  const profileData = () => { const a = resolveArea(obVal("uArea")); return {
-    area: a ? a.label : obVal("uArea"), areaCode: a ? a.code : null, employer: obVal("uEmployer") || null, nickname: obVal("uNick"), createdAt: new Date().toISOString()
-  }; };
-  const OB_LAST = 7, OB_FIRST = window.SBAuth ? 1 : 0;
+  // The council area and community nickname are asked the first time someone opens Community, not here.
+  const profileData = () => ({ createdAt: new Date().toISOString() });
+  const OB_LAST = 7, OB_FIRST = window.SBAuth ? 1 : 0, OB_SKIP = 2, OB_TOTAL = OB_LAST - 1, obPos = s => s > OB_SKIP ? s - 1 : s; // step 2 (community) is no longer part of setup
   let obStep = 0, obDay = null, obType = 0, obWork = "care", obPicked = new Set(OB_PICK.care), obEdit = {};
   const obVal = id => $("#" + id).value.trim();
   const obTypesChosen = () => TYPE_LIB[obWork].filter(t => obPicked.has(t.name)).map(t => ({ ...t, ...(obEdit[obWork + "|" + t.name] || {}) }));
@@ -1057,7 +1073,8 @@ import { mountAreaPicker } from "./area-picker.js";
   }
   // Time pickers: each <input type="time"> in `box` gets an hour and a minute (5-minute steps) select in a pill.
   // The real input stays (hidden) as the value holder, so the code that reads it doesn't change.
-  function obTimePickers(box) {
+  function obTimePickers(box) { return; // the shared time picker (timepicker.js) now handles every time input
+    
     const p2 = n => String(n).padStart(2, "0");
     box.querySelectorAll('input[type="time"]').forEach(inp => {
       const pill = document.createElement("div"), hh = document.createElement("select"), mm = document.createElement("select"), colon = document.createElement("span");
@@ -1090,11 +1107,11 @@ import { mountAreaPicker } from "./area-picker.js";
   function obRender() {
     document.querySelectorAll(".obstep").forEach(el => el.hidden = Number(el.dataset.step) !== obStep);
     $("#obTop").hidden = obStep === 0;
-    $("#obBar").style.width = (obStep / OB_LAST * 100) + "%";
-    { const pct = obStep / OB_LAST * 100, c = $("#obCoin"), w = $("#obBar").parentNode.clientWidth;
+    $("#obBar").style.width = (obPos(obStep) / OB_TOTAL * 100) + "%";
+    { const pct = obPos(obStep) / OB_TOTAL * 100, c = $("#obCoin"), w = $("#obBar").parentNode.clientWidth;
       c.style.setProperty("--p", String(pct));
       c.style.setProperty("--rot", String(Math.round((w * pct / 100) / (Math.PI * 28) * 360))); } // rolls without slipping: distance / circumference
-    $("#obCount").textContent = obStep ? `Step ${obStep} of ${OB_LAST}` : "";
+    $("#obCount").textContent = obStep ? `Step ${obPos(obStep)} of ${OB_TOTAL}` : "";
     $("#obBack").hidden = obStep <= OB_FIRST;
     $("#obNext").hidden = obStep === OB_LAST; $("#setupBtn").hidden = obStep !== OB_LAST;
     $("#obNext").textContent = obStep === 0 ? "Get started" : obStep === 6 && !obVal("uUsers") ? "Skip" : "Next";
@@ -1118,7 +1135,7 @@ import { mountAreaPicker } from "./area-picker.js";
     if (obStep === 5) { const bad = obTypesChosen().find(t => !t.start || !t.end || (t.paid === "both" && !(t.hours > 0)) || (t.paid !== "sleep" && (Number(t.breakHrs) || 0) >= (typeHours(t) || 0))); if (bad) return err(`Check the times and break for ${bad.name}.`); }
     return true;
   }
-  const obGo = n => { const prev = obStep; obStep = Math.max(OB_FIRST, Math.min(OB_LAST, n)); obRender(); obEnter(obStep >= prev ? 1 : -1); const f = document.querySelector(`.obstep[data-step="${obStep}"] input`); if (f && obStep) setTimeout(() => f.focus({ preventScroll: true }), 50); window.scrollTo({ top: 0 }); };
+  const obGo = n => { const prev = obStep; if (n === OB_SKIP) n = prev < OB_SKIP ? n + 1 : n - 1; obStep = Math.max(OB_FIRST, Math.min(OB_LAST, n)); obRender(); obEnter(obStep >= prev ? 1 : -1); const f = document.querySelector(`.obstep[data-step="${obStep}"] input`); if (f && obStep) setTimeout(() => f.focus({ preventScroll: true }), 50); window.scrollTo({ top: 0 }); };
   $("#obNext").onclick = () => { if (obCheck()) obGo(obStep + 1); };
   $("#obBack").onclick = () => obGo(obStep - 1);
   $("#setupForm").addEventListener("keydown", e => { if (e.key === "Enter" && e.target.tagName === "INPUT" && obStep < OB_LAST) { e.preventDefault(); $("#obNext").click(); } });
@@ -1129,7 +1146,6 @@ import { mountAreaPicker } from "./area-picker.js";
     if (obStep !== OB_LAST) { $("#obNext").click(); return; }
     const name = obVal("uName"), rate = Number($("#uRate").value), sleep = Number($("#uSleep").value) || 0, day = Number($("#uDay").value);
     if (!name || !(rate > 0) || !(day >= 1 && day <= 31)) { obGo(!name ? 1 : !(rate > 0) ? 3 : 4); obCheck(); return; }
-    if (!obVal("uNick")) { obGo(2); obCheck(); return; }
     const types = obTypesChosen().map(t => ({ ...t })), t0 = types[obType], users = obVal("uUsers").split(",").map(x => x.trim()).filter(Boolean), pay = obShiftPay();
     $("#setupBtn").disabled = true; $("#setupErr").hidden = true;
     try {

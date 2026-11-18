@@ -112,22 +112,6 @@
             <div class="field"><label for="uRole">Job title <span class="hint">optional</span></label><input type="text"
                 id="uRole" placeholder="Support Worker"></div>
           </div>
-          <div class="obstep" data-step="2" hidden>
-            <h2 class="obh">Where do you work?</h2>
-            <p class="obsub">Your council area puts you in the right carers' group. Your employer is kept private and never
-              shown to anyone.</p>
-            <div class="field"><label for="uArea">Your council area</label><input type="text" id="uArea"
-                placeholder="Start typing, e.g. Leicester"></div>
-            <div class="field"><label for="uEmployer">Employer <span class="hint">optional, private</span></label><input
-                type="text" id="uEmployer" placeholder="e.g. the care company you work for" autocomplete="organization">
-            </div>
-            <div class="field"><label for="uNick">Your nickname in the carers' community</label>
-              <div class="row2" style="grid-template-columns:1fr auto;align-items:center"><input type="text" id="uNick"
-                  maxlength="20" autocapitalize="off" spellcheck="false" placeholder="e.g. NightOwl_Leics"><button
-                  type="button" class="btn secondary" id="uNickGen">Suggest one</button></div>
-              <span class="hint">This is how other carers see you. Don't use your real name.</span>
-            </div>
-          </div>
           <div class="obstep" data-step="3" hidden>
             <h2 class="obh">What are you paid?</h2>
             <p class="obsub">It's on your contract or payslip. You can change it later.</p>
@@ -185,6 +169,7 @@
 
     <!-- OVERVIEW -->
     <section class="view" id="view-overview">
+      <div class="hello"><h2><span id="helloTxt">Hello</span> <span class="wave" aria-hidden="true">👋</span></h2><small id="helloSub">Here's how this pay period is going.</small></div>
       <div class="card hero">
         <div class="eyebrow">Gross pay this period</div>
         <div class="big" id="gross">£0.00</div>
