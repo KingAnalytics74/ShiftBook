@@ -5,4 +5,3 @@
 - Read `CONTRIBUTING.md` before your first change and pick a task from `docs/first-issues.md`.
 - Branch conventions: feature/<name>-<what>, fix/<name>-<what>. PR required for merges.
 - No schema or database changes without founder and Data Analyst sign-off.
-- `legacy-app/` is the earlier single-user version, kept for reference until the team agrees to remove it.
