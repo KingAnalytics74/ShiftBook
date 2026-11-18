@@ -90,7 +90,6 @@ app/src/styles.css       design tokens (light and dark) and all styles
 supabase/schema.sql  database tables, row-level security, delete_my_account() and the community functions
 docs/DATA_MODEL.md   documents, fields and rules
 docs/00-start-here.md, docs/decisions.md, docs/first-issues.md   team notes, decisions and starter tasks
-legacy-app/          the earlier single-user version, kept for reference
 ```
 
 ## Sign-up and sign-in
