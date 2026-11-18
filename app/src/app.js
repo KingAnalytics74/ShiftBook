@@ -1220,8 +1220,10 @@ import { mountAreaPicker } from "./area-picker.js";
   const deepInfo = (location.hash.match(/^#(privacy|terms|faq)$/) || [])[1];
   if (deepInfo) setTimeout(() => openInfo(deepInfo), 700);
   if ($("#delAll")) {
-    $("#delAll").onclick = () => { $("#delAllConfirm").hidden = false; };
-    $("#delAllNo").onclick = () => { $("#delAllConfirm").hidden = true; };
+    const delType = $("#delAllType"), delYes = $("#delAllYes");
+    $("#delAll").onclick = () => { $("#delAllConfirm").hidden = false; $("#delAll").hidden = true; delType.value = ""; delYes.disabled = true; delType.focus(); };
+    $("#delAllNo").onclick = () => { $("#delAllConfirm").hidden = true; $("#delAll").hidden = false; };
+    delType.oninput = () => { delYes.disabled = delType.value.trim().toUpperCase() !== "DELETE"; };
     $("#delAllYes").onclick = async () => {
       if (!S) { toast("Nothing to delete in this view"); return; }
       $("#delAllYes").disabled = true;
@@ -1233,10 +1235,9 @@ import { mountAreaPicker } from "./area-picker.js";
         await Promise.all(jobs);
         await S.money().delete(); await S.main().delete();
         if (window.SBAuth) { try { await SBAuth.deleteAccount(); } catch (e3) { } toast("Your account has been deleted"); setTimeout(() => location.reload(), 1200); return; }
-        $("#delAllConfirm").hidden = true; toast("All your Shiftbuck data has been deleted");
-        closeInfo();
+        $("#delAllConfirm").hidden = true; $("#delAll").hidden = false; toast("All your Shiftbuck data has been deleted");
       } catch (e2) { toast("Some data wasn't deleted. Try again."); }
-      finally { $("#delAllYes").disabled = false; }
+      finally { $("#delAllYes").disabled = $("#delAllType").value.trim().toUpperCase() !== "DELETE"; }
     };
   }
 

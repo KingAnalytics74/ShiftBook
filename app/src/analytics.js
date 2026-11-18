@@ -64,7 +64,7 @@
   function start() {
     if ($("consentYes")) $("consentYes").onclick = function () { choose(true); };
     if ($("consentNo")) $("consentNo").onclick = function () { choose(false); };
-    var cs = $("cookieSettings"); if (cs) cs.onclick = function () { show(true, true); };
+    Array.prototype.forEach.call(document.querySelectorAll("#cookieSettings,[data-cookie-settings]"), function (cs) { cs.onclick = function () { show(true, true); }; });
     var c = get();
     if (c === "yes") load(); else if (c !== "no") show(true);
   }

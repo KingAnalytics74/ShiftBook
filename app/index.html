@@ -512,8 +512,7 @@
             data-signout>Sign out</button></div>
         <div class="acctpause">
           <p class="hint" style="margin:0">Taking a break from care work? <b>Pause your account</b>: you'll be signed
-            out and everything is kept until you come back and reactivate it. To remove everything for good, use Privacy
-            → Delete my account.</p>
+            out and everything is kept until you come back and reactivate it.</p>
           <button type="button" class="btn secondary" id="pauseBtn">Pause my account</button>
           <div class="confirm" id="pauseConfirm" hidden>
             <span>Pause your account? You'll be signed out. Sign in any time to reactivate it.</span>
@@ -522,6 +521,28 @@
             <div class="banner bad" id="pauseErr" hidden></div>
           </div>
         </div>
+        <div class="acctpause">
+          <p class="hint" style="margin:0"><b>Delete my account</b>: removes your account and all your shifts,
+            payslips, spending and settings for good. It can't be undone, so download a backup first if you want one.</p>
+          <button type="button" class="btn danger" id="delAll">Delete my account</button>
+          <div class="confirm" id="delAllConfirm" hidden>
+            <span>This deletes your account and all your Shiftbuck data. It can't be undone. Type <b>DELETE</b> to
+              confirm.</span>
+            <input type="text" id="delAllType" autocomplete="off" autocapitalize="characters" spellcheck="false"
+              aria-label="Type DELETE to confirm">
+            <div class="actions"><button type="button" class="btn danger" id="delAllYes" disabled>Delete everything</button><button
+                type="button" class="btn secondary" id="delAllNo">Keep my account</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="card" id="aboutCard">
+        <h2>About and legal</h2>
+        <nav class="aboutlist" aria-label="About and legal">
+          <a href="#privacy" data-info="privacy">Privacy notice</a>
+          <a href="#terms" data-info="terms">Terms of use</a>
+          <button type="button" data-cookie-settings>Cookie settings</button>
+          <a href="/#faq" target="_blank" rel="noopener">Help and FAQ<span class="sr"> (opens the Shiftbuck website)</span></a>
+        </nav>
       </div>
     </section>
 
@@ -836,14 +857,8 @@
         <p>Pay, tax and rest figures are estimates to help you plan. They are not financial, tax or legal advice. Your
           payslip is the final word.</p>
         <h3>Delete my account</h3>
-        <p>This deletes your account and all your shifts, payslips, spending and settings. It can't be undone, so
-          download a backup first if you want one.</p>
-        <button type="button" class="btn danger" id="delAll">Delete my account</button>
-        <div class="confirm" id="delAllConfirm" hidden>
-          <span>Delete your account and all your Shiftbuck data? This can't be undone.</span>
-          <div class="actions"><button type="button" class="btn danger" id="delAllYes">Yes, delete
-              everything</button><button type="button" class="btn secondary" id="delAllNo">Keep my data</button></div>
-        </div>
+        <p>You can delete your account and everything in it at any time from <b>Settings → Your account</b>. It removes
+          your shifts, payslips, spending and settings for good, so download a backup first if you want one.</p>
       </div>
     </section>
 
@@ -1019,8 +1034,7 @@
       <nav class="footlinks"><a href="#privacy" data-info="privacy">Privacy</a><span aria-hidden="true">·</span><a
           href="#terms" data-info="terms">Terms</a><span aria-hidden="true">·</span><a href="#faq"
           data-info="faq">FAQ</a><span aria-hidden="true">·</span><button type="button" class="footso"
-          id="cookieSettings">Cookie settings</button><span aria-hidden="true" class="so">·</span><button type="button" class="footso so"
-          data-signout>Sign out</button></nav>Powered by <a class="poweredlink" href="https://westechinnovation.com/"
+          id="cookieSettings">Cookie settings</button></nav>Powered by <a class="poweredlink" href="https://westechinnovation.com/"
         target="_blank" rel="noopener"><b>WesTech Innovation</b><span class="sr"> (opens westechinnovation.com in a new
           tab)</span></a>
     </footer>

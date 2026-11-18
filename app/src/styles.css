@@ -802,3 +802,11 @@ body[data-view="profile"] .period{display:none}
 /* headings: Fraunces (warm serif) */
 h1,h2,h3,.brand h1,.card h2,.info h3,.vtitle,.pfname{font-family:var(--f-head);letter-spacing:-.02em}
 .card h2{font-weight:700}
+
+/* settings: legal links live here; the page footer only carries them before sign-in */
+body:not(.authing):not(.onboarding) .footlinks{display:none}
+.aboutlist{display:flex;flex-direction:column}
+.aboutlist a,.aboutlist button{display:flex;align-items:center;justify-content:space-between;min-height:48px;padding:0 2px;border:0;border-bottom:1px solid var(--line);background:transparent;color:var(--ink);font:inherit;font-weight:600;text-decoration:none;text-align:left;cursor:pointer;width:100%}
+.aboutlist a::after,.aboutlist button::after{content:"›";color:var(--muted);font-size:20px}
+.aboutlist>:last-child{border-bottom:0}
+.confirm input[type=text]{width:100%}

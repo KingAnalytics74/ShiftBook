@@ -2,6 +2,14 @@
 
 const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+// signed-in visitors: the sign-up buttons become "Open app", and Sign in becomes Sign out
+if (document.documentElement.classList.contains("in")) {
+  document.querySelectorAll('a[href^="app/?go="]').forEach(a => {
+    if (a.classList.contains("signin") || a.classList.contains("signin-top")) { a.textContent = "Sign out"; a.href = "app/?signout=1"; }
+    else { a.href = "app/"; a.textContent = a.classList.contains("sm") ? "Open app" : "Open your app"; }
+  });
+}
+
 // mobile menu
 const menu = document.getElementById("menu"), links = document.getElementById("links");
 if (menu && links) {

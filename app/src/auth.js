@@ -450,7 +450,7 @@
         <button type="button" class="btn secondary authbtn" id="pausedOut">Sign out</button>
       </div>
       <div class="banner bad" id="authErr" hidden></div>
-      <p class="obpriv">Want to remove everything instead? Reactivate, then go to Privacy → Delete my account.</p>`;
+      <p class="obpriv">Want to remove everything instead? Reactivate, then go to Settings → Delete my account.</p>`;
     $("#reactBtn").onclick = async () => {
       setBusy(true, $("#reactBtn"));
       try { await writeAcct(current.id, { status: "active", since: new Date().toISOString(), reactivated: true }); location.reload(); }
@@ -482,7 +482,7 @@
   function needSignIn() {
     document.body.classList.add("authing");
     watchScreens();
-    const tc = document.querySelector('meta[name="theme-color"]'); if (tc) tc.content = "#FFF8E6";
+    const tc = document.querySelector('meta[name="theme-color"]'); if (tc) tc.content = "#EDF7FC";
     const box = $("#view-auth"); if (box) box.hidden = false;
     let out = false; try { out = sessionStorage.getItem("shiftbook:signedout") === "1"; sessionStorage.removeItem("shiftbook:signedout"); } catch (e) {}
     screenStart();
@@ -490,6 +490,8 @@
     if (out) { const h = root().querySelector(".obh"); if (h) h.insertAdjacentHTML("beforebegin", `<p class="authdemo" style="background:var(--good-soft)">You've signed out. Your data is safe and will be here when you sign back in.</p>`); }
   }
   async function start() {
+    // "Sign out" on the homepage links here
+    if (new URLSearchParams(location.search).get("signout")) { history.replaceState(null, "", location.pathname + location.hash); await signOut(); return; }
     if (mode === "supabase") {
       const { data } = await client.auth.getSession();
       if (data && data.session && recovering) screenNewPassword();
