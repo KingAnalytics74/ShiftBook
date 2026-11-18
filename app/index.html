@@ -23,6 +23,23 @@
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <meta name="theme-color" content="#3E4095">
   <link rel="stylesheet" href="src/styles.css">
+  <!-- Deferred: downloaded in parallel while the page is read, then run in this order. The cookie banner (analytics.js) needs nothing else, so it goes first. -->
+  <script defer src="src/analytics.js"></script>
+  <script defer src="src/vendor/supabase.js"></script>
+  <script defer src="src/config.js"></script>
+  <script defer src="src/auth.js"></script>
+  <script defer src="src/platform.js"></script>
+  <script defer src="src/community-store.js"></script>
+  <script type="module" src="src/app.js"></script>
+  <link rel="modulepreload" href="src/core/dates.js">
+  <link rel="modulepreload" href="src/core/periods.js">
+  <link rel="modulepreload" href="src/core/pay.js">
+  <link rel="modulepreload" href="src/core/restCheck.js">
+  <link rel="modulepreload" href="src/core/tax.js">
+  <link rel="modulepreload" href="src/core/forecast.js">
+  <link rel="modulepreload" href="src/core/areas.js">
+  <link rel="modulepreload" href="src/core/areas-data.js">
+  <link rel="modulepreload" href="src/area-picker.js">
 </head>
 
 <body data-clarity-mask="True">
@@ -1062,13 +1079,7 @@
   </div>
   <div id="tip" role="tooltip" hidden></div>
 
-  <script src="src/vendor/supabase.js"></script>
-  <script src="src/config.js"></script>
-  <script src="src/auth.js"></script>
-  <script src="src/platform.js"></script>
-  <script src="src/community-store.js"></script>
-  <script type="module" src="src/app.js"></script>
-  <script src="src/analytics.js"></script>
+
 </body>
 
 </html>
