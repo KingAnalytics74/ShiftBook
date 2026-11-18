@@ -7,8 +7,8 @@
 (function () {
   var h = document.documentElement, signed = false;
   try {
-    if (localStorage.getItem("shiftbook:auth")) signed = true;
-    for (var i = 0; i < localStorage.length; i++) { var k = localStorage.key(i); if (/^sb-.+-auth-token$/.test(k)) signed = true; }
+    if (sessionStorage.getItem("shiftbook:auth")) signed = true;
+    for (var i = 0; i < sessionStorage.length; i++) { var k = sessionStorage.key(i); if (/^sb-.+-auth-token$/.test(k)) signed = true; }
   } catch (e) {}
   h.classList.add("boot");
   if (!signed) {

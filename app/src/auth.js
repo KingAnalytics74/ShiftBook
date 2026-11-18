@@ -22,8 +22,12 @@
   // read before the Supabase client tidies the URL: a password-reset link lands here with type=recovery
   let recovering = /(^|[#&?])type=recovery(&|$)/.test(location.hash + location.search);
   const mode = CFG.supabaseUrl && CFG.supabaseAnonKey && window.supabase ? "supabase" : "demo";
-  const client = mode === "supabase" ? window.supabase.createClient(CFG.supabaseUrl, CFG.supabaseAnonKey, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } }) : null;
+  const client = mode === "supabase" ? window.supabase.createClient(CFG.supabaseUrl, CFG.supabaseAnonKey, { auth: { storage: window.sessionStorage, persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } }) : null;
   const DEMO_KEY = "shiftbook:auth";
+  // The sign-in lives only as long as the browser tab: close the tab and you are signed out. Your data stays saved.
+  const sess = { get: k => { try { return JSON.parse(sessionStorage.getItem(k)); } catch (e) { return null; } }, set: (k, v) => { try { sessionStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }, del: k => { try { sessionStorage.removeItem(k); } catch (e) {} } };
+  // clear any sign-in saved by older versions, which kept people signed in for good
+  try { localStorage.removeItem(DEMO_KEY); Object.keys(localStorage).filter(k => /^sb-.+-auth-token$/.test(k)).forEach(k => localStorage.removeItem(k)); } catch (e) {}
   const $ = s => document.querySelector(s);
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
@@ -182,7 +186,7 @@
     } else {
       if ((store.get(PWS) || {})[email]) throw { exists: true };
       await demoSetPw(email, pw); demoAdd(email);
-      const u = { id: demoId(email), email }; store.set(DEMO_KEY, u); signedIn(u);
+      const u = { id: demoId(email), email }; sess.set(DEMO_KEY, u); signedIn(u);
     }
   }
   async function pwSignIn(email, pw) {
@@ -192,7 +196,7 @@
     } else {
       const rec = (store.get(PWS) || {})[email];
       if (!rec || rec.hash !== await demoHash(pw, rec.salt)) throw { badLogin: true };
-      const u = { id: demoId(email), email }; store.set(DEMO_KEY, u); signedIn(u);
+      const u = { id: demoId(email), email }; sess.set(DEMO_KEY, u); signedIn(u);
     }
   }
   function pwError(e, email) {
@@ -284,7 +288,7 @@
           signedIn(fromSupabase(data.user));
         } else {
           await demoSetPw(demoEmail, pw); demoAdd(demoEmail);
-          const u = { id: demoId(demoEmail), email: demoEmail }; store.set(DEMO_KEY, u); signedIn(u);
+          const u = { id: demoId(demoEmail), email: demoEmail }; sess.set(DEMO_KEY, u); signedIn(u);
         }
       } catch (e2) {
         const m = (e2 && e2.message) || "";
@@ -366,7 +370,7 @@
           if (error) throw error; signedIn(fromSupabase(data.user));
         } else {
           if (t !== demoCode) throw new Error("bad code");
-          const u = { id: demoId(ident), [kind]: ident }; demoAdd(ident); store.set(DEMO_KEY, u); signedIn(u);
+          const u = { id: demoId(ident), [kind]: ident }; demoAdd(ident); sess.set(DEMO_KEY, u); signedIn(u);
         }
       } catch (e2) { err("That code didn't work or has expired. Check it, or ask for a new code."); code.select(); }
       finally { setBusy(false, $("#authVerify")); }
@@ -413,7 +417,7 @@
       e.preventDefault();
       const email = normEmail($("#authId").value);
       if (!email) { err("Enter an email address like you@gmail.com."); return; }
-      const u = { id: demoId(email), email }; demoAdd(email); store.set(DEMO_KEY, u); signedIn(u);
+      const u = { id: demoId(email), email }; demoAdd(email); sess.set(DEMO_KEY, u); signedIn(u);
     };
   }
 
@@ -469,13 +473,13 @@
     w.innerHTML = `Signed in as <b>${esc(who)}</b>${mode === "demo" ? " · demo mode, saved in this browser" : ""}`;
   }
   async function signOut() {
-    if (mode === "supabase") { try { await client.auth.signOut(); } catch (e) {} } else store.del(DEMO_KEY);
+    if (mode === "supabase") { try { await client.auth.signOut(); } catch (e) {} } else sess.del(DEMO_KEY);
     try { sessionStorage.setItem("shiftbook:signedout", "1"); } catch (e) {}
     location.reload();
   }
   async function deleteAccount() {
     if (mode === "supabase") { const { error } = await client.rpc("delete_my_account"); if (error) throw error; await client.auth.signOut(); }
-    else { const u = store.get(DEMO_KEY); if (u) { demoDrop(u.phone || u.email); store.del("shiftbook:" + acctPath(u.id)); } store.del(DEMO_KEY); }
+    else { const u = sess.get(DEMO_KEY); if (u) { demoDrop(u.phone || u.email); store.del("shiftbook:" + acctPath(u.id)); } sess.del(DEMO_KEY); }
   }
 
   // ---- start ----
@@ -501,7 +505,7 @@
         if (ev === "SIGNED_IN" && s && !current && !recovering) signedIn(fromSupabase(s.user));
       });
     } else {
-      const u = store.get(DEMO_KEY);
+      const u = sess.get(DEMO_KEY);
       if (u && u.id) signedIn(u); else needSignIn();
     }
     document.querySelectorAll("[data-signout]").forEach(b => b.onclick = signOut);
