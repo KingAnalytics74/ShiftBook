@@ -1,3 +1,8 @@
+// Email links (confirm, magic link, reset) can land on the homepage when Supabase's Site URL is the bare domain. Pass them straight on to the app, which signs the person in.
+if (/[#&?](access_token|error_description|error_code)=|[?&]token_hash=/.test(location.hash + location.search)) {
+  location.replace("/app/" + location.search + location.hash);
+}
+
 document.documentElement.classList.add("js");
 
 // Signed in already? Then the homepage offers "Open app" instead of sign-up. Nothing is sent anywhere: it only looks for the sign-in kept by this browser tab.

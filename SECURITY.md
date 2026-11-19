@@ -4,7 +4,7 @@ Shiftbuck holds care workers' pay, shifts and private messages. This page covers
 
 ## Reporting a problem
 
-If you think you've found a security problem, **don't open a public GitHub issue**. Message the Shiftbuck team in the app (Community → Messages), or contact WesTech Innovation through [westechinnovation.com](https://westechinnovation.com/). Say what you found and how to repeat it. Please don't access or change other people's data while checking.
+If you think you've found a security problem, **don't open a public GitHub issue**. Message the Shiftbuck team in the app (Community → Messages), or contact WestByte. Say what you found and how to repeat it. Please don't access or change other people's data while checking.
 
 ## What's built in
 

@@ -512,9 +512,24 @@
     // "Sign out" on the homepage links here
     if (new URLSearchParams(location.search).get("signout")) { history.replaceState(null, "", location.pathname + location.hash); await signOut(); return; }
     if (mode === "supabase") {
+      // Email links: either ?token_hash=...&type=... (our own email templates) or a #error=... that Supabase sends when a link has already been used or has run out
+      const qs = new URLSearchParams(location.search), hs = new URLSearchParams(location.hash.replace(/^#/, ""));
+      const th = qs.get("token_hash"), ty = qs.get("type");
+      let linkNote = "";
+      if (th && ty) {
+        try { history.replaceState(null, "", location.pathname); } catch (e) {}
+        if (ty === "recovery") recovering = true;
+        const { error } = await client.auth.verifyOtp({ token_hash: th, type: ty });
+        if (error) { recovering = false; linkNote = "That link has expired or was already used. Email links only work once. Sign in below, or ask for a new one."; }
+      } else if (hs.get("error") || hs.get("error_description") || qs.get("error_description")) {
+        const d = (hs.get("error_description") || qs.get("error_description") || "").toLowerCase();
+        try { history.replaceState(null, "", location.pathname); } catch (e) {}
+        recovering = false;
+        linkNote = /expired|invalid|used/.test(d) ? "That link has expired or was already used. Email links only work once. Sign in below, or ask for a new one." : "We couldn't open that email link. Sign in below, or ask for a new one.";
+      }
       const { data } = await client.auth.getSession();
       if (data && data.session && recovering) screenNewPassword();
-      else if (data && data.session) signedIn(fromSupabase(data.session.user)); else needSignIn();
+      else if (data && data.session) signedIn(fromSupabase(data.session.user)); else { needSignIn(); if (linkNote) { const h = root().querySelector(".obh"); if (h) h.insertAdjacentHTML("beforebegin", `<p class="authdemo" style="background:var(--warn-soft,#FFF3D6)">${esc(linkNote)}</p>`); } }
       client.auth.onAuthStateChange((ev, s) => {
         if (ev === "PASSWORD_RECOVERY") { recovering = true; screenNewPassword(); return; }
         if (ev === "SIGNED_IN" && s && !current && !recovering) signedIn(fromSupabase(s.user));

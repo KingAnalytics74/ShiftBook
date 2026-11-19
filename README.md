@@ -4,7 +4,7 @@
 
 **Know your pay before payday.** A shift log, pay, tax and budgeting app built for UK care workers and support workers.
 
-Powered by **WesTech Innovation**.
+Powered by **WestByte**.
 
 ## Features
 

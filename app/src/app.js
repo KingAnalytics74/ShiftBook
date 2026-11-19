@@ -27,6 +27,7 @@ import { forecast as forecastCore, shiftKind } from "./core/forecast.js";
 import { resolveArea } from "./core/areas.js";
 import { mountAreaPicker } from "./area-picker.js";
 import "./timepicker.js";
+import "./datepicker.js";
 
 
 (() => {
@@ -1111,6 +1112,7 @@ import "./timepicker.js";
     { const pct = obPos(obStep) / OB_TOTAL * 100, c = $("#obCoin"), w = $("#obBar").parentNode.clientWidth;
       c.style.setProperty("--p", String(pct));
       c.style.setProperty("--rot", String(Math.round((w * pct / 100) / (Math.PI * 28) * 360))); } // rolls without slipping: distance / circumference
+    document.querySelectorAll("#obAside [data-s], .obaside [data-s]").forEach(li => { const n = Number(li.dataset.s); li.classList.toggle("done", n < obStep); li.classList.toggle("now", n === obStep); li.setAttribute("aria-current", n === obStep ? "step" : "false"); });
     $("#obCount").textContent = obStep ? `Step ${obPos(obStep)} of ${OB_TOTAL}` : "";
     $("#obBack").hidden = obStep <= OB_FIRST;
     $("#obNext").hidden = obStep === OB_LAST; $("#setupBtn").hidden = obStep !== OB_LAST;
