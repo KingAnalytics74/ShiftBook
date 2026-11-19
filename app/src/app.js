@@ -1197,14 +1197,18 @@ import "./datepicker.js";
       const btn = !x.existing && x.guess && x.p >= 0.3 ? `<button type="button" class="btn secondary fcadd" data-fc="${x.key}">Add to rota</button>` : "";
       return `<div class="fcday ${st[0]}"><div class="fcdate"><b>${fmt(x.d, { weekday: "short" })}</b><span>${fmt(x.d, { day: "numeric", month: "short" })}</span></div><div class="fcbody"><span class="fcpill ${st[0]}">${st[1]}</span><div class="fcdet">${det}</div><div class="fcbar" aria-hidden="true"><i style="width:${x.existing ? 100 : pct}%"></i></div></div><div class="fcpay num">${shown ? gbp(x.pay) : "–"}${btn}</div></div>`;
     }).join("");
-    const m = new Map(state.shifts); likely.forEach(x => { if (!x.existing && x.guess) m.set(x.key, x.guess); });
-    const rs = f.days.map(x => ({ x, r: restDay(x.key, m) })), red = rs.filter(o => o.r.level === "red"), amber = rs.filter(o => o.r.level === "amber");
+    // Rest counts only shifts the person has logged or added to their rota. Predicted shifts are suggestions:
+    // a day with nothing logged is a day off, so rest improves until they choose to add a shift.
+    const rs = f.days.map(x => ({ x, r: restDay(x.key, state.shifts) })), red = rs.filter(o => o.r.level === "red"), amber = rs.filter(o => o.r.level === "amber");
     const lvl = red.length ? "red" : amber.length ? "amber" : "ok", worst = red[0] || amber[0];
     $("#fcRestCard").className = "card restcard lvl-" + lvl; $("#fcRestPill").className = "rpill " + lvl;
     $("#fcRestPill").textContent = lvl === "red" ? "⚠ Not resting enough" : lvl === "amber" ? "Watch your rest" : "✓ Well rested";
     $("#ovNextPay").textContent = gbp(expected); $("#ovNextPill").className = "rpill " + lvl; $("#ovNextPill").textContent = $("#fcRestPill").textContent;
-    $("#ovNextText").textContent = `Expected pay, ${f0(f.days[0].d)} – ${f0(f.days[6].d)}. ${worst ? "Watch your rest." : "Rest looks fine."}`;
-    $("#fcRestText").innerHTML = worst ? `If the likely shifts happen: ${worst.r.reasons[0]} on ${f0(worst.x.d)}. Try to keep a full day off this week.` : "If the likely shifts happen, you'll still get regular days off.";
+    const booked = f.days.filter(x => x.existing).length;
+    $("#ovNextText").textContent = `Expected pay, ${f0(f.days[0].d)} – ${f0(f.days[6].d)}. ${worst ? "Watch your rest." : booked ? "Rest looks fine." : "Rest is improving."}`;
+    $("#fcRestText").innerHTML = worst ? `From the shifts on your rota: ${worst.r.reasons[0]} on ${f0(worst.x.d)}. Try to keep a full day off this week.`
+      : booked ? `From the ${booked} shift${booked === 1 ? "" : "s"} on your rota this week, you'll still get regular days off.`
+      : "No shifts on your rota for the next 7 days, so your rest is improving. Predicted shifts below don't count until you add them.";
   }
   $("#fcList").addEventListener("click", e => {
     const b = e.target.closest(".fcadd"); if (!b) return;
