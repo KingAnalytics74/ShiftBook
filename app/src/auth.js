@@ -345,7 +345,7 @@
         if (!up() && !demoHas(ident)) throw { noAccount: true };
         demoCode = String(Math.floor(100000 + Math.random() * 900000));
       }
-      resendAt = Date.now() + 30000; screenCode();
+      resendAt = Date.now() + 60000; screenCode();   // Supabase allows one email per 60 seconds, so a sooner resend would only be refused
     } catch (e) {
       const m = (e && e.message) || "";
       if (e && e.noAccount || /signups not allowed|user not found|not found/i.test(m)) {
@@ -386,7 +386,7 @@
           if (t !== demoCode) throw new Error("bad code");
           const u = { id: demoId(ident), [kind]: ident }; demoAdd(ident); sess.set(DEMO_KEY, u); signedIn(u);
         }
-      } catch (e2) { err("That code didn't work or has expired. Check it, or ask for a new code."); code.select(); }
+      } catch (e2) { err("That code didn't work. Check the digits, and use the newest email: each new code replaces the one before it. Or ask for a new code."); code.select(); }
       finally { setBusy(false, $("#authVerify")); }
     };
     const r = $("#authResend");
