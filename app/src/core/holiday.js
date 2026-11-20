@@ -11,7 +11,7 @@
 //   Holiday pay is the average pay over the last 52 weeks with pay (up to 104 weeks back), Sunday to Saturday weeks.
 //
 // hol (the user's holiday settings, all optional):
-//   { mode: "irregular" | "regular" | "rolledup", startMonth: 1-12, weeks: 5.6, daysPerWeek, hoursPerDay,
+//   { mode: "irregular" | "regular" | "rolledup", startMonth: 1-12, startDay: 1-31, weeks: 5.6, daysPerWeek, hoursPerDay,
 //     contractDays (days a year when the contract gives a fixed number), sleepIns: "no" | "payroll",
 //     carriedHours, joined: "YYYY-MM-DD" (started the job during this leave year) }
 
@@ -27,12 +27,17 @@ export const accrualRate = (weeks = STATUTORY_WEEKS) => {
     return Math.round(w / (52 - w) * 10000) / 10000;
 };
 
-// The leave year containing date d. startMonth is 1 (January) to 12.
-export function leaveYear(d, startMonth = 1) {
+// The leave year containing date d. Leave years start on any day: 1 January, 1 April,
+// 6 April, the day someone started the job... startMonth is 1-12, startDay 1-31
+// (a day the month doesn't have, like 31 in a 30-day month, means its last day).
+const yearStart = (y, m, day) => new Date(y, m, Math.min(day, new Date(y, m + 1, 0).getDate()));
+export function leaveYear(d, startMonth = 1, startDay = 1) {
     const m = Math.min(Math.max(Math.round(Number(startMonth) || 1), 1), 12) - 1;
-    let y = d.getFullYear();
-    if (d.getMonth() < m) y -= 1;
-    const start = new Date(y, m, 1), end = addDays(new Date(y + 1, m, 1), -1);
+    const day = Math.min(Math.max(Math.round(Number(startDay) || 1), 1), 31);
+    const t = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    let y = t.getFullYear();
+    if (t < yearStart(y, m, day)) y -= 1;
+    const start = yearStart(y, m, day), end = addDays(yearStart(y + 1, m, day), -1);
     return { start, end, startKey: ymd(start), endKey: ymd(end) };
 }
 
@@ -134,7 +139,7 @@ export const rolledUp = (gross, weeks) => Math.round(gross * accrualRate(weeks) 
 
 // Everything the Holiday screen shows, in hours.
 export function holidaySummary({ shifts, holidays, cfg, hol = {}, todayStr, periodFor }) {
-    const year = leaveYear(parse(todayStr), hol.startMonth || 1);
+    const year = leaveYear(parse(todayStr), hol.startMonth || 1, hol.startDay || 1);
     const mode = hol.mode || "irregular";
     const carried = Math.max(0, Number(hol.carriedHours) || 0);
     const used = usedHours(holidays || [], year, todayStr);

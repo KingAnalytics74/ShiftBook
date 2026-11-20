@@ -21,6 +21,22 @@ test("leave year from January or April", () => {
     assert.equal(a.startKey, "2026-04-01"); assert.equal(a.endKey, "2027-03-31");
 });
 
+test("leave year can start on any day", () => {
+    const tax = leaveYear(new Date(2026, 10, 20), 4, 6); // 6 April, like the tax year
+    assert.equal(tax.startKey, "2026-04-06"); assert.equal(tax.endKey, "2027-04-05");
+    const before = leaveYear(new Date(2026, 3, 5), 4, 6); // 5 April is still last year's
+    assert.equal(before.startKey, "2025-04-06"); assert.equal(before.endKey, "2026-04-05");
+    const started = leaveYear(new Date(2026, 10, 20), 9, 15); // the day they started: 15 September
+    assert.equal(started.startKey, "2026-09-15"); assert.equal(started.endKey, "2027-09-14");
+    const late = leaveYear(new Date(2026, 1, 28), 2, 31); // 31 February means the last day of February
+    assert.equal(late.startKey, "2026-02-28"); assert.equal(late.endKey, "2027-02-27");
+});
+
+test("summary uses the chosen start day", () => {
+    const s = holidaySummary({ shifts: new Map(), holidays: [], cfg, hol: { startMonth: 4, startDay: 6 }, todayStr: "2026-11-20", periodFor: pf });
+    assert.equal(s.year.startKey, "2026-04-06");
+});
+
 test("hours counted: breaks off, sleep-ins only when payroll turns them into hours", () => {
     const day = { date: "2026-11-02", dayHours: 12, breakHrs: 2 };
     const sleep = { date: "2026-11-03", dayHours: null, sleepIn: true };

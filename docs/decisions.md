@@ -23,3 +23,6 @@
 - 2026-11-19: Rest outlook (Forecast tab and Overview) now counts only shifts the person has logged or added to their rota, at the founder's request. Predicted shifts are suggestions and never trigger a rest warning until the person adds them; with nothing logged ahead it says rest is improving.
 - 2026-11-20: Removed the three `signup-redesign*.patch` files from the repo root. They were leftovers from the sign-up redesign (already merged) and were being published on the website. Babatee agreed.
 - 2026-11-20: Holiday tab added under Stats: leave left, built up, taken and booked; booking; holiday pay estimate; settings for irregular, regular and rolled-up holiday; sector guide (care, NHS, factory, retail, agency, driving and cleaning, term-time) and plain-English rights. GB rules; NI pointed to nidirect.
+
+## Leave year can start on any day (Nov 2026)
+Not everyone's leave year runs January to December. Leave years often start on 1 April, 6 April (tax year), 1 September or the day someone started the job, so the Holiday settings take a day and a month, with one-tap choices for these. A "Change" link next to the leave year at the top of the Holiday tab jumps straight to it. Old settings with only `startMonth` still work (day 1).
