@@ -1272,7 +1272,7 @@ import "./scene.js";
   const CM_SPACES = [["all", "Everything"], ["area", "Near me"], ["pay", "Pay & sleep-ins"], ["rights", "Your rights at work"], ["rest", "Rest & wellbeing"], ["meet", "Meet-ups"], ["general", "General chat"]];
   const CM_LABEL = Object.fromEntries(CM_SPACES);
   const CM_HEART = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.3s-7.4-4.4-9.2-9.1C1.5 7.6 4 4.6 7.2 4.6c2 0 3.6 1.1 4.8 2.8 1.2-1.7 2.8-2.8 4.8-2.8 3.2 0 5.7 3 4.4 6.6-1.8 4.7-9.2 9.1-9.2 9.1z"/></svg>`;
-  const cm = { store: null, feed: { posts: [], hidden: new Set(), reports: [], people: new Map(), team: { thread: [], unread: 0 }, announcements: [], inbox: [], dms: { threads: [], blocked: new Set() } }, space: "all", replyTo: null, reporting: null, uid: null, isMod: false, isTeam: false, thread: null, sheet: null, marking: "", dmReporting: null, lastBubbles: "" };
+  const cm = { pane: "feed", store: null, feed: { posts: [], hidden: new Set(), reports: [], people: new Map(), team: { thread: [], unread: 0 }, announcements: [], inbox: [], dms: { threads: [], blocked: new Set() } }, space: "all", replyTo: null, reporting: null, uid: null, isMod: false, isTeam: false, thread: null, sheet: null, marking: "", dmReporting: null, lastBubbles: "" };
   const cmNorm = v => String(v || "").trim().toLowerCase();
   const cmAgo = iso => { const m = Math.round((Date.now() - new Date(iso)) / 60000); if (m < 1) return "just now"; if (m < 60) return m + " min ago"; const h = Math.round(m / 60); if (h < 24) return h + " h ago"; const d = Math.round(h / 24); return d < 7 ? d + (d === 1 ? " day ago" : " days ago") : new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short" }); };
   const cmNickOk = (n, first) => /^[A-Za-z0-9_]{3,20}$/.test(n) && !(first && first.length > 2 && n.toLowerCase().includes(first.toLowerCase()));
@@ -1397,6 +1397,8 @@ import "./scene.js";
     if (!$("#view-community")) return;
     const me = cmMe(), joined = !!me.nick;
     $("#cmJoin").hidden = joined; $("#cmMain").hidden = !joined;
+    $("#cmPaneFeed").hidden = cm.pane !== "feed"; $("#cmPaneMsgs").hidden = cm.pane !== "msgs";
+    document.querySelectorAll(".cmseg [data-pane]").forEach(b => b.setAttribute("aria-selected", String(b.dataset.pane === cm.pane)));
     const myPid = [...(cm.feed.people || new Map()).entries()].find(([, v]) => v.me)?.[0];
     $("#cmMe").innerHTML = joined ? `You're ${myPid ? `<button type="button" class="linkinline" data-prof="${esc(myPid)}">${esc(me.nick)}</button>` : esc(me.nick)}${me.area ? " · " + esc(me.area) : ""}` : "";
     if (!joined) { if (!$("#cmJoin").contains(document.activeElement)) { $("#cmArea").value ||= (state.profile && state.profile.area) || ""; } return; }
@@ -1445,7 +1447,7 @@ import "./scene.js";
   function cmUnreadTotal(f = cm.feed) {
     return (f.team?.unread || 0) + (cm.isTeam ? (f.inbox || []).reduce((a, x) => a + (x.unread || 0), 0) : 0) + (f.dms?.threads || []).reduce((a, x) => a + (x.unread || 0), 0);
   }
-  function cmBadge() { const n = cmUnreadTotal(); document.querySelectorAll('[data-view="community"]').forEach(b => { b.toggleAttribute("data-unread", n > 0); b.setAttribute("aria-label", n ? `Community, ${n} unread message${n === 1 ? "" : "s"}` : "Community"); }); }
+  function cmBadge() { const n = cmUnreadTotal(); const sb = document.getElementById("cmSegBadge"); if (sb) { sb.hidden = !n; sb.textContent = n > 9 ? "9+" : String(n); } document.querySelectorAll('[data-view="community"]').forEach(b => { b.toggleAttribute("data-unread", n > 0); b.setAttribute("aria-label", n ? `Community, ${n} unread message${n === 1 ? "" : "s"}` : "Community"); }); }
   function cmThreadInfo(t, f = cm.feed) {
     if (!t) return null;
     if (t.kind === "team") return { name: "Shiftbuck team", sub: "Only you and the Shiftbuck team can read these messages.", msgs: f.team?.thread || [], unread: f.team?.unread || 0 };
@@ -1509,7 +1511,7 @@ import "./scene.js";
     cm.thread = t; cm.lastBubbles = ""; cm.dmReporting = null; cm.sheet = null;
     $("#cmMsgErr").hidden = true; $("#cmMsgText").value = "";
     if (cm.store?.openThread) cm.store.openThread(t).catch(() => { });
-    renderCommunity(); $("#cmMsgs").scrollIntoView({ block: "start", behavior: "smooth" });
+    cm.pane = "msgs"; renderCommunity(); $("#cmMsgs").scrollIntoView({ block: "start", behavior: "smooth" });
   }
   function cmRenderSheet() {
     const pid = cm.sheet, box = $("#cmSheet");
@@ -1541,6 +1543,7 @@ import "./scene.js";
   }
   function cmCloseSheet() { const pid = cm.sheet; cm.sheet = null; cmRenderSheet(); const back = pid && document.querySelector(`#cmFeed [data-prof="${CSS.escape(pid)}"]`); if (back) back.focus(); }
   $("#cmSheetClose").onclick = cmCloseSheet;
+  document.querySelector(".cmseg").addEventListener("click", e => { const b = e.target.closest("[data-pane]"); if (!b || cm.pane === b.dataset.pane) return; cm.pane = b.dataset.pane; renderCommunity(); window.scrollTo({ top: 0 }); });
   $("#cmMe").addEventListener("click", e => { const b = e.target.closest("[data-prof]"); if (b) { cm.sheet = b.dataset.prof; cmRenderSheet(); } });
   $("#cmSheet").addEventListener("click", e => { if (e.target === $("#cmSheet")) cmCloseSheet(); });
   document.addEventListener("keydown", e => { if (e.key === "Escape" && cm.sheet) cmCloseSheet(); });
@@ -1578,7 +1581,7 @@ import "./scene.js";
     catch (e2) { $("#cmErr").textContent = "That didn't post. Check your connection and try again."; $("#cmErr").hidden = false; }
     finally { $("#cmPost").disabled = false; }
   });
-  $("#cmFeed").parentElement.addEventListener("click", async e => {
+  $("#cmMain").addEventListener("click", async e => {
     const t = e.target.closest("button"); if (!t || !cm.store) return;
     const d = t.dataset;
     if (d.prof) { cm.sheet = d.prof; cmRenderSheet(); return; }

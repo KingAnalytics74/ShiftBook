@@ -692,14 +692,10 @@
 
     <!-- COMMUNITY: carers talk under nicknames -->
     <section class="view" id="view-community" hidden>
-      <div class="card cmhead">
-        <div class="charthead">
-          <h2>Carers' community</h2><span class="hint" id="cmMe"></span>
-        </div>
-        <p class="cmlede">Talk to other carers about shifts, pay, rest and meeting up. Everyone shows as a nickname:
-          nobody sees your name or where you work.</p>
+      <div class="cmtop">
+        <span class="hint" id="cmMe"></span>
         <details class="cmrules">
-          <summary>House rules</summary>
+          <summary>House rules and staying safe</summary>
           <ul>
             <li><b>Never name or describe the people you support.</b> No names, initials, addresses or health details.
               That's their private information.</li>
@@ -709,13 +705,13 @@
             <li>Meet-ups: meet in public places, tell someone where you're going, and don't share your home address.
             </li>
           </ul>
-        </details>
-        <p class="cmspeak"><b>Worried about care or safety at work?</b> A post here won't fix it. Raise it with your
+          <p class="cmspeak"><b>Worried about care or safety at work?</b> A post here won't fix it. Raise it with your
           manager or your company's whistleblowing line, <a
             href="https://www.cqc.org.uk/contact-us/report-concern/share-your-experience-whistleblowing" target="_blank"
             rel="noopener">tell the CQC</a>, or get free, confidential advice from <a
             href="https://protect-advice.org.uk/" target="_blank" rel="noopener">Protect</a>. If someone is in danger,
           call 999.</p>
+        </details>
       </div>
       <div class="card" id="cmJoin" hidden>
         <h2>Choose your nickname</h2>
@@ -745,39 +741,14 @@
         </form>
       </div>
       <div id="cmMain" hidden>
+        <div class="cmseg" role="tablist" aria-label="Community or messages">
+          <button type="button" role="tab" id="cmTabFeed" data-pane="feed" aria-selected="true">Community</button>
+          <button type="button" role="tab" id="cmTabMsgs" data-pane="msgs" aria-selected="false">Messages<span class="cmsegbadge" id="cmSegBadge" hidden></span></button>
+        </div>
+        <div class="cmpane" id="cmPaneFeed">
         <div class="card cmann" id="cmAnn" hidden>
           <h2>From the Shiftbuck team</h2>
           <div id="cmAnnList"></div>
-        </div>
-        <div class="card" id="cmMsgs">
-          <div class="charthead">
-            <h2>Messages</h2><span class="hint" id="cmMsgHint"></span>
-          </div>
-          <div id="cmMsgHome">
-            <div class="cmrows" id="cmMsgList"></div>
-          </div>
-          <div id="cmThread" hidden>
-            <button type="button" class="linkinline" id="cmThreadBack">‹ All messages</button>
-            <div class="cmthreadhead">
-              <div><b id="cmThreadName"></b>
-                <div class="hint" id="cmThreadSub"></div>
-              </div>
-              <div class="cmacts" id="cmThreadActs"></div>
-            </div>
-            <div class="cmbubbles" id="cmBubbles" aria-live="polite"></div>
-            <form id="cmMsgForm" novalidate>
-              <label for="cmMsgText" class="lbl" id="cmMsgLbl">Your message</label>
-              <textarea id="cmMsgText" maxlength="1000"></textarea>
-              <div class="banner bad" id="cmMsgErr" hidden></div>
-              <div class="actions"><button class="btn" type="submit" id="cmMsgSend">Send</button></div>
-            </form>
-          </div>
-          <form id="cmAnnForm" novalidate hidden>
-            <label for="cmAnnText" class="lbl">Announcement to every carer <span class="hint">team only</span></label>
-            <textarea id="cmAnnText" maxlength="1000"
-              placeholder="e.g. Pilot update: the payslip check now works for weekly pay."></textarea>
-            <div class="actions"><button class="btn secondary" type="submit">Send to everyone</button></div>
-          </form>
         </div>
         <div class="card" id="cmComposer">
           <form id="cmForm" novalidate>
@@ -794,6 +765,42 @@
         </div>
         <div class="cmchips" id="cmSpaces" role="group" aria-label="Spaces"></div>
         <div class="cmfeed" id="cmFeed"></div>
+        <div class="card" id="cmMod" hidden>
+          <h2>Reported posts</h2>
+          <p class="cmlede">Only you can see this. Hidden posts disappear for everyone.</p>
+          <div class="cmfeed" id="cmModList"></div>
+        </div>
+        </div>
+        <div class="cmpane" id="cmPaneMsgs" hidden>
+        <div class="card" id="cmMsgs">
+          <span class="hint" id="cmMsgHint"></span>
+          <div id="cmMsgHome">
+            <div class="cmrows" id="cmMsgList"></div>
+          </div>
+          <div id="cmThread" hidden>
+            <button type="button" class="linkinline" id="cmThreadBack">‹ All messages</button>
+            <div class="cmthreadhead">
+              <div><b id="cmThreadName"></b>
+                <div class="hint" id="cmThreadSub"></div>
+              </div>
+              <div class="cmacts" id="cmThreadActs"></div>
+            </div>
+            <div class="cmbubbles" id="cmBubbles" aria-live="polite"></div>
+            <form id="cmMsgForm" novalidate>
+              <label for="cmMsgText" class="lbl" id="cmMsgLbl">Your message</label>
+              <textarea id="cmMsgText" maxlength="1000" rows="1" placeholder="Message"></textarea>
+              <div class="banner bad" id="cmMsgErr" hidden></div>
+              <div class="actions"><button class="btn" type="submit" id="cmMsgSend" aria-label="Send"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M3.4 20.4 21 12 3.4 3.6 3.3 10l12 2-12 2z"/></svg></button></div>
+            </form>
+          </div>
+          <form id="cmAnnForm" novalidate hidden>
+            <label for="cmAnnText" class="lbl">Announcement to every carer <span class="hint">team only</span></label>
+            <textarea id="cmAnnText" maxlength="1000"
+              placeholder="e.g. Pilot update: the payslip check now works for weekly pay."></textarea>
+            <div class="actions"><button class="btn secondary" type="submit">Send to everyone</button></div>
+          </form>
+        </div>
+        </div>
         <div class="cmsheet" id="cmSheet" hidden>
           <div class="cmsheetbox" role="dialog" aria-modal="true" aria-labelledby="cmSheetNick">
             <div>
@@ -805,11 +812,6 @@
             <div class="actions" id="cmSheetActs"></div>
             <button type="button" class="btn secondary" id="cmSheetClose">Close</button>
           </div>
-        </div>
-        <div class="card" id="cmMod" hidden>
-          <h2>Reported posts</h2>
-          <p class="cmlede">Only you can see this. Hidden posts disappear for everyone.</p>
-          <div class="cmfeed" id="cmModList"></div>
         </div>
       </div>
     </section>

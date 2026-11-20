@@ -1015,3 +1015,39 @@ body.tp-open{overflow:hidden}
 @media (prefers-reduced-motion:reduce){.sc-card,.sc-card::after{animation:none!important}}
 
 @media (min-width:1000px) and (max-height:900px){.obaside li{font-size:16px}.obaside h2{font-size:clamp(30px,3vw,40px)}.asin{gap:20px}.sc-cols{height:96px}.sc-pay b{font-size:46px}}
+
+/* community: slim header, Community / Messages switch, WhatsApp-style messages */
+.cmtop{display:flex;flex-direction:column;gap:6px;margin:0 0 4px}
+.cmtop .hint:empty{display:none}
+.cmtop .cmrules{margin:0;padding:8px 12px;border-radius:12px;background:transparent}
+.cmtop .cmrules summary{font-weight:600;font-size:14px;color:var(--muted)}
+.cmtop .cmspeak{margin-top:10px}
+.cmseg{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border-radius:999px;background:var(--sunk)}
+.cmseg button{position:relative;border:0;background:transparent;border-radius:999px;padding:9px 12px;font:700 14.5px/1 var(--f-head,inherit);color:var(--muted);cursor:pointer;min-height:40px;transition:background-color .2s,color .2s,box-shadow .2s}
+.cmseg button[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 4px rgba(20,22,70,.14)}
+.cmsegbadge{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;margin-left:6px;padding:0 5px;border-radius:9px;background:var(--brand);color:#fff;font-size:11px;font-weight:800;vertical-align:middle}
+.cmsegbadge[hidden]{display:none}
+.cmpane{display:flex;flex-direction:column;gap:12px;min-width:0}
+.cmpane[hidden]{display:none!important}
+#cmMsgs{padding:14px 14px 12px}
+#cmMsgs>.hint:empty{display:none}
+#cmMsgs .cmrows{gap:0}
+.cmrow{border:0;border-bottom:1px solid var(--line);border-radius:0;background:transparent;padding:9px 2px;gap:12px}
+.cmrow:hover{background:var(--sunk);border-color:var(--line)}
+.cmrow .av{width:44px;height:44px;font-size:17px}
+.cmrow .tx b{font-size:15.5px}
+.cmbubbles{gap:2px;padding:10px 8px;min-height:240px;max-height:min(62vh,520px);border:0;border-radius:14px;background:var(--sunk)}
+.cmbub{display:block;max-width:80%;padding:5px 9px 4px;border-radius:9px;background:var(--surface);box-shadow:0 1px 1px rgba(20,22,70,.12);margin-top:5px}
+.cmbub.mine{background:var(--day);color:#fff;border-bottom-right-radius:3px}
+.cmbub:not(.mine){border-bottom-left-radius:3px}
+.cmbub .who{display:none}
+.cmbub .txt{display:inline;font-size:14.5px;line-height:1.32}
+.cmbub .when{display:inline-block;float:right;margin:8px 0 -1px 10px;font-size:10.5px;opacity:.7}
+.cmbub .linkinline{display:block;clear:both;font-size:11.5px}
+#cmMsgForm{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end;margin-top:10px}
+#cmMsgForm .lbl{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+#cmMsgText{min-height:44px;max-height:120px;padding:11px 16px;border-radius:22px;resize:none;line-height:1.3}
+#cmMsgForm .banner{grid-column:1/-1;order:3}
+#cmMsgForm .actions{margin:0}
+#cmMsgSend{width:44px;min-width:44px;height:44px;min-height:44px;padding:0;border-radius:50%;display:grid;place-items:center}
+body[data-view="community"] .fab{display:none}
