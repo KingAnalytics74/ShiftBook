@@ -100,7 +100,8 @@
           </div>
         </div>
         <div class="brandright">
-          <div class="sync" id="sync"><span class="dot"></span><span>Connecting…</span></div>
+          <div class="sync" id="sync" hidden><span class="dot"></span><span>Connecting…</span></div>
+          <button type="button" class="gear themebtn" id="themeBtn" aria-label="Switch to dark theme" data-mode="light"><svg class="ti sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg><svg class="ti moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.2A8.6 8.6 0 0 1 9.8 3.5a8.6 8.6 0 1 0 10.7 10.7z"/></svg></button>
           <button type="button" class="gear" id="gear" data-go="settings" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg></button>
         </div>
       </div>
@@ -767,17 +768,17 @@
           <h2>From the Shiftbuck team</h2>
           <div id="cmAnnList"></div>
         </div>
-        <div class="card" id="cmComposer">
+        <div class="card cmcomposer" id="cmComposer" role="dialog" aria-label="New post">
           <form id="cmForm" novalidate>
             <div class="cmreplying" id="cmReplying" hidden><span id="cmReplyTxt"></span><button type="button"
                 class="linkinline" id="cmReplyCancel">Cancel</button></div>
-            <div class="field" id="cmSpaceWrap"><label for="cmSpace">Post in</label><select id="cmSpace"></select></div>
+            <p class="hint cmpostto" id="cmPostTo"></p>
             <div class="field"><label for="cmText" id="cmTextLbl">What's on your mind?</label><textarea id="cmText"
                 maxlength="1000"
                 placeholder="e.g. Anyone else not getting paid for sleep-ins this month?"></textarea><span class="hint"
                 id="cmCount">0 / 1000</span></div>
             <div class="banner bad" id="cmErr" hidden></div>
-            <div class="actions"><button class="btn" type="submit" id="cmPost">Post</button></div>
+            <div class="actions"><button class="btn secondary" type="button" id="cmCancel">Cancel</button><button class="btn" type="submit" id="cmPost">Post</button></div>
           </form>
         </div>
         <div class="cmchips" id="cmSpaces" role="group" aria-label="Spaces"></div>
@@ -1086,6 +1087,8 @@
     <footer class="poweredby">Powered by <b>WestByte</b></footer>
   </div>
 
+  <div class="cmscrim" id="cmScrim" hidden></div>
+  <button type="button" class="fab cmfab" id="cmFab" aria-label="New post"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg><span>Post</span></button>
   <button type="button" class="fab" id="fab" data-go="log"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Log shift</button>
   <nav class="bottombar" role="tablist">
     <button role="tab" data-view="overview" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

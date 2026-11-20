@@ -10,6 +10,7 @@
     if (sessionStorage.getItem("shiftbook:auth")) signed = true;
     for (var i = 0; i < sessionStorage.length; i++) { var k = sessionStorage.key(i); if (/^sb-.+-auth-token$/.test(k)) signed = true; }
   } catch (e) {}
+  try { var th = localStorage.getItem("sb-theme"); if (th === "dark" || th === "light") h.setAttribute("data-theme", th); } catch (e) {}
   h.classList.add("boot");
   if (!signed) {
     h.classList.add("boot-light");

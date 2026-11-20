@@ -422,7 +422,7 @@ import "./scene.js";
     if (LEGACY[view]) [view, pane] = LEGACY[view];
     if (!VIEWS.includes(view)) view = "overview";
     state.view = view;
-    document.body.dataset.view = view;
+    document.body.dataset.view = view; if (typeof cmFabSync === "function") cmFabSync();
     VIEWS.forEach(v => { $("#view-" + v).hidden = v !== view; });
     if (view === "stats") setPane(pane || state.pane);
     if (view === "community") renderCommunity();
@@ -447,7 +447,7 @@ import "./scene.js";
 
   let toastT;
   function toast(msg) { const t = $("#toast"); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => (t.hidden = true), 3200); }
-  function setSync(cls, text) { const el = $("#sync"); el.innerHTML = `<span class="dot ${cls}"></span><span>${esc(text)}</span>`; el.title = text; }
+  function setSync(cls, text) { const el = $("#sync"); el.hidden = cls !== "warn" && cls !== "bad"; el.innerHTML = `<span class="dot ${cls}"></span><span>${esc(text)}</span>`; el.title = text; }
 
   // ---------- log form ----------
   function renderUserChips() {
@@ -1425,6 +1425,11 @@ import "./scene.js";
   const makeCommunityStore = window.makeCommunityStore || makeClaudeCommunityStore;
 
   function cmMe() { const p = state.profile || {}; return { nick: p.nickname || "", area: p.area || "" }; }
+  // Posts go to the space being looked at; "Everything" and "Near me" post to General chat
+  const cmTarget = () => (["all", "area"].includes(cm.space) ? "general" : cm.space);
+  function cmFabSync() { document.body.classList.toggle("cmpost-on", state.view === "community" && cm.pane === "feed" && !!cm.store && !$("#cmMain").hidden); }
+  function cmOpenComposer() { $("#cmComposer").classList.add("open"); $("#cmScrim").hidden = false; document.body.classList.add("cmcomposing"); requestAnimationFrame(() => $("#cmText").focus({ preventScroll: true })); }
+  function cmCloseComposer() { $("#cmComposer").classList.remove("open"); $("#cmScrim").hidden = true; document.body.classList.remove("cmcomposing"); }
   function renderCommunity() {
     if (!$("#view-community")) return;
     const me = cmMe(), joined = !!me.nick;
@@ -1432,6 +1437,7 @@ import "./scene.js";
     $("#cmPaneFeed").hidden = cm.pane !== "feed"; $("#cmPaneMsgs").hidden = cm.pane !== "msgs";
     document.querySelectorAll(".cmseg [data-pane]").forEach(b => b.setAttribute("aria-selected", String(b.dataset.pane === cm.pane)));
     document.querySelector(".cmseg").style.setProperty("--cs", cm.pane === "msgs" ? 1 : 0);
+    cmFabSync();
     // lists glide in when the pane, the space or the filter changes, not on every background refresh
     const ek = cm.pane + "|" + (cm.space || "") + "|" + (cm.filter || "") + "|" + joined;
     if (ek !== cm._ek) { cm._ek = ek; ["#cmFeed", "#cmMsgList", "#cmSpaces"].forEach(q => { const el = $(q); if (!el) return; el.classList.remove("enter"); void el.offsetWidth; el.classList.add("enter"); }); }
@@ -1440,11 +1446,8 @@ import "./scene.js";
     if (!joined) { if (!$("#cmJoin").contains(document.activeElement)) { $("#cmArea").value ||= (state.profile && state.profile.area) || ""; } return; }
     const spaces = CM_SPACES.map(([k, l]) => [k, k === "area" ? (me.area ? `Near me · ${me.area}` : l) : l]);
     $("#cmSpaces").innerHTML = spaces.map(([k, l]) => `<button type="button" data-cs="${k}" aria-pressed="${k === cm.space}">${esc(l)}</button>`).join("");
-    if (!$("#cmComposer").contains(document.activeElement)) {
-      const cur = $("#cmSpace").value || (["all", "area"].includes(cm.space) ? "general" : cm.space);
-      $("#cmSpace").innerHTML = CM_SPACES.filter(([k]) => !["all", "area"].includes(k)).map(([k, l]) => `<option value="${k}">${esc(l)}</option>`).join("");
-      $("#cmSpace").value = cur;
-    }
+    const tgt = cmTarget();
+    $("#cmPostTo").textContent = cm.replyTo ? "" : `Posting in ${CM_LABEL[tgt] || "General chat"}`;
     const all = cm.feed.posts, top = all.filter(p => !p.replyTo);
     const inSpace = p => cm.space === "all" || (cm.space === "area" ? cmNorm(p.area) === cmNorm(me.area) : p.space === cm.space);
     const list = top.filter(inSpace);
@@ -1471,7 +1474,7 @@ import "./scene.js";
       $("#cmModList").innerHTML = dmr + (ids.length ? ids.map(id => { const p = byId[id]; return p ? `<div class="cmpost"><div class="cmwho"><b>${esc(p.nick)}</b><span>${seen[id].length} report${seen[id].length === 1 ? "" : "s"}: ${esc([...new Set(seen[id])].join(", "))}</span></div><div class="cmbody">${esc(p.text)}</div><div class="cmacts"><button type="button" class="danger" data-hide="${esc(id)}">${cm.feed.hidden.has(id) ? "Unhide" : "Hide for everyone"}</button></div></div>` : ""; }).join("") : (dmr ? "" : `<div class="cmempty">No reports.</div>`));
     }
     const rp = cm.replyTo && all.find(p => p.id === cm.replyTo);
-    $("#cmReplying").hidden = !rp; $("#cmSpaceWrap").hidden = !!rp;
+    $("#cmReplying").hidden = !rp; $("#cmPostTo").hidden = !!rp;
     $("#cmReplyTxt").textContent = rp ? `Commenting on ${rp.nick}'s post` : "";
     $("#cmTextLbl").textContent = rp ? "Your comment" : "What's on your mind?";
     $("#cmPost").textContent = rp ? "Comment" : "Post";
@@ -1603,9 +1606,12 @@ import "./scene.js";
     e.preventDefault(); const text = $("#cmAnnText").value.trim(); if (!text || !cm.store?.announce) return;
     try { await cm.store.announce(text); $("#cmAnnText").value = ""; toast("Sent to everyone"); } catch (e2) { toast("Only the Shiftbuck team can send announcements."); }
   });
-  $("#cmSpaces").addEventListener("click", e => { const b = e.target.closest("[data-cs]"); if (!b) return; cm.space = b.dataset.cs; if (!["all", "area"].includes(cm.space)) $("#cmSpace").value = cm.space; renderCommunity(); });
+  $("#cmSpaces").addEventListener("click", e => { const b = e.target.closest("[data-cs]"); if (!b) return; cm.space = b.dataset.cs; renderCommunity(); });
   $("#cmText").addEventListener("input", () => { $("#cmCount").textContent = `${$("#cmText").value.length} / 1000`; $("#cmErr").hidden = true; });
-  $("#cmReplyCancel").onclick = () => { cm.replyTo = null; renderCommunity(); };
+  $("#cmReplyCancel").onclick = () => { cm.replyTo = null; cmCloseComposer(); renderCommunity(); };
+  $("#cmFab").onclick = () => { cm.replyTo = null; renderCommunity(); cmOpenComposer(); };
+  $("#cmScrim").onclick = $("#cmCancel").onclick = () => { cm.replyTo = null; cmCloseComposer(); renderCommunity(); };
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && $("#cmComposer").classList.contains("open")) { cm.replyTo = null; cmCloseComposer(); renderCommunity(); } });
   $("#cmNickGen").onclick = () => { $("#cmNick").value = cmNickFor($("#cmArea").value); };
   $("#cmForm").addEventListener("submit", async e => {
     e.preventDefault(); if (!cm.store) { toast("The community isn't available in this view"); return; }
@@ -1613,7 +1619,7 @@ import "./scene.js";
     if (problem) { $("#cmErr").textContent = problem; $("#cmErr").hidden = false; return; }
     const me = cmMe(), parent = cm.replyTo && cm.feed.posts.find(p => p.id === cm.replyTo);
     $("#cmPost").disabled = true;
-    try { await cm.store.post({ space: parent ? parent.space : $("#cmSpace").value, text, replyTo: parent ? parent.id : null, nick: me.nick, area: me.area }); $("#cmText").value = ""; $("#cmCount").textContent = "0 / 1000"; cm.replyTo = null; toast(parent ? "Comment posted" : "Posted"); renderCommunity(); }
+    try { await cm.store.post({ space: parent ? parent.space : cmTarget(), text, replyTo: parent ? parent.id : null, nick: me.nick, area: me.area }); $("#cmText").value = ""; $("#cmCount").textContent = "0 / 1000"; cm.replyTo = null; cmCloseComposer(); toast(parent ? "Comment posted" : "Posted"); renderCommunity(); }
     catch (e2) { $("#cmErr").textContent = "That didn't post. Check your connection and try again."; $("#cmErr").hidden = false; }
     finally { $("#cmPost").disabled = false; }
   });
@@ -1639,7 +1645,7 @@ import "./scene.js";
       catch (e2) { flip(!on); toast("That didn't save. Try again."); }
       return;
     }
-    if (t.dataset.reply) { cm.replyTo = t.dataset.reply; renderCommunity(); $("#cmComposer").scrollIntoView({ block: "center" }); $("#cmText").focus({ preventScroll: true }); return; }
+    if (t.dataset.reply) { cm.replyTo = t.dataset.reply; renderCommunity(); cmOpenComposer(); return; }
     if (t.dataset.del) { try { await cm.store.remove(t.dataset.del); toast("Post deleted"); } catch (e2) { toast("That didn't delete. Try again."); } return; }
     if (t.dataset.report) { cm.reporting = t.dataset.report; renderCommunity(); return; }
     if ("repcancel" in t.dataset) { cm.reporting = null; renderCommunity(); return; }
@@ -1700,4 +1706,18 @@ import "./scene.js";
       state.loaded = true; render();
     }, e => { setSync("bad", e?.code === "revoked" ? "Access to this Shiftbuck changed" : "Live updates stopped. Reload to reconnect"); });
   })();
+})();
+
+// ---- light / dark switch (remembers the choice on this device) ----
+(() => {
+  const b = document.getElementById("themeBtn"); if (!b) return;
+  const cur = () => document.documentElement.dataset.theme || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  const paint = () => { const d = cur() === "dark"; b.setAttribute("aria-label", d ? "Switch to light theme" : "Switch to dark theme"); b.title = d ? "Light theme" : "Dark theme"; b.dataset.mode = d ? "dark" : "light"; };
+  document.documentElement.dataset.theme = cur(); paint();
+  b.addEventListener("click", () => {
+    const n = cur() === "dark" ? "light" : "dark";
+    document.documentElement.classList.add("themeswap"); document.documentElement.dataset.theme = n;
+    try { localStorage.setItem("sb-theme", n); } catch (e) {}
+    paint(); setTimeout(() => document.documentElement.classList.remove("themeswap"), 500);
+  });
 })();
