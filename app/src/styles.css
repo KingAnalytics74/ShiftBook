@@ -1169,3 +1169,25 @@ html.themeswap *,html.themeswap *::before,html.themeswap *::after{transition:bac
 .hlpreview .pv b{font-variant-numeric:tabular-nums}
 .hlpreview .warn{color:var(--amber)}
 .hlitem .pay{display:block;font-weight:600;margin-top:2px}
+
+/* holiday dashboard */
+.hldash{display:grid;gap:14px}
+.hldhead{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.hldhead h2{margin:0}
+.hlbadge{font:inherit;font-size:14px;font-weight:600;padding:6px 12px;border-radius:999px;border:0;cursor:pointer;min-height:36px;background:var(--good-soft);color:var(--good)}
+.hltiles{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+@media (min-width:640px){.hltiles{grid-template-columns:repeat(4,1fr)}}
+.hltile{background:var(--sunk);border-radius:14px;padding:16px 14px;display:grid;gap:4px;align-content:start;min-width:0}
+.hltile .v{font-family:var(--f-num);font-weight:600;font-size:clamp(24px,7vw,34px);letter-spacing:-.02em;line-height:1.1;overflow-wrap:anywhere}
+.hltile.main .v{color:var(--good,#1f8a4c)}
+.hltile .l{font-size:14px;color:var(--ink);opacity:.8;margin-top:6px}
+.hltile .s{font-size:12px;color:var(--muted)}
+.hlused{display:flex;justify-content:space-between;font-size:14px}
+.hlbar{height:10px;border-radius:999px;background:var(--sunk);overflow:hidden;display:flex}
+.hlbar i{display:block;height:100%}
+#hlBarTaken,.hllegend .t{background:var(--good,#1f8a4c)}
+#hlBarBooked,.hllegend .b{background:var(--amber)}
+.hllegend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--muted);align-items:center}
+.hllegend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.hllegend #hlYear{margin-left:auto}
+.hlbook{width:100%;min-height:48px;border-radius:999px;font-size:16px}

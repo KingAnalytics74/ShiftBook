@@ -29,3 +29,6 @@ Not everyone's leave year runs January to December. Leave years often start on 1
 
 ## Holiday pay for each booking (Nov 2026)
 Booking a holiday now shows what it uses, what it pays (hours × average pay per hour over the last 52 paid weeks) and what's left after it, with a warning when it's more than has been built up so far. Each booked holiday in the list shows its pay too. Rolled-up workers see "already paid on your payslips".
+
+## Holiday dashboard (Nov 2026)
+The top of the Holiday tab is an "Annual leave" card: available balance, holiday taken (+ booked), the year's holiday (entitlement for fixed hours, "expected this year" for changing hours) and the estimated value of what's left, then a "Holiday used" bar (taken and booked) and a Book holiday button. Hours first, because shift lengths differ across jobs. The year badge opens the leave year setting.

@@ -1684,6 +1684,11 @@ import "./scene.js";
   }
   ["#hlStartDay", "#hlStart", "#hlStartedJob"].forEach(id => $(id).addEventListener("change", hlStartUI));
   $("#hlQuick").addEventListener("click", e => { const b = e.target.closest("button[data-d]"); if (!b) return; $("#hlStartDay").value = b.dataset.d; $("#hlStart").value = b.dataset.m; hlStartUI(); });
+  $("#hlBookBtn").addEventListener("click", () => {
+    const f = $("#hlForm"); f.scrollIntoView({ behavior: "smooth", block: "start" });
+    f.closest(".card").classList.remove("hlflash"); void f.offsetWidth; f.closest(".card").classList.add("hlflash");
+    setTimeout(() => { const i = $("#hlFrom"); (i.nextElementSibling && i.hidden ? i.nextElementSibling : i).focus({ preventScroll: true }); }, 450);
+  });
   $("#hlYearChange").addEventListener("click", () => {
     const f = $("#hlYearField"); f.scrollIntoView({ behavior: "smooth", block: "center" });
     f.classList.remove("hlflash"); void f.offsetWidth; f.classList.add("hlflash");
@@ -1706,20 +1711,27 @@ import "./scene.js";
     const sm = holidaySummary({ shifts: state.shifts, holidays: state.holidays || new Map(), cfg: state.cfg, hol, todayStr, periodFor });
     state.hlSm = sm;
     const y = sm.year, yr = `${fmt(y.start, { day: "numeric", month: "short", year: "numeric" })} – ${fmt(y.end, { day: "numeric", month: "short", year: "numeric" })}`;
-    $("#hlYear").textContent = `Holiday left · leave year ${yr}`;
-    $("#hlLeft").textContent = hrsTxt(sm.left);
-    $("#hlLeftDays").textContent = `about ${asDays(Math.max(0, sm.left), per)} of ${hrs(per)} hours${sm.left < 0 ? " · you've booked more than you've built up so far" : ""}`;
-    const tot = Math.max(1, sm.carried + sm.earned, sm.taken + sm.booked);
-    const parts = [["Taken", sm.taken, "var(--night)"], ["Booked", sm.booked, "var(--amber)"], ["Left", Math.max(0, sm.left), "var(--day)"]];
-    $("#hlSplit").innerHTML = parts.map(x => `<i style="width:${x[1] / tot * 100}%;background:${x[2]}"></i>`).join("");
-    $("#hlLegend").innerHTML = parts.map(x => `<span><span class="sw" style="background:${x[2]}"></span>${x[0]} <b>${hrsTxt(x[1])}</b></span>`).join("");
+    $("#hlYear").textContent = `Leave year ${yr}`;
+    const sy = y.start.getFullYear(), ey = y.end.getFullYear();
+    $("#hlBadge").textContent = sy === ey ? String(sy) : `${sy}/${String(ey).slice(2)}`;
     const reg = sm.mode === "regular";
-    $("#hlKpis").innerHTML = [
-      [reg ? "This year's holiday" : "Built up so far", hrsTxt(reg ? sm.yearTotal : sm.earned), reg ? asDays(sm.yearTotal, per) : `from ${hrs(sm.irregular.hoursWorked)} hours worked`],
-      ["Carried over", hrsTxt(sm.carried), "from last year"],
-      ["Taken and booked", hrsTxt(sm.taken + sm.booked), `${hrsTxt(sm.taken)} taken`],
-      [reg ? "Built up so far" : "By the end of the year", hrsTxt(reg ? sm.earned : sm.yearTotal), reg ? (sm.entitlement.firstYear ? "1/12 a month in your first year" : "all of it, from day one") : "if you keep working like the last 12 weeks"]
-    ].map(([l, v, s]) => `<div class="kpi"><div class="eyebrow">${l}</div><div class="v">${v}</div><div class="s">${s}</div></div>`).join("");
+    // the year's holiday: regular = the entitlement; changing hours = built up so far plus what the next weeks should add
+    const ent = sm.carried + sm.yearTotal;
+    $("#hlLeft").textContent = hrsTxt(sm.left);
+    $("#hlLeftDays").textContent = sm.left < 0 ? "you've booked more than you've built up so far" : `about ${asDays(sm.left, per)}`;
+    $("#hlTaken").textContent = hrsTxt(sm.taken);
+    $("#hlTakenSub").textContent = sm.booked ? `+ ${hrsTxt(sm.booked)} booked` : "nothing booked yet";
+    $("#hlEnt").textContent = hrsTxt(ent);
+    $("#hlEntLbl").textContent = reg ? "Annual entitlement" : "Expected this year";
+    $("#hlEntSub").textContent = reg ? (sm.carried ? `incl. ${hrsTxt(sm.carried)} carried over` : asDays(ent, per)) : `${hrsTxt(sm.carried + sm.earned)} built up so far`;
+    if (sm.mode === "rolledup") { $("#hlValue").textContent = "Paid"; $("#hlValueSub").textContent = "on every payslip (rolled-up)"; }
+    else if (sm.pay.weeks) { $("#hlValue").textContent = gbp(Math.max(0, sm.left) * sm.pay.perHour).replace(/\.00$/, ""); $("#hlValueSub").textContent = `at ${gbp(sm.pay.perHour)} an hour`; }
+    else { $("#hlValue").textContent = "–"; $("#hlValueSub").textContent = "log a few weeks of shifts first"; }
+    const base = Math.max(ent, sm.carried + sm.earned, sm.taken + sm.booked, 1);
+    const pT = sm.taken / base * 100, pB = sm.booked / base * 100, used = Math.round((pT + pB) * 10) / 10;
+    $("#hlUsedPct").textContent = `${used.toLocaleString("en-GB")}%`;
+    $("#hlBarTaken").style.width = `${pT}%`; $("#hlBarBooked").style.width = `${pB}%`;
+    $("#hlBar").setAttribute("aria-valuenow", String(Math.round(used))); $("#hlBar").setAttribute("aria-label", `Holiday used ${used}%`);
     // the maths, in the user's own numbers
     const L = [];
     if (reg) {

@@ -516,14 +516,19 @@
       </div>
       </div>
       <div class="pane" id="pane-holiday" role="tabpanel" aria-labelledby="pill-holiday" hidden>
-      <div class="card hero">
-        <div class="eyebrow"><span id="hlYear">Holiday left this leave year</span> <button type="button" class="hlchange" id="hlYearChange">Change</button></div>
-        <div class="big" id="hlLeft">0 hrs</div>
-        <div class="hlsub" id="hlLeftDays"></div>
-        <div class="split" id="hlSplit" aria-hidden="true"></div>
-        <div class="legend" id="hlLegend"></div>
+      <div class="card hldash">
+        <div class="hldhead"><h2>Annual leave</h2><button type="button" class="hlbadge" id="hlYearChange" aria-label="Change your leave year"><span id="hlBadge">2026</span> <span aria-hidden="true">✎</span></button></div>
+        <div class="hltiles">
+          <div class="hltile main"><div class="v" id="hlLeft">0 hrs</div><div class="l">Available balance</div><div class="s" id="hlLeftDays"></div></div>
+          <div class="hltile"><div class="v" id="hlTaken">0 hrs</div><div class="l">Holiday taken</div><div class="s" id="hlTakenSub"></div></div>
+          <div class="hltile"><div class="v" id="hlEnt">0 hrs</div><div class="l" id="hlEntLbl">Annual entitlement</div><div class="s" id="hlEntSub"></div></div>
+          <div class="hltile"><div class="v" id="hlValue">£0</div><div class="l">Estimated remaining value</div><div class="s" id="hlValueSub"></div></div>
+        </div>
+        <div class="hlused"><span>Holiday used</span><b id="hlUsedPct">0%</b></div>
+        <div class="hlbar" role="progressbar" id="hlBar" aria-valuemin="0" aria-valuemax="100"><i id="hlBarTaken"></i><i id="hlBarBooked"></i></div>
+        <div class="hllegend"><span><i class="t"></i>Taken</span><span><i class="b"></i>Booked</span><span id="hlYear" class="hint"></span></div>
+        <button type="button" class="btn hlbook" id="hlBookBtn">Book holiday</button>
       </div>
-      <div class="kpis" id="hlKpis"></div>
       <div class="grid2">
         <div class="card">
           <h2>How we worked it out</h2>
