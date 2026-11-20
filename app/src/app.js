@@ -28,6 +28,7 @@ import { resolveArea } from "./core/areas.js";
 import { mountAreaPicker } from "./area-picker.js";
 import "./timepicker.js";
 import "./datepicker.js";
+import "./scene.js";
 
 
 (() => {
