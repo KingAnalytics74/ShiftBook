@@ -21,3 +21,4 @@
 - 2026-11-19: Google sign-in turned on in config. The "Continue with Google" button only shows once Supabase reports Google switched on (Authentication → Providers), so it appears by itself when the founder finishes the Google setup; until then, or if Supabase can't be reached, it stays hidden.
 - 2026-11-19: The company is now called WestByte (it was WesTech Innovation). The westechinnovation.com links were removed until the new website address is known.
 - 2026-11-19: Rest outlook (Forecast tab and Overview) now counts only shifts the person has logged or added to their rota, at the founder's request. Predicted shifts are suggestions and never trigger a rest warning until the person adds them; with nothing logged ahead it says rest is improving.
+- 2026-11-20: Removed the three `signup-redesign*.patch` files from the repo root. They were leftovers from the sign-up redesign (already merged) and were being published on the website. Babatee agreed.
