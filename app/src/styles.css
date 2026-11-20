@@ -1163,3 +1163,9 @@ html.themeswap *,html.themeswap *::before,html.themeswap *::after{transition:bac
 .hlquick button[aria-pressed="true"]{border-color:var(--day);box-shadow:0 0 0 2px var(--day) inset}
 .hlflash{animation:hlflash 1.6s ease}
 @keyframes hlflash{0%,40%{box-shadow:0 0 0 3px var(--amber)}100%{box-shadow:0 0 0 0 transparent}}
+
+.hlpreview{border-radius:12px;padding:12px 14px;background:color-mix(in srgb,var(--day) 10%,transparent);border:1px solid color-mix(in srgb,var(--day) 35%,transparent);display:grid;gap:6px}
+.hlpreview .pv{display:flex;justify-content:space-between;gap:12px}
+.hlpreview .pv b{font-variant-numeric:tabular-nums}
+.hlpreview .warn{color:var(--amber)}
+.hlitem .pay{display:block;font-weight:600;margin-top:2px}
