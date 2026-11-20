@@ -26,3 +26,6 @@
 
 ## Leave year can start on any day (Nov 2026)
 Not everyone's leave year runs January to December. Leave years often start on 1 April, 6 April (tax year), 1 September or the day someone started the job, so the Holiday settings take a day and a month, with one-tap choices for these. A "Change" link next to the leave year at the top of the Holiday tab jumps straight to it. Old settings with only `startMonth` still work (day 1).
+
+## Holiday pay for each booking (Nov 2026)
+Booking a holiday now shows what it uses, what it pays (hours × average pay per hour over the last 52 paid weeks) and what's left after it, with a warning when it's more than has been built up so far. Each booked holiday in the list shows its pay too. Rolled-up workers see "already paid on your payslips".

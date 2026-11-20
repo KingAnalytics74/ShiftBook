@@ -1704,6 +1704,7 @@ import "./scene.js";
     if (!$("#pane-holiday")) return;
     const hol = holCfg(), per = hol.hoursPerDay;
     const sm = holidaySummary({ shifts: state.shifts, holidays: state.holidays || new Map(), cfg: state.cfg, hol, todayStr, periodFor });
+    state.hlSm = sm;
     const y = sm.year, yr = `${fmt(y.start, { day: "numeric", month: "short", year: "numeric" })} – ${fmt(y.end, { day: "numeric", month: "short", year: "numeric" })}`;
     $("#hlYear").textContent = `Holiday left · leave year ${yr}`;
     $("#hlLeft").textContent = hrsTxt(sm.left);
@@ -1752,13 +1753,34 @@ import "./scene.js";
     const list = [...(state.holidays || new Map()).entries()].map(([id, h]) => ({ id, ...h })).filter(h => h.from).sort((a, b) => b.from.localeCompare(a.from));
     $("#hlList").innerHTML = list.length ? list.map(h => {
       const past = (h.to || h.from) < todayStr, same = h.from === h.to;
-      return `<div class="hlitem${past ? " past" : ""}"><div><b>${fmt(parse(h.from), { weekday: "short", day: "numeric", month: "short", year: "numeric" })}${same ? "" : ` – ${fmt(parse(h.to), { weekday: "short", day: "numeric", month: "short" })}`}</b><small>${hrsTxt(Number(h.hours) || 0)} · ${past ? "taken" : "booked"}${h.note ? " · " + esc(h.note) : ""}</small></div><span><button type="button" class="btn secondary" data-hledit="${esc(h.id)}">Edit</button><button type="button" class="btn secondary" data-hldel="${esc(h.id)}" aria-label="Delete this holiday">Delete</button></span></div>`;
+      return `<div class="hlitem${past ? " past" : ""}"><div><b>${fmt(parse(h.from), { weekday: "short", day: "numeric", month: "short", year: "numeric" })}${same ? "" : ` – ${fmt(parse(h.to), { weekday: "short", day: "numeric", month: "short" })}`}</b><small>${hrsTxt(Number(h.hours) || 0)} · ${past ? "taken" : "booked"}${h.note ? " · " + esc(h.note) : ""}${hlPayLine(Number(h.hours) || 0)}</small></div><span><button type="button" class="btn secondary" data-hledit="${esc(h.id)}">Edit</button><button type="button" class="btn secondary" data-hldel="${esc(h.id)}" aria-label="Delete this holiday">Delete</button></span></div>`;
     }).join("") : `<p class="hint">No holiday booked yet.</p>`;
     const bh = bankHolidaysIn(y, hol.nation);
     $("#hlBank").textContent = `There are ${bh.length} bank holidays in your leave year.`;
     if (!state.hlFilled) fillHolidaySettings();
     $("#hlPerDay").placeholder = `${hrs(per)} (your usual shift)`;
   }
+  // what a holiday of h hours pays: your average pay per hour over the last 52 paid weeks
+  function hlPayLine(h) {
+    const sm = state.hlSm; if (!sm || !h) return "";
+    if (sm.mode === "rolledup") return `<span class="pay">Already paid on your payslips (rolled-up)</span>`;
+    return sm.pay.weeks ? `<span class="pay">about ${gbp(h * sm.pay.perHour)} holiday pay</span>` : "";
+  }
+  // the box under the booking form: hours used, what it pays, and what's left after it
+  function hlPreview() {
+    const box = $("#hlPreview"), sm = state.hlSm, f = $("#hlFrom").value, raw = $("#hlHours").value;
+    const h = Number(raw);
+    if (!sm || !f || raw === "" || !(h > 0)) { box.hidden = true; return; }
+    const old = hlEditing && state.holidays.get(hlEditing) ? Number(state.holidays.get(hlEditing).hours) || 0 : 0;
+    const after = sm.left + old - h, per = holCfg().hoursPerDay;
+    const R = [`<div class="pv"><span>Holiday hours this uses</span><b>${hrsTxt(h)} (${asDays(h, per)})</b></div>`];
+    if (sm.mode === "rolledup") R.push(`<div class="pv"><span>Holiday pay</span><b>already paid on your payslips</b></div>`);
+    else if (sm.pay.weeks) R.push(`<div class="pv"><span>You'll be paid about</span><b>${gbp(h * sm.pay.perHour)}</b></div><div class="hint">${hrs(h)} hrs × ${gbp(sm.pay.perHour)} an hour, your average over the last ${sm.pay.weeks} paid week${sm.pay.weeks === 1 ? "" : "s"}</div>`);
+    R.push(`<div class="pv"><span>Holiday left after this</span><b>${hrsTxt(after)}</b></div>`);
+    if (after < 0) R.push(`<div class="hint warn">That's ${hrsTxt(-after)} more than you've built up so far. You keep building holiday as you work, so check with your manager before you book it.</div>`);
+    box.innerHTML = R.join(""); box.hidden = false;
+  }
+  ["#hlFrom", "#hlTo", "#hlHours"].forEach(id => $(id).addEventListener(id === "#hlHours" ? "input" : "change", () => setTimeout(hlPreview, 0)));
   function fillHolidaySettings() {
     const h = holCfg(); state.hlFilled = true; state.hlMode = h.mode;
     $("#hlStart").value = String(h.startMonth); $("#hlStartDay").value = String(h.startDay || 1); $("#hlStartedJob").value = h.startedJob || ""; hlStartUI(); $("#hlPerDay").value = (state.cfg.holiday || {}).hoursPerDay || "";
@@ -1798,7 +1820,7 @@ import "./scene.js";
   }
   ["#hlFrom", "#hlTo"].forEach(id => $(id).addEventListener("change", () => { if (id === "#hlFrom" && (!$("#hlTo").value || $("#hlTo").value < $("#hlFrom").value)) { $("#hlTo").value = $("#hlFrom").value; $("#hlTo").dispatchEvent(new Event("change")); } hlAutoHours(); }));
   $("#hlHours").addEventListener("input", () => { hlTouched = true; });
-  function hlReset() { hlEditing = null; hlTouched = false; $("#hlForm").reset(); ["#hlFrom", "#hlTo"].forEach(id => $(id).dispatchEvent(new Event("change"))); $("#hlSave").textContent = "Save holiday"; $("#hlCancel").hidden = true; $("#hlErr").hidden = true; $("#hlHoursHint").textContent = "worked out from your holiday day"; }
+  function hlReset() { hlEditing = null; hlTouched = false; $("#hlForm").reset(); ["#hlFrom", "#hlTo"].forEach(id => $(id).dispatchEvent(new Event("change"))); $("#hlSave").textContent = "Save holiday"; $("#hlCancel").hidden = true; $("#hlErr").hidden = true; $("#hlHoursHint").textContent = "worked out from your holiday day"; $("#hlPreview").hidden = true; }
   $("#hlCancel").onclick = hlReset;
   $("#hlForm").addEventListener("submit", async e => {
     e.preventDefault();
