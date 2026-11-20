@@ -51,3 +51,15 @@ export function restDay(key, m) {
     }
     return { level, run, hrs7: hrs, reasons };
 }
+// How rested someone is right now. Looks only at the most recent `n` days up to and including `key`
+// (days off count as rested): the worst of those days is the status, so after n clear days the
+// person is back on green. Older red and amber days stay on the record but no longer set the status.
+export const BACK_ON_TRACK_DAYS = 3;
+export function restNow(key, m, n = BACK_ON_TRACK_DAYS) {
+    const d = parse(key); let level = "ok", worst = null;
+    for (let i = 0; i < n; i++) {
+        const k = ymd(addDays(d, -i)), x = restDay(k, m);
+        if (x.level === "red" || (x.level === "amber" && level === "ok")) { level = x.level; worst = { key: k, ...x }; }
+    }
+    return { level, worst };
+}

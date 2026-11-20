@@ -21,7 +21,7 @@
 import { pad, ymd, parse, addDays } from "./core/dates.js";
 import { periodFor as periodForCore, daysIn } from "./core/periods.js";
 import { calc as calcCore, summarise as summariseCore } from "./core/pay.js";
-import { REST, hasDayHrs, worked, isNight, restDay as restDayCore } from "./core/restCheck.js";
+import { REST, hasDayHrs, worked, isNight, restDay as restDayCore, restNow, BACK_ON_TRACK_DAYS } from "./core/restCheck.js";
 import { parseTaxCode, deductions } from "./core/tax.js";
 import { forecast as forecastCore, shiftKind } from "./core/forecast.js";
 import { resolveArea } from "./core/areas.js";
@@ -214,29 +214,30 @@ import "./datepicker.js";
   function renderRest(p, sm) {
     const days = sm.rows.map(r => ({ r, x: restDay(r.key) }));
     const red = days.filter(d => d.x.level === "red"), amber = days.filter(d => d.x.level === "amber");
-    const level = red.length ? "red" : amber.length ? "amber" : "ok";
+    // The status is about now, not the whole period: three clear days put someone back on green, while the red days stay in the strip below
+    const nowKey = todayStr < sm.rows[0].key ? sm.rows[0].key : todayStr > sm.rows[sm.rows.length - 1].key ? sm.rows[sm.rows.length - 1].key : todayStr;
+    const rn = restNow(nowKey, state.shifts), level = rn.level, earlier = red.length + amber.length;
     const card = $("#restCard"); card.className = "card restcard lvl-" + level;
     const pill = $("#restPill"); pill.className = "rpill " + level;
     pill.textContent = level === "red" ? "⚠ Not resting enough" : level === "amber" ? "Watch your rest" : "✓ Well rested";
     const top = days.reduce((a, d) => (d.x.run > a.x.run ? d : a), days[0]);
-    const runFrom = top && top.x.run ? addDays(top.r.date, -(top.x.run - 1)) : null;
-    const f = d => fmt(d, { day: "numeric", month: "short" });
+    const nowX = restDay(nowKey), f = d => fmt(d, { day: "numeric", month: "short" });
     let head = "";
-    if (level === "ok") head = "You're getting regular days off and breaks between shifts this period.";
-    else if (top && top.x.run >= REST.amberRun) head = `You work <b>${top.x.run} days in a row</b> from ${f(runFrom)} to ${f(top.r.date)} with no full day off.`;
-    else head = `${(red[0] || amber[0]).x.reasons[0].replace(/^./, c => c.toUpperCase())} on ${f((red[0] || amber[0]).r.date)}.`;
-    if (level !== "ok") head += ` <b>${red.length}</b> day${red.length === 1 ? "" : "s"} in red and <b>${amber.length}</b> to watch.`;
+    if (level === "ok" && !earlier) head = "You're getting regular days off and breaks between shifts this period.";
+    else if (level === "ok") head = `You're back on track: your last ${BACK_ON_TRACK_DAYS} days have been well rested. Earlier this period, <b>${red.length}</b> day${red.length === 1 ? "" : "s"} were in red and <b>${amber.length}</b> to watch. They stay in the strip below.`;
+    else if (nowX.run >= REST.amberRun) head = `You've worked <b>${nowX.run} days in a row</b> up to ${f(parse(nowKey))} with no full day off.`;
+    else head = `${rn.worst.reasons[0].replace(/^./, c => c.toUpperCase())} on ${f(parse(rn.worst.key))}.`;
+    if (level !== "ok") head += ` Rest well for ${BACK_ON_TRACK_DAYS} days and this goes back to green. <b>${red.length}</b> day${red.length === 1 ? "" : "s"} in red and <b>${amber.length}</b> to watch this period.`;
     $("#restHead").innerHTML = head;
     $("#restStrip").innerHTML = days.map(d => {
       const tip = `<div class="t">${fmt(d.r.date, { weekday: "short", day: "numeric", month: "short" })}</div>${d.x.level === "off" ? "Day off" : d.x.reasons.length ? d.x.reasons.map(x => "• " + x).join("<br>") : "Worked, rested enough"}<br>Hours in last 7 days <b>${d.x.hrs7}</b>`;
       return `<i class="${d.x.level}${d.r.key === todayStr ? " today" : ""}" data-tip="${esc(tip)}"></i>`;
     }).join("");
     $("#restAx").innerHTML = `<span>${f(p.start)}</span><span>${f(p.end)}</span>`;
-    const nowKey = todayStr < sm.rows[0].key ? sm.rows[0].key : todayStr > sm.rows[sm.rows.length - 1].key ? sm.rows[sm.rows.length - 1].key : todayStr;
-    const now = restDay(nowKey), maxHrs = Math.max(...days.map(d => d.x.hrs7));
+    const now = nowX, maxHrs = Math.max(...days.map(d => d.x.hrs7));
     $("#restKpis").innerHTML = [
-      ["Days in a row now", now.run, now.run ? "since your last day off" : "you're off today"],
-      ["Longest run", top ? top.x.run : 0, "days without a day off"],
+      ["Working days in a row", now.run, now.run ? `worked every day since your last day off${nowKey === todayStr ? "" : " (as at " + f(parse(nowKey)) + ")"}` : nowKey === todayStr ? "no shift today, so the count is back to 0" : "no shift on " + f(parse(nowKey))],
+      ["Longest stretch this period", (top ? top.x.run : 0) + (top && top.x.run === 1 ? " day" : " days"), "worked back to back with no day off"],
       ["Days off", days.filter(d => d.x.level === "off").length, `of ${days.length} this period`],
       ["Busiest 7 days", hrs(maxHrs) + " hrs", maxHrs > REST.redHrs ? "over the 48-hour limit" : "under the 48-hour limit"]
     ].map(([l, v, sub]) => `<div class="kpi"><div class="eyebrow">${l}</div><div class="v">${v}</div><div class="s">${sub}</div></div>`).join("");

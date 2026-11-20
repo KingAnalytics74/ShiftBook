@@ -30,3 +30,11 @@ test("sleep-in then day shift is amber", () => {
     const m = new Map([["2026-10-01", { date: "2026-10-01", sleepIn: true }], ["2026-10-02", { date: "2026-10-02", dayHours: 8 }]]);
     assert.equal(restDay("2026-10-02", m).level, "amber");
 });
+test("restNow: three clear days put someone back on green, older red days no longer count", async () => {
+  const { restNow } = await import("../src/core/restCheck.js");
+  const m = new Map();
+  for (let d = 1; d <= 9; d++) m.set("2026-11-0" + d, { sleepIn: true });   // nine days in a row: red from the 7th
+  assert.equal(restNow("2026-11-09", m).level, "red");
+  assert.equal(restNow("2026-11-10", m).level, "red");   // day off, but the 8th/9th still count
+  assert.equal(restNow("2026-11-12", m).level, "ok");    // three days since: back on green
+});
