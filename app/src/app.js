@@ -868,6 +868,37 @@ import "./scene.js";
       </div>`).join("") : `<div class="empty">${state.loaded ? "No pots yet. Add one to start planning your take-home." : "Loading your plan…"}</div>`;
   }
 
+  const reduceMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+  // The headline for the spending plan: what the person plans to spend, what they have spent, and how far through that budget they are
+  let bgShown = 0;
+  function renderBudget(net, list, sp) {
+    const spendPots = list.filter(x => (x.kind || "need") !== "save"), savePots = list.filter(x => x.kind === "save");
+    const budget = spendPots.reduce((a, x) => a + planned(x, net), 0), spent = spendPots.reduce((a, x) => a + (Number(sp[x.id]) || 0), 0);
+    const saveGoal = savePots.reduce((a, x) => a + planned(x, net), 0), saved = savePots.reduce((a, x) => a + (Number(sp[x.id]) || 0), 0);
+    const card = $("#bgCard"); if (!card) return;
+    card.hidden = !list.length;
+    const pct = budget ? (spent / budget) * 100 : spent ? 100 : 0, left = budget - spent;
+    const p = curPeriod(), total = daysIn(p).length, today = parse(todayStr);
+    const elapsed = today < p.start ? 0 : today > p.end ? total : Math.round((today - p.start) / 864e5) + 1;
+    const timePct = total ? Math.round((elapsed / total) * 100) : 0;
+    const state_ = !budget ? "none" : pct > 100 ? "over" : pct >= 85 ? "near" : "ok";
+    card.dataset.state = state_;
+    const C = 2 * Math.PI * 52, ring = $("#bgRing");
+    ring.style.setProperty("--circ", C.toFixed(1));
+    ring.style.strokeDasharray = C.toFixed(1); ring.style.strokeDashoffset = (C * (1 - Math.min(1, pct / 100))).toFixed(1);
+    const from = bgShown, to = Math.round(pct); bgShown = to;
+    const el = $("#bgPct");
+    if (reduceMotion() || from === to) el.textContent = to + "%";
+    else { const t0 = performance.now(); const step = now => { const k = Math.min(1, (now - t0) / 700); el.textContent = Math.round(from + (to - from) * (1 - Math.pow(1 - k, 3))) + "%"; if (k < 1) requestAnimationFrame(step); }; requestAnimationFrame(step); }
+    $("#bgPlanned").textContent = gbp(budget); $("#bgSpent").textContent = gbp(spent);
+    $("#bgLeft").textContent = left >= 0 ? gbp(left) : gbp(-left) + " over";
+    $("#bgLeftLbl").textContent = left >= 0 ? "Left to spend" : "Over budget by";
+    $("#bgState").textContent = { none: "Set up your pots", ok: "On track", near: "Nearly at your budget", over: "Over budget" }[state_];
+    $("#bgNote").textContent = budget ? `${timePct}% of the pay period has gone (day ${Math.min(elapsed, total)} of ${total}) and ${Math.round(pct)}% of the budget.` : "Add a % or £ amount to your pots to set a budget.";
+    $("#bgTick").style.left = timePct + "%"; $("#bgFill").style.width = Math.min(100, pct) + "%";
+    $("#bgUse").textContent = net ? `Plan uses ${Math.round(((budget + saveGoal) / net) * 100)}% of your ${gbp(net)} take-home` : "";
+    $("#bgSave").textContent = saveGoal ? `Saving: ${gbp(saved)} of ${gbp(saveGoal)} planned (${Math.round((saved / saveGoal) * 100)}%)` : "";
+  }
   function updatePlanNumbers() {
     const net = state.moneyNet || 0, sp = spendFor(state.moneyKey), list = pots();
     const byKind = { need: 0, want: 0, save: 0 }; let total = 0, spentTotal = 0;
@@ -879,7 +910,7 @@ import "./scene.js";
       el("pp").textContent = gbp(pl);
       const plp = pennies(pl), r = plp ? s / plp : s ? 1.01 : 0;
       el("pb").style.width = Math.min(100, r * 100) + "%"; el("pb").className = r > 1 ? "over" : "";
-      el("pl").textContent = s ? (s <= plp ? `${gbp(plp - s)} left` : `${gbp(s - plp)} over plan`) : "Nothing spent yet";
+      el("pl").textContent = s ? (s <= plp ? `${gbp(plp - s)} left · ${Math.round(r * 100)}% used` : `${gbp(s - plp)} over plan · ${plp ? Math.round(r * 100) + "%" : "no plan"} used`) : "Nothing spent yet · 0% used";
       el("pc").textContent = pt.kind === "save" ? (s ? `${gbp(s)} put away` : "") : (pl && sm_hours(pl) ? `≈ ${sm_hours(pl)} hrs of work` : "");
     });
     const left = net - total;
@@ -888,6 +919,7 @@ import "./scene.js";
     const segs = [["need", "var(--day)"], ["want", "var(--night)"], ["save", "var(--c4)"]];
     $("#mPlanBar").innerHTML = segs.map(([k, c]) => `<i style="width:${(byKind[k] / base) * 100}%;background:${c}"></i>`).join("") + (left > 0 ? `<i style="width:${(left / base) * 100}%;background:var(--sunk)"></i>` : "");
     $("#mPlanLegend").innerHTML = segs.map(([k, c]) => `<span><span class="sw" style="background:${c}"></span>${KIND[k]} <b>${gbp(byKind[k])}</b> <span class="num">${net ? Math.round((byKind[k] / net) * 100) : 0}%</span></span>`).join("") + `<span>Spent so far <b>${gbp(spentTotal)}</b></span>`;
+    renderBudget(net, list, sp);
     renderWaterfall(state.moneyG || 0, state.moneyD, byKind, net);
     renderSpendAnalytics(net, list, sp);
     const pctSum = list.filter(x => x.mode !== "fixed").reduce((a, x) => a + (Number(x.value) || 0), 0);
@@ -1399,6 +1431,10 @@ import "./scene.js";
     $("#cmJoin").hidden = joined; $("#cmMain").hidden = !joined;
     $("#cmPaneFeed").hidden = cm.pane !== "feed"; $("#cmPaneMsgs").hidden = cm.pane !== "msgs";
     document.querySelectorAll(".cmseg [data-pane]").forEach(b => b.setAttribute("aria-selected", String(b.dataset.pane === cm.pane)));
+    document.querySelector(".cmseg").style.setProperty("--cs", cm.pane === "msgs" ? 1 : 0);
+    // lists glide in when the pane, the space or the filter changes, not on every background refresh
+    const ek = cm.pane + "|" + (cm.space || "") + "|" + (cm.filter || "") + "|" + joined;
+    if (ek !== cm._ek) { cm._ek = ek; ["#cmFeed", "#cmMsgList", "#cmSpaces"].forEach(q => { const el = $(q); if (!el) return; el.classList.remove("enter"); void el.offsetWidth; el.classList.add("enter"); }); }
     const myPid = [...(cm.feed.people || new Map()).entries()].find(([, v]) => v.me)?.[0];
     $("#cmMe").innerHTML = joined ? `You're ${myPid ? `<button type="button" class="linkinline" data-prof="${esc(myPid)}">${esc(me.nick)}</button>` : esc(me.nick)}${me.area ? " · " + esc(me.area) : ""}` : "";
     if (!joined) { if (!$("#cmJoin").contains(document.activeElement)) { $("#cmArea").value ||= (state.profile && state.profile.area) || ""; } return; }
@@ -1503,7 +1539,7 @@ import "./scene.js";
     const reasons = [["unwanted", "Unwanted or creepy"], ["abuse", "Abusive or threatening"], ["details", "Asks for personal details or money"], ["spam", "Spam or selling"], ["other", "Something else"]];
     const html = info.msgs == null ? `<div class="cmempty">Loading…</div>` : info.msgs.length ? info.msgs.map(m => `<div class="cmbub${m.mine ? " mine" : ""}"><span class="who">${esc(m.who)}</span><span class="txt">${esc(m.text)}</span><span class="when">${cmAgo(m.at)}</span>${t.kind === "dm" && !m.mine ? (cm.dmReporting === m.id ? `<div class="cmreport"><b>Why are you reporting this?</b><div class="obchips">${reasons.map(([k, l]) => `<button type="button" data-dmrep="${k}" data-id="${esc(m.id)}">${l}</button>`).join("")}</div><button type="button" class="linkinline" data-dmrepcancel>Cancel</button></div>` : `<button type="button" class="linkinline" data-dmreport="${esc(m.id)}">Report</button>`) : ""}</div>`).join("")
       : `<div class="cmempty">${t.kind === "team" ? "Tell us what's working, what isn't, or ask anything about Shiftbuck." : "No messages yet. Say hello."}</div>`;
-    if (html !== cm.lastBubbles) { $("#cmBubbles").innerHTML = html; cm.lastBubbles = html; $("#cmBubbles").scrollTop = $("#cmBubbles").scrollHeight; }
+    if (html !== cm.lastBubbles) { const had = !!cm.lastBubbles; $("#cmBubbles").innerHTML = html; if (had && $("#cmBubbles").lastElementChild) $("#cmBubbles").lastElementChild.classList.add("new"); cm.lastBubbles = html; $("#cmBubbles").scrollTop = $("#cmBubbles").scrollHeight; }
     const key = t.kind + ":" + (t.pid || "");
     if (info.unread && cm.marking !== key && cm.store?.markRead) { cm.marking = key; cm.store.markRead(t).catch(() => { }).finally(() => { setTimeout(() => { if (cm.marking === key) cm.marking = ""; }, 1500); }); }
   }
@@ -1597,7 +1633,7 @@ import "./scene.js";
     if (d.unann) { try { await cm.store.removeAnnouncement(d.unann); toast("Announcement removed"); } catch (e2) { toast("Only the Shiftbuck team can do that."); } return; }
     if (t.dataset.like) {
       const id = t.dataset.like, p = cm.feed.posts.find(x => x.id === id); if (!p || !cm.store || !cm.store.like) return;
-      const on = !p.liked, flip = v => { p.liked = v; p.likes = Math.max(0, (p.likes || 0) + (v ? 1 : -1)); renderCommunity(); document.querySelector(`[data-like="${CSS.escape(id)}"]`)?.focus(); };
+      const on = !p.liked, flip = v => { p.liked = v; p.likes = Math.max(0, (p.likes || 0) + (v ? 1 : -1)); renderCommunity(); const b = document.querySelector(`[data-like="${CSS.escape(id)}"]`); if (b) { b.focus(); if (v) { b.classList.remove("pop"); void b.offsetWidth; b.classList.add("pop"); } } };
       flip(on);
       try { await cm.store.like(id, on); document.querySelector(`[data-like="${CSS.escape(id)}"]`)?.focus(); }   // the refresh after saving redraws the button
       catch (e2) { flip(!on); toast("That didn't save. Try again."); }

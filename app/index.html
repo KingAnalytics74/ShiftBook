@@ -418,6 +418,23 @@
       </div>
       </div>
       <div class="pane" id="pane-spending" role="tabpanel" aria-labelledby="pill-spending" hidden>
+<div class="card budget" id="bgCard" data-state="none" hidden>
+        <div class="bgrow">
+          <div class="bgring"><svg viewBox="0 0 120 120" aria-hidden="true"><circle class="bgtrack" cx="60" cy="60" r="52"/><circle class="bgfg" id="bgRing" cx="60" cy="60" r="52"/></svg><div class="bgmid"><b id="bgPct">0%</b><span>of budget</span></div></div>
+          <div class="bgtxt">
+            <span class="bgstate" id="bgState"></span>
+            <div class="bgnums">
+              <div><span>Planned to spend</span><b class="num" id="bgPlanned">£0.00</b></div>
+              <div><span>Spent so far</span><b class="num" id="bgSpent">£0.00</b></div>
+              <div><span id="bgLeftLbl">Left to spend</span><b class="num" id="bgLeft">£0.00</b></div>
+            </div>
+          </div>
+        </div>
+        <div class="bgbar" aria-hidden="true"><i id="bgFill"></i><u id="bgTick" title="How far through the pay period you are"></u></div>
+        <p class="hint" id="bgNote" style="margin:8px 0 0"></p>
+        <p class="hint" id="bgUse" style="margin:2px 0 0"></p>
+        <p class="hint" id="bgSave" style="margin:2px 0 0"></p>
+      </div>
 <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap">
           <h2 style="margin:0">Spending plan</h2>
