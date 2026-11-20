@@ -24,7 +24,7 @@ import { calc as calcCore, summarise as summariseCore } from "./core/pay.js";
 import { REST, hasDayHrs, worked, isNight, restDay as restDayCore, restNow, BACK_ON_TRACK_DAYS } from "./core/restCheck.js";
 import { parseTaxCode, deductions } from "./core/tax.js";
 import { forecast as forecastCore, shiftKind } from "./core/forecast.js";
-import { holidaySummary, rolledUp, bankHolidaysIn } from "./core/holiday.js";
+import { holidaySummary, rolledUp, bankHolidaysIn, leaveYear } from "./core/holiday.js";
 import { resolveArea } from "./core/areas.js";
 import { mountAreaPicker } from "./area-picker.js";
 import "./timepicker.js";
@@ -1671,6 +1671,24 @@ import "./scene.js";
   // ---------- holiday (logic in ./core/holiday.js) ----------
   const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
   $("#hlStart").innerHTML = MONTHS.map((m, i) => `<option value="${i + 1}">${m}</option>`).join("");
+  $("#hlStartDay").innerHTML = Array.from({ length: 31 }, (_, i) => `<option value="${i + 1}">${i + 1}</option>`).join("");
+  // what the chosen start means, e.g. "6 April 2026 to 5 April 2027", and which quick choice it matches
+  function hlStartUI() {
+    const d = Number($("#hlStartDay").value) || 1, m = Number($("#hlStart").value) || 1;
+    const y = leaveYear(new Date(), m, d), o = { day: "numeric", month: "long", year: "numeric" };
+    $("#hlStartShow").textContent = `This leave year: ${fmt(y.start, o)} to ${fmt(y.end, o)}${d > 28 && y.start.getDate() !== d ? ` (${MONTHS[m - 1]} has no ${d}th, so it starts on the last day)` : ""}.`;
+    const j = $("#hlStartedJob").value, jb = $("#hlQuickJoined");
+    jb.hidden = !j;
+    if (j) { const jd = parse(j); jb.dataset.d = jd.getDate(); jb.dataset.m = jd.getMonth() + 1; jb.textContent = `The day I started (${fmt(jd, { day: "numeric", month: "long" })})`; }
+    $("#hlQuick").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(!b.hidden && Number(b.dataset.d) === d && Number(b.dataset.m) === m)));
+  }
+  ["#hlStartDay", "#hlStart", "#hlStartedJob"].forEach(id => $(id).addEventListener("change", hlStartUI));
+  $("#hlQuick").addEventListener("click", e => { const b = e.target.closest("button[data-d]"); if (!b) return; $("#hlStartDay").value = b.dataset.d; $("#hlStart").value = b.dataset.m; hlStartUI(); });
+  $("#hlYearChange").addEventListener("click", () => {
+    const f = $("#hlYearField"); f.scrollIntoView({ behavior: "smooth", block: "center" });
+    f.classList.remove("hlflash"); void f.offsetWidth; f.classList.add("hlflash");
+    setTimeout(() => $("#hlStartDay").focus({ preventScroll: true }), 400);
+  });
   // a holiday day = the user's setting, or their usual paid hours per shift over the last 12 weeks, or 8
   function holDayHours() {
     const h = state.cfg.holiday || {};
@@ -1679,7 +1697,7 @@ import "./scene.js";
     state.shifts.forEach((s, k) => { if (k >= from && k <= todayStr) { const c = calc(s); if (c.net > 0) { n++; t += c.net; } } });
     return n ? Math.round(t / n * 4) / 4 : 8;
   }
-  const holCfg = () => ({ mode: "irregular", startMonth: 1, weeks: 5.6, daysPerWeek: 5, sleepIns: "no", carriedHours: 0, nation: "ew", ...(state.cfg.holiday || {}), hoursPerDay: holDayHours() });
+  const holCfg = () => ({ mode: "irregular", startMonth: 1, startDay: 1, weeks: 5.6, daysPerWeek: 5, sleepIns: "no", carriedHours: 0, nation: "ew", ...(state.cfg.holiday || {}), hoursPerDay: holDayHours() });
   const asDays = (h, per) => { const d = h / per; return `${(Math.round(d * 10) / 10).toLocaleString("en-GB")} day${Math.abs(d - 1) < 0.05 ? "" : "s"}`; };
   const hrsTxt = n => `${hrs(n)} hr${Math.abs(n - 1) < 0.05 ? "" : "s"}`;
   function renderHoliday() {
@@ -1743,7 +1761,7 @@ import "./scene.js";
   }
   function fillHolidaySettings() {
     const h = holCfg(); state.hlFilled = true; state.hlMode = h.mode;
-    $("#hlStart").value = String(h.startMonth); $("#hlPerDay").value = (state.cfg.holiday || {}).hoursPerDay || "";
+    $("#hlStart").value = String(h.startMonth); $("#hlStartDay").value = String(h.startDay || 1); $("#hlStartedJob").value = h.startedJob || ""; hlStartUI(); $("#hlPerDay").value = (state.cfg.holiday || {}).hoursPerDay || "";
     $("#hlPerDay").placeholder = `${hrs(h.hoursPerDay)} (your usual shift)`;
     $("#hlDpw").value = h.daysPerWeek; $("#hlContract").value = h.contractDays || ""; $("#hlJoined").value = h.joined || "";
     $("#hlWeeks").value = h.weeks; $("#hlSleep").value = h.sleepIns; $("#hlCarry").value = h.carriedHours || ""; $("#hlNation").value = h.nation;
@@ -1760,7 +1778,7 @@ import "./scene.js";
   $("#hlSet").addEventListener("submit", async e => {
     e.preventDefault();
     const num = (id, lo, hi) => { const v = $(id).value.trim(); if (v === "") return null; const n = Number(v); return n >= lo && n <= hi ? n : NaN; };
-    const next = { mode: state.hlMode || "irregular", startMonth: Number($("#hlStart").value) || 1, hoursPerDay: num("#hlPerDay", 1, 24), daysPerWeek: num("#hlDpw", 0.5, 7) ?? 5,
+    const next = { mode: state.hlMode || "irregular", startMonth: Number($("#hlStart").value) || 1, startDay: Number($("#hlStartDay").value) || 1, startedJob: $("#hlStartedJob").value || null, hoursPerDay: num("#hlPerDay", 1, 24), daysPerWeek: num("#hlDpw", 0.5, 7) ?? 5,
       contractDays: num("#hlContract", 0, 60), joined: $("#hlJoined").value || null, weeks: num("#hlWeeks", 5.6, 12) ?? 5.6, sleepIns: $("#hlSleep").value,
       carriedHours: num("#hlCarry", 0, 500) ?? 0, nation: $("#hlNation").value };
     const bad = Object.entries(next).find(([, v]) => Number.isNaN(v));

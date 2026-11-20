@@ -79,6 +79,6 @@ The Claude-hosted pilot can't restrict a document to two people, so it has profi
 
 ## Holiday (added 20 Nov 2026)
 
-- `main.holiday`: `{mode: irregular|regular|rolledup, startMonth 1-12, hoursPerDay?, daysPerWeek, contractDays?, joined?, weeks (5.6+), sleepIns: no|payroll, carriedHours, nation: ew|sc|ni}`.
+- `main.holiday`: `{mode: irregular|regular|rolledup, startMonth 1-12, startDay 1-31 (a day the month lacks means its last day; missing = 1), startedJob? (date, only offers "the day I started" as a leave-year start), hoursPerDay?, daysPerWeek, contractDays?, joined?, weeks (5.6+), sleepIns: no|payroll, carriedHours, nation: ew|sc|ni}`.
 - `main/holidays/<id>`: `{from, to, hours, note, updatedAt}` — holiday the user has taken or booked. Private to the user, like shifts.
 - Maths in `app/src/core/holiday.js` (tests in `app/tests/holiday.test.js`): 12.07% of hours worked per pay period rounded to the nearest hour (irregular hours); 5.6 × days a week capped at 28 days (regular); rolled-up = 12.07% of pay; holiday pay = average of the last 52 paid weeks.

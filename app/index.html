@@ -517,7 +517,7 @@
       </div>
       <div class="pane" id="pane-holiday" role="tabpanel" aria-labelledby="pill-holiday" hidden>
       <div class="card hero">
-        <div class="eyebrow" id="hlYear">Holiday left this leave year</div>
+        <div class="eyebrow"><span id="hlYear">Holiday left this leave year</span> <button type="button" class="hlchange" id="hlYearChange">Change</button></div>
         <div class="big" id="hlLeft">0 hrs</div>
         <div class="hlsub" id="hlLeftDays"></div>
         <div class="split" id="hlSplit" aria-hidden="true"></div>
@@ -555,7 +555,11 @@
               <button type="button" role="radio" data-mode="regular" aria-checked="false"><b>Same days every week</b><small>Fixed days, full-time or part-time. You get a set amount for the year.</small></button>
               <button type="button" role="radio" data-mode="rolledup" aria-checked="false"><b>Holiday pay on every payslip</b><small>"Rolled-up" pay: 12.07% extra each payday, and your time off is unpaid.</small></button>
             </div></div>
-          <div class="field"><label for="hlStart">Leave year starts in</label><select id="hlStart"></select></div>
+          <div class="field" style="grid-column:1/-1" id="hlYearField"><span class="lbl">Your leave year starts on <span class="hint">it's in your contract or handbook, or ask your manager</span></span>
+            <div class="hlstart"><select id="hlStartDay" aria-label="Day the leave year starts"></select><select id="hlStart" aria-label="Month the leave year starts"></select></div>
+            <div class="hlquick" id="hlQuick"><button type="button" data-d="1" data-m="1">1 January</button><button type="button" data-d="1" data-m="4">1 April</button><button type="button" data-d="6" data-m="4">6 April (tax year)</button><button type="button" data-d="1" data-m="9">1 September</button><button type="button" id="hlQuickJoined" hidden>The day I started</button></div>
+            <small class="hint" id="hlStartShow"></small></div>
+          <div class="field"><label for="hlStartedJob">When did you start this job? <span class="hint">optional, for "the day I started"</span></label><input type="date" id="hlStartedJob"></div>
           <div class="field"><label for="hlPerDay">Hours in one holiday day <span class="hint">usually your normal shift, after breaks</span></label><input type="number" id="hlPerDay" min="1" max="24" step="0.25" inputmode="decimal"></div>
           <div class="field" data-for="regular"><label for="hlDpw">Days you work each week</label><input type="number" id="hlDpw" min="0.5" max="7" step="0.5" inputmode="decimal"></div>
           <div class="field" data-for="regular"><label for="hlContract">Days a year in your contract <span class="hint">blank = the legal minimum</span></label><input type="number" id="hlContract" min="0" max="60" step="0.5" inputmode="decimal"></div>

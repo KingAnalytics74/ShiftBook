@@ -1155,3 +1155,11 @@ html.themeswap *,html.themeswap *::before,html.themeswap *::after{transition:bac
 .hlguide summary{font-weight:700;cursor:pointer;min-height:24px}
 .hlguide ul{margin:10px 0 0;padding-left:20px;display:grid;gap:8px;line-height:1.5}
 .hlguide details p{margin:10px 0 0;line-height:1.5}
+
+.hlchange{font:inherit;font-size:12px;font-weight:600;background:none;border:0;padding:6px 4px;margin:-6px 0;color:inherit;text-decoration:underline;cursor:pointer;min-height:32px}
+.hlstart{display:grid;grid-template-columns:5.5rem 1fr;gap:8px}
+.hlquick{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.hlquick button{font:inherit;font-size:13px;padding:8px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;min-height:36px}
+.hlquick button[aria-pressed="true"]{border-color:var(--day);box-shadow:0 0 0 2px var(--day) inset}
+.hlflash{animation:hlflash 1.6s ease}
+@keyframes hlflash{0%,40%{box-shadow:0 0 0 3px var(--amber)}100%{box-shadow:0 0 0 0 transparent}}
