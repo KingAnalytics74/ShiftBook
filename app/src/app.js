@@ -24,6 +24,7 @@ import { calc as calcCore, summarise as summariseCore } from "./core/pay.js";
 import { REST, hasDayHrs, worked, isNight, restDay as restDayCore, restNow, BACK_ON_TRACK_DAYS } from "./core/restCheck.js";
 import { parseTaxCode, deductions } from "./core/tax.js";
 import { forecast as forecastCore, shiftKind } from "./core/forecast.js";
+import { holidaySummary, rolledUp, bankHolidaysIn } from "./core/holiday.js";
 import { resolveArea } from "./core/areas.js";
 import { mountAreaPicker } from "./area-picker.js";
 import "./timepicker.js";
@@ -95,7 +96,7 @@ import "./scene.js";
     const sm = summarise(p);
     $("#who").textContent = [state.cfg.name, state.cfg.role].filter(Boolean).join(" · ") || "Support Worker";
     $("#periodLabel").innerHTML = `${fmt(p.start, { day: "numeric", month: "short" })} – ${fmt(p.end, { day: "numeric", month: "short", year: "numeric" })}<small>${state.offset === 0 ? "Current pay period" : state.offset < 0 ? Math.abs(state.offset) + " period" + (state.offset < -1 ? "s" : "") + " ago" : "Upcoming"}</small>`;
-    renderOverview(p, sm); renderSheet(p, sm); renderMoney(p, sm); renderForecast(); renderRecent(sm); renderProfile(); renderHello(sm);
+    renderOverview(p, sm); renderSheet(p, sm); renderMoney(p, sm); renderForecast(); renderRecent(sm); renderProfile(); renderHello(sm); renderHoliday();
   }
 
   // Profile: who you are, this pay period at a glance, and everything saved about you.
@@ -384,7 +385,7 @@ import "./scene.js";
 
   // ---------- views ----------
   // Five screens: Overview, Stats (five panes under pills), Community, Settings (the gear) and Log shift (the + button).
-  const VIEWS = ["overview", "stats", "community", "settings", "profile", "log"], PANES = ["earnings", "takehome", "spending", "forecast", "sheet"];
+  const VIEWS = ["overview", "stats", "community", "settings", "profile", "log"], PANES = ["earnings", "takehome", "spending", "forecast", "sheet", "holiday"];
   // saved from older versions of the app, when these were tabs of their own
   const LEGACY = { sheet: ["stats", "sheet"], money: ["stats", "takehome"], forecast: ["stats", "forecast"] };
   function setPane(name) {
@@ -1287,6 +1288,7 @@ import "./scene.js";
         const jobs = [];
         state.shifts.forEach((_, k) => jobs.push(S.shifts().doc(k).delete()));
         state.spend.forEach((_, k) => jobs.push(S.spend().doc(k).delete()));
+        (state.holidays || new Map()).forEach((_, k) => jobs.push(S.holidays().doc(k).delete()));
         (state.payslips || new Map()).forEach((_, k) => jobs.push(payCol().doc(k).delete()));
         await Promise.all(jobs);
         await S.money().delete(); await S.main().delete();
@@ -1666,6 +1668,144 @@ import "./scene.js";
     catch (e2) { bad("That didn't save. Try again."); }
   });
 
+  // ---------- holiday (logic in ./core/holiday.js) ----------
+  const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  $("#hlStart").innerHTML = MONTHS.map((m, i) => `<option value="${i + 1}">${m}</option>`).join("");
+  // a holiday day = the user's setting, or their usual paid hours per shift over the last 12 weeks, or 8
+  function holDayHours() {
+    const h = state.cfg.holiday || {};
+    if (Number(h.hoursPerDay) > 0) return Number(h.hoursPerDay);
+    const from = ymd(addDays(new Date(), -84)); let n = 0, t = 0;
+    state.shifts.forEach((s, k) => { if (k >= from && k <= todayStr) { const c = calc(s); if (c.net > 0) { n++; t += c.net; } } });
+    return n ? Math.round(t / n * 4) / 4 : 8;
+  }
+  const holCfg = () => ({ mode: "irregular", startMonth: 1, weeks: 5.6, daysPerWeek: 5, sleepIns: "no", carriedHours: 0, nation: "ew", ...(state.cfg.holiday || {}), hoursPerDay: holDayHours() });
+  const asDays = (h, per) => { const d = h / per; return `${(Math.round(d * 10) / 10).toLocaleString("en-GB")} day${Math.abs(d - 1) < 0.05 ? "" : "s"}`; };
+  const hrsTxt = n => `${hrs(n)} hr${Math.abs(n - 1) < 0.05 ? "" : "s"}`;
+  function renderHoliday() {
+    if (!$("#pane-holiday")) return;
+    const hol = holCfg(), per = hol.hoursPerDay;
+    const sm = holidaySummary({ shifts: state.shifts, holidays: state.holidays || new Map(), cfg: state.cfg, hol, todayStr, periodFor });
+    const y = sm.year, yr = `${fmt(y.start, { day: "numeric", month: "short", year: "numeric" })} – ${fmt(y.end, { day: "numeric", month: "short", year: "numeric" })}`;
+    $("#hlYear").textContent = `Holiday left · leave year ${yr}`;
+    $("#hlLeft").textContent = hrsTxt(sm.left);
+    $("#hlLeftDays").textContent = `about ${asDays(Math.max(0, sm.left), per)} of ${hrs(per)} hours${sm.left < 0 ? " · you've booked more than you've built up so far" : ""}`;
+    const tot = Math.max(1, sm.carried + sm.earned, sm.taken + sm.booked);
+    const parts = [["Taken", sm.taken, "var(--night)"], ["Booked", sm.booked, "var(--amber)"], ["Left", Math.max(0, sm.left), "var(--day)"]];
+    $("#hlSplit").innerHTML = parts.map(x => `<i style="width:${x[1] / tot * 100}%;background:${x[2]}"></i>`).join("");
+    $("#hlLegend").innerHTML = parts.map(x => `<span><span class="sw" style="background:${x[2]}"></span>${x[0]} <b>${hrsTxt(x[1])}</b></span>`).join("");
+    const reg = sm.mode === "regular";
+    $("#hlKpis").innerHTML = [
+      [reg ? "This year's holiday" : "Built up so far", hrsTxt(reg ? sm.yearTotal : sm.earned), reg ? asDays(sm.yearTotal, per) : `from ${hrs(sm.irregular.hoursWorked)} hours worked`],
+      ["Carried over", hrsTxt(sm.carried), "from last year"],
+      ["Taken and booked", hrsTxt(sm.taken + sm.booked), `${hrsTxt(sm.taken)} taken`],
+      [reg ? "Built up so far" : "By the end of the year", hrsTxt(reg ? sm.earned : sm.yearTotal), reg ? (sm.entitlement.firstYear ? "1/12 a month in your first year" : "all of it, from day one") : "if you keep working like the last 12 weeks"]
+    ].map(([l, v, s]) => `<div class="kpi"><div class="eyebrow">${l}</div><div class="v">${v}</div><div class="s">${s}</div></div>`).join("");
+    // the maths, in the user's own numbers
+    const L = [];
+    if (reg) {
+      const e = sm.entitlement, dpw = Number(hol.daysPerWeek) || 5;
+      L.push(`<p><b>5.6 weeks × ${hrs(dpw)} days a week = ${hrs(Math.min(5.6 * dpw, 28))} days</b>${5.6 * dpw > 28 ? " (the legal limit is 28)" : ""}${Number(hol.contractDays) > Math.min(5.6 * dpw, 28) ? `. Your contract gives more: <b>${hrs(hol.contractDays)} days</b>` : ""}.</p>`);
+      if (e.firstYear) L.push(`<p>You started on ${fmt(parse(hol.joined), { day: "numeric", month: "long" })}, so you get your share of the year: <b>${hrs(e.days)} days</b>, building up 1/12 each month.</p>`);
+      L.push(`<p><b>${hrs(e.days)} days × ${hrs(per)} hours = ${hrsTxt(e.hours)}</b> of holiday this leave year.</p>`);
+    } else {
+      const ir = sm.irregular, pct = (sm.rate * 100).toFixed(2);
+      L.push(`<p>Every hour you work earns <b>${pct}%</b> of an hour of holiday, because ${hrs(hol.weeks)} weeks off ÷ ${hrs(52 - hol.weeks)} weeks worked = ${pct}%.</p>`);
+      L.push(`<p><b>${hrs(ir.hoursWorked)} hours worked × ${pct}% = ${hrs(ir.hoursWorked * sm.rate)} hours</b>. Each pay period is rounded to the nearest hour, so you've built up <b>${hrsTxt(ir.earned)}</b>.</p>`);
+      if (ir.rows.length) L.push(`<div class="hlrows">${ir.rows.slice(-4).map(r => `<div><span>${fmt(r.start, { day: "numeric", month: "short" })} – ${fmt(r.end, { day: "numeric", month: "short" })}</span><span>${hrs(r.hours)} hrs → <b>${hrsTxt(r.holiday)}</b></span></div>`).join("")}</div>`);
+      L.push(`<p class="hint">${hol.sleepIns === "payroll" ? `Sleep-ins count as ${hrs(state.cfg.sleepInRate / state.cfg.hourlyRate)} hours each (£${state.cfg.sleepInRate} ÷ £${state.cfg.hourlyRate}), the way your payslip does it.` : "Sleep-ins aren't counted. If your payslip turns them into hours, change this in your holiday settings."}</p>`);
+    }
+    L.push(`<p><b>Left = ${hrs(sm.carried)} carried over + ${hrs(sm.earned)} built up − ${hrs(sm.taken)} taken − ${hrs(sm.booked)} booked = ${hrsTxt(sm.left)}</b></p>`);
+    $("#hlMath").innerHTML = L.join("");
+    // holiday pay
+    const P = [];
+    if (sm.mode === "rolledup") {
+      const cur = summarise(periodFor(new Date(), 0)).t.gross;
+      P.push(`<p>Your employer adds <b>12.07%</b> to every payslip instead of paying you when you're off.</p>`);
+      P.push(`<div class="hlrows"><div><span>This pay period: ${gbp(cur)} × 12.07%</span><b>${gbp(rolledUp(cur))}</b></div><div><span>This leave year so far</span><b>${gbp(sm.rolled.yearPay)}</b></div></div>`);
+      P.push(`<p class="hint">Look for a separate "holiday pay" line on your payslip. If there isn't one, holiday pay probably isn't being rolled up. Save some of it so you can afford your time off.</p>`);
+    } else if (sm.pay.weeks) {
+      P.push(`<p>Holiday pay is the average of the last <b>${sm.pay.weeks} week${sm.pay.weeks === 1 ? "" : "s"}</b> you were paid${sm.pay.weeks < 52 ? " (up to 52 count)" : ""}:</p>`);
+      P.push(`<div class="hlrows"><div><span>Average week's pay</span><b>${gbp(sm.pay.weekly)}</b></div><div><span>Per holiday hour</span><b>${gbp(sm.pay.perHour)}</b></div><div><span>One holiday day (${hrs(per)} hrs)</span><b>${gbp(sm.pay.perHour * per)}</b></div><div><span>Your ${hrsTxt(Math.max(0, sm.left))} left</span><b>${gbp(sm.pay.perHour * Math.max(0, sm.left))}</b></div></div>`);
+      P.push(`<p class="hint">Sleep-in and enhanced pay you get regularly are included, so this can be more than your basic £${state.cfg.hourlyRate} an hour.</p>`);
+    } else P.push(`<p class="hint">Log a few weeks of shifts and Shiftbuck will work out what a day's holiday pays you.</p>`);
+    $("#hlPay").innerHTML = P.join("");
+    // booked holidays
+    const list = [...(state.holidays || new Map()).entries()].map(([id, h]) => ({ id, ...h })).filter(h => h.from).sort((a, b) => b.from.localeCompare(a.from));
+    $("#hlList").innerHTML = list.length ? list.map(h => {
+      const past = (h.to || h.from) < todayStr, same = h.from === h.to;
+      return `<div class="hlitem${past ? " past" : ""}"><div><b>${fmt(parse(h.from), { weekday: "short", day: "numeric", month: "short", year: "numeric" })}${same ? "" : ` – ${fmt(parse(h.to), { weekday: "short", day: "numeric", month: "short" })}`}</b><small>${hrsTxt(Number(h.hours) || 0)} · ${past ? "taken" : "booked"}${h.note ? " · " + esc(h.note) : ""}</small></div><span><button type="button" class="btn secondary" data-hledit="${esc(h.id)}">Edit</button><button type="button" class="btn secondary" data-hldel="${esc(h.id)}" aria-label="Delete this holiday">Delete</button></span></div>`;
+    }).join("") : `<p class="hint">No holiday booked yet.</p>`;
+    const bh = bankHolidaysIn(y, hol.nation);
+    $("#hlBank").textContent = `There are ${bh.length} bank holidays in your leave year.`;
+    if (!state.hlFilled) fillHolidaySettings();
+    $("#hlPerDay").placeholder = `${hrs(per)} (your usual shift)`;
+  }
+  function fillHolidaySettings() {
+    const h = holCfg(); state.hlFilled = true; state.hlMode = h.mode;
+    $("#hlStart").value = String(h.startMonth); $("#hlPerDay").value = (state.cfg.holiday || {}).hoursPerDay || "";
+    $("#hlPerDay").placeholder = `${hrs(h.hoursPerDay)} (your usual shift)`;
+    $("#hlDpw").value = h.daysPerWeek; $("#hlContract").value = h.contractDays || ""; $("#hlJoined").value = h.joined || "";
+    $("#hlWeeks").value = h.weeks; $("#hlSleep").value = h.sleepIns; $("#hlCarry").value = h.carriedHours || ""; $("#hlNation").value = h.nation;
+    holModeUI();
+    $("#hlJoined").dispatchEvent(new Event("change"));
+  }
+  function holModeUI() {
+    const m = state.hlMode || "irregular";
+    $("#hlMode").querySelectorAll("[data-mode]").forEach(b => b.setAttribute("aria-checked", String(b.dataset.mode === m)));
+    document.querySelectorAll("#hlSet [data-for]").forEach(f => { f.hidden = f.dataset.for === "regular" ? m !== "regular" : m === "regular"; });
+    if (m !== "regular") $("#hlSleep").closest(".field").hidden = !isCare(); // sleep-ins are a care thing
+  }
+  $("#hlMode").addEventListener("click", e => { const b = e.target.closest("[data-mode]"); if (!b) return; state.hlMode = b.dataset.mode; holModeUI(); });
+  $("#hlSet").addEventListener("submit", async e => {
+    e.preventDefault();
+    const num = (id, lo, hi) => { const v = $(id).value.trim(); if (v === "") return null; const n = Number(v); return n >= lo && n <= hi ? n : NaN; };
+    const next = { mode: state.hlMode || "irregular", startMonth: Number($("#hlStart").value) || 1, hoursPerDay: num("#hlPerDay", 1, 24), daysPerWeek: num("#hlDpw", 0.5, 7) ?? 5,
+      contractDays: num("#hlContract", 0, 60), joined: $("#hlJoined").value || null, weeks: num("#hlWeeks", 5.6, 12) ?? 5.6, sleepIns: $("#hlSleep").value,
+      carriedHours: num("#hlCarry", 0, 500) ?? 0, nation: $("#hlNation").value };
+    const bad = Object.entries(next).find(([, v]) => Number.isNaN(v));
+    if (bad) { toast(bad[0] === "weeks" ? "Weeks of holiday must be 5.6 or more" : "Check the numbers in your holiday settings"); return; }
+    try { await S.main().set({ ...state.cfg, holiday: next }); toast("Holiday settings saved"); state.hlFilled = false; } catch (e2) { toast("Holiday settings didn't save"); }
+  });
+  // booking: the hours fill in from the days, skipping nothing (shift workers' days off vary), and can be changed
+  let hlEditing = null, hlTouched = false;
+  function hlAutoHours() {
+    if (hlTouched) return;
+    const f = $("#hlFrom").value, t = $("#hlTo").value || f;
+    if (!f || t < f) return;
+    const days = Math.round((parse(t) - parse(f)) / 864e5) + 1, per = holDayHours();
+    const shifts = [...state.shifts.keys()].filter(k => k >= f && k <= t).length;
+    $("#hlHours").value = shifts ? Math.round(shifts * per * 4) / 4 : Math.round(Math.min(days, Math.ceil(days * 5 / 7)) * per * 4) / 4;
+    $("#hlHoursHint").textContent = shifts ? `${shifts} rostered shift${shifts === 1 ? "" : "s"} × ${hrs(per)} hrs` : `about ${Math.min(days, Math.ceil(days * 5 / 7))} working days × ${hrs(per)} hrs · change it to match your rota`;
+  }
+  ["#hlFrom", "#hlTo"].forEach(id => $(id).addEventListener("change", () => { if (id === "#hlFrom" && (!$("#hlTo").value || $("#hlTo").value < $("#hlFrom").value)) { $("#hlTo").value = $("#hlFrom").value; $("#hlTo").dispatchEvent(new Event("change")); } hlAutoHours(); }));
+  $("#hlHours").addEventListener("input", () => { hlTouched = true; });
+  function hlReset() { hlEditing = null; hlTouched = false; $("#hlForm").reset(); ["#hlFrom", "#hlTo"].forEach(id => $(id).dispatchEvent(new Event("change"))); $("#hlSave").textContent = "Save holiday"; $("#hlCancel").hidden = true; $("#hlErr").hidden = true; $("#hlHoursHint").textContent = "worked out from your holiday day"; }
+  $("#hlCancel").onclick = hlReset;
+  $("#hlForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    const f = $("#hlFrom").value, t = $("#hlTo").value || f, h = Number($("#hlHours").value), note = $("#hlNote").value.trim().slice(0, 60);
+    const err = m => { $("#hlErr").textContent = m; $("#hlErr").hidden = false; };
+    if (!f) return err("Pick the first day of your holiday.");
+    if (t < f) return err("The last day can't be before the first day.");
+    if (!(h >= 0) || $("#hlHours").value === "") return err("Add how many holiday hours this uses.");
+    if (Math.round((parse(t) - parse(f)) / 864e5) > 366) return err("Book a year or less at a time.");
+    const id = hlEditing || f + "-" + Math.random().toString(36).slice(2, 6);
+    try { await S.holidays().doc(id).set({ from: f, to: t, hours: Math.round(h * 4) / 4, note, updatedAt: new Date().toISOString() }); toast(hlEditing ? "Holiday updated" : "Holiday saved"); hlReset(); }
+    catch (e2) { err("That didn't save. Try again."); }
+  });
+  $("#hlList").addEventListener("click", async e => {
+    const d = e.target.closest("[data-hldel]"), ed = e.target.closest("[data-hledit]");
+    if (d) { try { await S.holidays().doc(d.dataset.hldel).delete(); toast("Holiday deleted"); } catch (e2) { toast("That didn't delete. Try again."); } return; }
+    if (ed) {
+      const h = state.holidays.get(ed.dataset.hledit); if (!h) return;
+      hlEditing = ed.dataset.hledit; hlTouched = true;
+      $("#hlFrom").value = h.from; $("#hlTo").value = h.to || h.from; $("#hlHours").value = h.hours; $("#hlNote").value = h.note || "";
+      ["#hlFrom", "#hlTo"].forEach(id => $(id).dispatchEvent(new Event("change")));
+      $("#hlSave").textContent = "Save changes"; $("#hlCancel").hidden = false; $("#hlForm").scrollIntoView({ block: "center", behavior: "smooth" });
+    }
+  });
+
   // ---------- boot ----------
   try { state.pane = localStorage.getItem("sb.pane") || "earnings"; const v = localStorage.getItem("sb.view"); if (v && v !== "log") show(v); } catch (e) { }
   openLog(todayStr); fillSettings(); render();
@@ -1680,7 +1820,7 @@ import "./scene.js";
     const base = "data/users/" + uid;
     S = {
       profile: () => db.doc(base + "/profile"), main: () => db.doc(base + "/main"), money: () => db.doc(base + "/money"),
-      shifts: () => db.doc(base + "/main").collection("shifts"), spend: () => db.doc(base + "/main").collection("spend")
+      shifts: () => db.doc(base + "/main").collection("shifts"), spend: () => db.doc(base + "/main").collection("spend"), holidays: () => db.doc(base + "/main").collection("holidays")
     };
     setSync("ok", window.SBAuth && SBAuth.mode === "supabase" ? "Synced · private to you" : "Demo · saved in this browser");
     const cmSync = () => { const me = cmMe(); if (cm.store && cm.store.syncProfile && me.nick) cm.store.syncProfile(me).catch(() => { }); };
@@ -1692,11 +1832,12 @@ import "./scene.js";
     cm.store.start(f => { cm.feed = { people: new Map(), team: { thread: [], unread: 0 }, announcements: [], inbox: [], dms: { threads: [], blocked: new Set() }, ...f }; if (typeof f.isMod === "boolean") cm.isMod = f.isMod; if (typeof f.isTeam === "boolean") cm.isTeam = f.isTeam; if (state.view === "community") renderCommunity(); else cmBadge(); });
     cmSync();
     S.main().onSnapshot(snap => {
-      state.needsSetup = !snap.exists; setupMode(state.needsSetup);
+      state.needsSetup = !snap.exists; setupMode(state.needsSetup); state.hlFilled = false;
       state.cfg = { ...DEFAULTS, ...(snap.exists ? snap.data() : {}) }; fillSettings(); if (!state.editing || state.view !== "log") renderUserChips(); render();
     }, () => { });
     S.money().onSnapshot(snap => { state.money = { ...MONEY_DEFAULTS, ...(snap.exists ? snap.data() : {}) }; render(); }, () => { });
     payCol().limit(120).onSnapshot(snap => { state.payslips = new Map(snap.docs.map(d => [d.id, d.data()])); render(); }, () => { });
+    S.holidays().limit(500).onSnapshot(snap => { state.holidays = new Map(snap.docs.map(d => [d.id, d.data()])); render(); }, () => { });
     S.spend().limit(200).onSnapshot(snap => {
       const typingSpend = /^ps-/.test(document.activeElement?.id || "");
       if (!typingSpend) { state.spend = new Map(snap.docs.map(d => [d.id, d.data()])); render(); }

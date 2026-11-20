@@ -22,3 +22,4 @@
 - 2026-11-19: The company is now called WestByte (it was WesTech Innovation). The westechinnovation.com links were removed until the new website address is known.
 - 2026-11-19: Rest outlook (Forecast tab and Overview) now counts only shifts the person has logged or added to their rota, at the founder's request. Predicted shifts are suggestions and never trigger a rest warning until the person adds them; with nothing logged ahead it says rest is improving.
 - 2026-11-20: Removed the three `signup-redesign*.patch` files from the repo root. They were leftovers from the sign-up redesign (already merged) and were being published on the website. Babatee agreed.
+- 2026-11-20: Holiday tab added under Stats: leave left, built up, taken and booked; booking; holiday pay estimate; settings for irregular, regular and rolled-up holiday; sector guide (care, NHS, factory, retail, agency, driving and cleaning, term-time) and plain-English rights. GB rules; NI pointed to nidirect.
