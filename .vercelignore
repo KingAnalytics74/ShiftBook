@@ -1,3 +1,14 @@
 # Files Vercel does not publish on shiftbuck.com.
 # Commercial videos, image ads and their sources stay in the repository but are never part of the website.
 marketing/
+
+# Internal files: database layout, email template sources, team docs and tests.
+# They stay in the repository but are never published, so Google can't find them.
+supabase/
+docs/
+README.md
+CONTRIBUTING.md
+SECURITY.md
+.env.example
+app/tests/
+app/package.json
