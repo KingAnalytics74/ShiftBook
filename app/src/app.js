@@ -277,6 +277,9 @@ import "./scene.js";
     for (const [, h] of (state.holidays || new Map())) {
       if (!h || !h.from || kindOf(h) !== "leave" || !["approved", "pending"].includes(statusOf(h))) continue;
       const to = h.to || h.from, per = new Map((h.shifts || []).map(x => [x.date, Number(x.hours) || 0]));
+      // the booking's hours are what counts (it may be rounded or changed by hand), shared by the shifts' sizes
+      const perSum = [...per.values()].reduce((a, b) => a + b, 0);
+      if (perSum > 0) per.forEach((v, k) => per.set(k, v * (Number(h.hours) || 0) / perSum));
       const days = Math.round((parse(to) - parse(h.from)) / 864e5) + 1, share = per.size ? 0 : (Number(h.hours) || 0) / days;
       for (let d = parse(h.from); ymd(d) <= to; d = addDays(d, 1)) {
         const k = ymd(d); m.set(k, { hours: per.size ? per.get(k) || 0 : share, status: statusOf(h), note: h.note || "" });
@@ -438,13 +441,23 @@ import "./scene.js";
   function renderSheet(p, sm) {
     const t = sm.t;
     let h = `<thead><tr><th>Date</th><th>Day</th><th>Time</th><th>Workplace</th><th>Sleep-in</th><th>Paid hrs</th><th>Break</th><th>Net hrs</th><th>Hourly £</th><th>Sleep-in £</th><th>Total £</th><th>Status</th></tr></thead><tbody>`;
+    const holD = holidayDays(); let holH = 0, holDays = 0;
+    const est = (() => { try { const sm2 = holSummary(); return n => sm2.mode === "rolledup" || !sm2.pay.weeks ? null : payEstimate(n, sm2.pay, state.cfg.hourlyRate).likely; } catch (e) { return () => null; } })();
     sm.rows.forEach(r => {
       const wk = r.date.getDay() === 0 || r.date.getDay() === 6;
+      const hd = holD.get(r.key);
+      if (hd) { holDays++; holH += hd.hours; }
+      if (hd && !r.s) {
+        const pay = hd.hours ? est(hd.hours) : null;
+        h += `<tr class="hol clickable${wk ? " wkend" : ""}" data-date="${r.key}"><td>${fmt(r.date, { day: "2-digit", month: "short" })}</td><td>${fmt(r.date, { weekday: "short" })}</td><td></td><td>Holiday${hd.note ? ` · ${esc(hd.note)}` : ""}</td><td></td><td></td><td></td><td class="num">${hd.hours ? hrs(hd.hours) : ""}</td><td></td><td></td><td class="num">${pay != null ? `<small>about</small> ${gbp(pay)}` : ""}</td><td><span class="pill holiday${hd.status === "pending" ? " wait" : ""}">${hd.status === "pending" ? "Holiday · waiting" : "Holiday"}</span></td></tr>`;
+        return;
+      }
       if (!r.s) { h += `<tr class="off clickable${wk ? " wkend" : ""}" data-date="${r.key}"><td>${fmt(r.date, { day: "2-digit", month: "short" })}</td><td>${fmt(r.date, { weekday: "short" })}</td><td></td><td>Day off</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>`; return; }
       const s = r.s, c = r.c;
-      h += `<tr class="clickable${wk ? " wkend" : ""}" data-date="${r.key}"><td>${fmt(r.date, { day: "2-digit", month: "short" })}</td><td>${fmt(r.date, { weekday: "short" })}</td><td>${s.start && s.end ? `${esc(s.start)}–${esc(s.end)}` : ""}${s.type ? `<br><small>${esc(s.type)}</small>` : ""}</td><td>${esc((s.users || []).join(", "))}</td><td>${s.sleepIn ? '<span class="pill sleep">Yes</span>' : "No"}</td><td class="num">${s.dayHours == null || s.dayHours === "" ? "" : hrs(s.dayHours)}</td><td class="num">${s.breakHrs ? hrs(s.breakHrs) : ""}</td><td class="num">${c.net ? hrs(c.net) : ""}</td><td class="num">${c.hourly ? gbp(c.hourly) : ""}</td><td class="num">${c.sleep ? gbp(c.sleep) : ""}</td><td class="num"><b>${gbp(c.total)}</b></td><td><span class="pill ${c.status.toLowerCase()}">${c.status}</span></td></tr>`;
+      h += `<tr class="clickable${wk ? " wkend" : ""}" data-date="${r.key}"><td>${fmt(r.date, { day: "2-digit", month: "short" })}</td><td>${fmt(r.date, { weekday: "short" })}</td><td>${s.start && s.end ? `${esc(s.start)}–${esc(s.end)}` : ""}${s.type ? `<br><small>${esc(s.type)}</small>` : ""}</td><td>${esc((s.users || []).join(", "))}</td><td>${s.sleepIn ? '<span class="pill sleep">Yes</span>' : "No"}</td><td class="num">${s.dayHours == null || s.dayHours === "" ? "" : hrs(s.dayHours)}</td><td class="num">${s.breakHrs ? hrs(s.breakHrs) : ""}</td><td class="num">${c.net ? hrs(c.net) : ""}</td><td class="num">${c.hourly ? gbp(c.hourly) : ""}</td><td class="num">${c.sleep ? gbp(c.sleep) : ""}</td><td class="num"><b>${gbp(c.total)}</b></td><td><span class="pill ${c.status.toLowerCase()}">${c.status}</span>${hd ? ` <span class="pill holiday${hd.status === "pending" ? " wait" : ""}">Holiday</span>` : ""}</td></tr>`;
     });
-    h += `</tbody><tfoot><tr><td colspan="4">Total · ${t.shifts} shifts</td><td>${t.sleepIns}</td><td class="num">${hrs(t.dayHours)}</td><td class="num">${hrs(t.breaks)}</td><td class="num">${hrs(t.net)}</td><td class="num">${gbp(t.hourly)}</td><td class="num">${gbp(t.sleep)}</td><td class="num">${gbp(t.gross)}</td><td></td></tr></tfoot>`;
+    const holPay = holH ? est(holH) : null;
+    h += `</tbody><tfoot><tr><td colspan="4">Total · ${t.shifts} shifts</td><td>${t.sleepIns}</td><td class="num">${hrs(t.dayHours)}</td><td class="num">${hrs(t.breaks)}</td><td class="num">${hrs(t.net)}</td><td class="num">${gbp(t.hourly)}</td><td class="num">${gbp(t.sleep)}</td><td class="num">${gbp(t.gross)}</td><td></td></tr>${holDays ? `<tr class="holtot"><td colspan="4">Holiday · ${holDays} day${holDays === 1 ? "" : "s"} (not in the total above)</td><td></td><td></td><td></td><td class="num">${hrs(holH)}</td><td></td><td></td><td class="num">${holPay != null ? `about ${gbp(holPay)}` : ""}</td><td></td></tr>` : ""}</tfoot>`;
     $("#sheet").innerHTML = h;
     $("#calc").innerHTML = `<div class="hbars">
       <div class="preview"><span>${hrs(t.net)} net hrs × ${gbp(state.cfg.hourlyRate)}</span><span class="num">${gbp(t.hourly)}</span></div>
@@ -562,7 +575,11 @@ import "./scene.js";
   document.querySelectorAll("[data-b]").forEach(b => b.onclick = () => { $("#fBreak").value = b.dataset.b; preview(); });
   ["#fHours", "#fBreak", "#fFare"].forEach(s => $(s).addEventListener("input", preview));
   $("#fFareQuick").addEventListener("click", e => { const b = e.target.closest("[data-fare]"); if (!b) return; $("#fFare").value = b.dataset.fare === "usual" ? (state.cfg.busFare || "") : ""; preview(); });
-  $("#fDate").addEventListener("change", () => { const v = $("#fDate").value; if (v) openLog(v); });
+  $("#fDate").addEventListener("change", () => {
+    const v = $("#fDate").value; if (!v) return;
+    if (state.logKind === "holiday") { if (!$("#fHolTo").value || $("#fHolTo").value < v) $("#fHolTo").value = v; logHolCalc(); return; }
+    openLog(v);
+  });
 
   // "Usual" fare button follows the bus fare saved in settings
   function fareUsualUI() {
@@ -607,13 +624,106 @@ import "./scene.js";
     $("#fFare").value = s ? (s.fare ?? "") : (Number(state.cfg.busFare) || "");
     fareUsualUI();
     setSleep(!!s?.sleepIn);
+    state.logDate = date; state.logNotes = s?.notes || "";
+    renderUserChips();
+    renderPresets(); preview();
+    // a day inside booked holiday opens as that holiday
+    const hd = holidayOn(date);
+    state.holEditing = hd ? hd.id : null; state.holTouched = !!hd;
+    $("#fHolTo").value = hd ? (hd.to || hd.from) : date;
+    $("#fHolHours").value = hd ? hd.hours : "";
+    $("#fHolStatus").value = hd && statusOf(hd) === "approved" ? "approved" : "pending";
+    $("#fHolRemove").checked = true;
+    setLogKind(hd ? "holiday" : state.nextLogKind || "shift");
+    state.nextLogKind = null;
+  }
+  function shiftLabels() {
+    const date = state.logDate, s = state.shifts.get(date);
+    $("#fDate").value = date; $("#fNotes").value = state.logNotes || "";
     $("#logTitle").textContent = s ? "Edit shift" : "Log a shift";
     $("#editNote").hidden = !s;
     if (s) $("#editNote").textContent = `There is already a shift on ${fmt(parse(date), { weekday: "long", day: "numeric", month: "long" })}. Saving replaces it.`;
     $("#delBtn").hidden = !s; $("#delConfirm").hidden = true; $("#formError").hidden = true;
     $("#saveBtn").textContent = s ? "Save changes" : "Save shift";
-    renderUserChips();
-    renderPresets(); preview();
+  }
+  // ---------- Log: shift or holiday ----------
+  const holidayOn = date => holList().find(h => kindOf(h) === "leave" && ["approved", "pending"].includes(statusOf(h)) && h.from <= date && (h.to || h.from) >= date);
+  function setLogKind(k) {
+    state.logKind = k;
+    const hol = k === "holiday", h = state.holEditing ? state.holidays.get(state.holEditing) : null;
+    $("#fKind").querySelectorAll("[data-k]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.k === k)));
+    $("#logForm").classList.toggle("holmode", hol); $("#fHolBox").hidden = !hol;
+    $("#fDateLbl").textContent = hol ? "First day off" : "Shift date";
+    if (!hol) { shiftLabels(); return; }
+    if (h) { $("#fDate").value = h.from; $("#fNotes").value = h.note || ""; }
+    else { if (state.logNotes && $("#fNotes").value === state.logNotes) $("#fNotes").value = ""; }
+    $("#logTitle").textContent = h ? "Edit holiday" : "Book holiday";
+    $("#saveBtn").textContent = h ? "Save changes" : "Save holiday";
+    $("#delBtn").hidden = !h; $("#delConfirm").hidden = true; $("#formError").hidden = true;
+    $("#editNote").hidden = !h;
+    if (h) $("#editNote").textContent = `This day is part of your holiday${h.from === (h.to || h.from) ? "" : ` from ${dShort(h.from)} to ${dShort(h.to)}`}. Change it here, or switch to Shift to log a shift instead.`;
+    logHolCalc();
+  }
+  $("#fKind").addEventListener("click", e => {
+    const b = e.target.closest("[data-k]"); if (!b || b.dataset.k === state.logKind) return;
+    if (b.dataset.k === "holiday" && !state.holEditing) { const d = $("#fDate").value || state.logDate; $("#fHolTo").value = d; state.holTouched = false; $("#fHolHours").value = ""; }
+    setLogKind(b.dataset.k);
+  });
+  // the shifts the holiday covers, the hours, what it pays and what's left
+  function logHolCalc() {
+    const f = $("#fDate").value, t = $("#fHolTo").value || f, box = $("#fHolShifts");
+    if (!f || t < f) { box.hidden = true; $("#fHolPreview").hidden = true; return; }
+    const r = rotaHours(state.shifts, f, t, state.cfg, holCfg());
+    state.logHolRota = r;
+    if (r.source === "estimate") { box.hidden = true; $("#fHolHint").textContent = `no shifts logged · about ${r.estimateDays} working day${r.estimateDays === 1 ? "" : "s"} × ${hrs(r.perDay)} hrs`; }
+    else {
+      box.innerHTML = `<div class="hint">${r.days.length ? "Shifts this covers:" : "You're not down to work on these days."}</div>` + r.days.map(d => `<div class="row"><span>${fmt(parse(d.date), { weekday: "short", day: "numeric", month: "short" })} · ${d.source === "shift" ? hlShiftLabel(d) : "your normal week"}</span><span>${hrs(d.hours)} hrs</span></div>`).join("") + (r.days.length > 1 ? `<div class="row tot"><span>Total</span><span>${hrs(r.total)} hrs</span></div>` : "");
+      box.hidden = false; $("#fHolHint").textContent = "from your rota · you can change it";
+    }
+    if (!state.holTouched) $("#fHolHours").value = r.total;
+    const logged = r.days.filter(d => d.source === "shift").length;
+    $("#fHolRemoveRow").hidden = !logged;
+    $("#fHolRemoveTxt").textContent = `Take ${logged === 1 ? "the shift on this day" : `the ${logged} shifts on these days`} out of my log, because I won't work ${logged === 1 ? "it" : "them"}`;
+    logHolPreview();
+  }
+  function logHolPreview() {
+    const box = $("#fHolPreview"), raw = $("#fHolHours").value, h = Number(raw);
+    if (raw === "" || !(h > 0)) { box.hidden = true; return; }
+    const sm = holSummary(), per = holCfg().hoursPerDay, ed = state.holEditing ? state.holidays.get(state.holEditing) : null;
+    const old = ed && statusOf(ed) === "approved" ? Number(ed.hours) || 0 : 0, pend = $("#fHolStatus").value === "pending", after = sm.left + old - h;
+    const R = [`<div class="pv"><span>Holiday hours</span><b>${hrsTxt(h)} (${asDays(h, per)})</b></div>`];
+    if (sm.mode === "rolledup") R.push(`<div class="pv"><span>Holiday pay</span><b>already paid on your payslips</b></div>`);
+    else if (sm.pay.weeks) { const e = payEstimate(h, sm.pay, state.cfg.hourlyRate); R.push(`<div class="pv"><span>Estimated holiday pay</span><b>${e.extras && e.low < e.likely - 0.5 ? `${gbp(e.low)} – ${gbp(e.likely)}` : gbp(e.likely)}</b></div>`); }
+    R.push(`<div class="pv"><span>Holiday left ${pend ? "if it's approved" : "after this"}</span><b>${hrsTxt(after)}</b></div>`);
+    if (after < 0) R.push(`<div class="hint warn">That's ${hrsTxt(-after)} more than you've built up so far.</div>`);
+    box.innerHTML = R.join(""); box.hidden = false;
+  }
+  $("#fHolTo").addEventListener("change", () => { if ($("#fHolTo").value && $("#fHolTo").value < $("#fDate").value) $("#fHolTo").value = $("#fDate").value; logHolCalc(); });
+  $("#fHolHours").addEventListener("input", () => { state.holTouched = true; logHolPreview(); });
+  $("#fHolStatus").addEventListener("change", logHolPreview);
+  async function saveLogHoliday() {
+    const f = $("#fDate").value, t = $("#fHolTo").value || f, h = Number($("#fHolHours").value), note = $("#fNotes").value.trim().slice(0, 60);
+    const err = m => { $("#formError").textContent = m; $("#formError").hidden = false; };
+    if (!f) return err("Pick the first day of your holiday.");
+    if (t < f) return err("The last day can't be before the first day.");
+    if ($("#fHolHours").value === "" || !(h >= 0)) return err("Add how many holiday hours this uses.");
+    if (Math.round((parse(t) - parse(f)) / 864e5) > 366) return err("Book a year or less at a time.");
+    const overlap = holList().find(x => x.id !== state.holEditing && kindOf(x) === "leave" && ["pending", "approved"].includes(statusOf(x)) && x.from <= t && (x.to || x.from) >= f);
+    if (overlap) return err(`You already have holiday from ${dShort(overlap.from)} to ${dShort(overlap.to || overlap.from)}. Open that day to change it.`);
+    if (!state.db) return err("Saving isn't available. Sign in again.");
+    const r = rotaHours(state.shifts, f, t, state.cfg, holCfg());
+    const id = state.holEditing || f + "-" + Math.random().toString(36).slice(2, 6), prev = state.holEditing ? state.holidays.get(state.holEditing) || {} : {};
+    const doc = { ...prev, kind: "leave", from: f, to: t, hours: Math.round(h * 4) / 4, note, status: $("#fHolStatus").value,
+      shifts: r.days.length ? r.days.map(d => ({ date: d.date, hours: d.hours })) : null, createdAt: prev.createdAt || new Date().toISOString(), updatedAt: new Date().toISOString() };
+    $("#saveBtn").disabled = true;
+    try {
+      await S.holidays().doc(id).set(doc);
+      const drop = !$("#fHolRemoveRow").hidden && $("#fHolRemove").checked ? r.days.filter(d => d.source === "shift").map(d => d.date) : [];
+      for (const k of drop) { try { await S.shifts().doc(k).delete(); } catch (e3) { } }
+      toast(`Holiday saved · ${hrsTxt(doc.hours)}${doc.status === "pending" ? " · waiting for approval" : ""}${drop.length ? ` · ${drop.length} shift${drop.length === 1 ? "" : "s"} taken out of your log` : ""}`);
+      state.editing = null; show("overview");
+    } catch (e2) { err("The holiday didn't save. Check your connection and try again."); }
+    finally { $("#saveBtn").disabled = false; }
   }
 
   function validate(s) {
@@ -649,6 +759,7 @@ import "./scene.js";
 
   $("#logForm").addEventListener("submit", async e => {
     e.preventDefault();
+    if (state.logKind === "holiday") return saveLogHoliday();
     const s = formShift(); const err = validate(s);
     if (err) { $("#formError").textContent = err; $("#formError").hidden = false; return; }
     $("#formError").hidden = true;
@@ -667,9 +778,18 @@ import "./scene.js";
       $("#formError").hidden = false;
     } finally { $("#saveBtn").disabled = false; }
   });
-  $("#delBtn").onclick = () => { $("#delText").textContent = `Delete the shift on ${fmt(parse(state.editing), { weekday: "long", day: "numeric", month: "long" })}?`; $("#delConfirm").hidden = false; };
+  $("#delBtn").onclick = () => {
+    const h = state.logKind === "holiday" && state.holEditing ? state.holidays.get(state.holEditing) : null;
+    $("#delText").textContent = h ? `Delete your holiday ${h.from === (h.to || h.from) ? `on ${fmt(parse(h.from), { weekday: "long", day: "numeric", month: "long" })}` : `from ${dShort(h.from)} to ${dShort(h.to)}`}? Your holiday balance goes back up.` : `Delete the shift on ${fmt(parse(state.editing), { weekday: "long", day: "numeric", month: "long" })}?`;
+    $("#delConfirm").hidden = false;
+  };
   $("#delNo").onclick = () => { $("#delConfirm").hidden = true; };
   $("#delYes").onclick = async () => {
+    if (state.logKind === "holiday" && state.holEditing) {
+      try { await S.holidays().doc(state.holEditing).delete(); toast("Holiday deleted"); state.editing = null; show("overview"); }
+      catch (e) { $("#formError").textContent = "The holiday wasn't deleted. Try again."; $("#formError").hidden = false; }
+      return;
+    }
     try { await S.shifts().doc(state.editing).delete(); toast("Shift deleted"); state.editing = null; show("overview"); }
     catch (e) { $("#formError").textContent = "The shift wasn't deleted. Try again."; $("#formError").hidden = false; }
   };
@@ -683,8 +803,12 @@ import "./scene.js";
     const head = [["Employee", q(name || "Not set")], ["Role", q(state.cfg.role || "")],
     ["Pay period", `${ymd(p.start)} to ${ymd(p.end)}`], ["Hourly rate", state.cfg.hourlyRate], ["Sleep-in rate", state.cfg.sleepInRate], []].map(r => r.join(","));
     const lines = [...head, ["Date", "Day", "Shift", "Start", "Finish", "Workplace", "Sleep-in", "Paid hours", "Break", "Net hours", "Hourly pay", "Sleep-in pay", "Total", "Notes"].join(",")];
-    sm.rows.forEach(r => { const s = r.s, c = r.c; lines.push([r.key, fmt(r.date, { weekday: "short" }), s?.type ? q(s.type) : "", s?.start || "", s?.end || "", s ? q((s.users || []).join(", ")) : "Day off", s ? (s.sleepIn ? "Y" : "N") : "", s?.dayHours ?? "", s?.breakHrs ?? "", c ? c.net : "", c ? c.hourly.toFixed(2) : "", c ? c.sleep.toFixed(2) : "", c ? c.total.toFixed(2) : "", s?.notes ? q(s.notes) : ""].join(",")); });
+    const holD = holidayDays(); let holH = 0;
+    sm.rows.forEach(r => { const s = r.s, c = r.c, hd = holD.get(r.key); if (hd) holH += hd.hours;
+      if (hd && !s) { lines.push([r.key, fmt(r.date, { weekday: "short" }), "Holiday", "", "", hd.status === "pending" ? "Holiday (waiting for approval)" : "Holiday", "", "", "", hd.hours ? Math.round(hd.hours * 100) / 100 : "", "", "", "", hd.note ? q(hd.note) : ""].join(",")); return; }
+      lines.push([r.key, fmt(r.date, { weekday: "short" }), s?.type ? q(s.type) : "", s?.start || "", s?.end || "", s ? q((s.users || []).join(", ")) : "Day off", s ? (s.sleepIn ? "Y" : "N") : "", s?.dayHours ?? "", s?.breakHrs ?? "", c ? c.net : "", c ? c.hourly.toFixed(2) : "", c ? c.sleep.toFixed(2) : "", c ? c.total.toFixed(2) : "", s?.notes ? q(s.notes) : ""].join(",")); });
     lines.push(["TOTAL", "", "", "", "", "", sm.t.sleepIns, sm.t.dayHours, sm.t.breaks, sm.t.net, sm.t.hourly.toFixed(2), sm.t.sleep.toFixed(2), sm.t.gross.toFixed(2), ""].join(","));
+    if (holH) lines.push(["HOLIDAY HOURS", "", "", "", "", "", "", "", "", Math.round(holH * 100) / 100, "", "", "", "Not in the total above"].join(","));
     return { text: lines.join("\n"), name: `Timesheet_${(name || "worker").replace(/[^A-Za-z0-9]+/g, "_").replace(/^_|_$/g, "")}_${ymd(p.start)}_to_${ymd(p.end)}.csv` };
   }
   $("#csvBtn").onclick = async () => {
@@ -698,7 +822,7 @@ import "./scene.js";
     // app: "Shiftbook" is the backup format's label from before the rename to Shiftbuck; kept so old and new backups match
     const data = {
       exportedAt: new Date().toISOString(), app: "Shiftbook", schemaVersion: 1, config: state.cfg, money: state.money,
-      shifts: [...state.shifts.values()].sort((a, b) => a.date.localeCompare(b.date)), spend: Object.fromEntries(state.spend), payslips: Object.fromEntries(state.payslips)
+      shifts: [...state.shifts.values()].sort((a, b) => a.date.localeCompare(b.date)), spend: Object.fromEntries(state.spend), payslips: Object.fromEntries(state.payslips), holidays: Object.fromEntries(state.holidays || new Map())
     };
     try { await state.downloads.save({ filename: `Shiftbuck_backup_${todayStr}.json`, data: JSON.stringify(data, null, 2) }); } catch (e) { if (e?.code !== "cancelled") toast("The backup wasn't saved"); }
   };
@@ -2149,7 +2273,7 @@ import "./scene.js";
       if (!typingSpend) { state.spend = new Map(snap.docs.map(d => [d.id, d.data()])); render(); }
     }, () => { });
     S.shifts().limit(1000).onSnapshot(snap => {
-      state.shifts = new Map(snap.docs.map(d => [d.id, d.data()]));
+      state.shifts = new Map(snap.docs.map(d => [d.id, d.data()]).filter(([, v]) => v && v.date)); // skip a row caught mid-delete
       state.loaded = true; render();
     }, e => { setSync("bad", e?.code === "revoked" ? "Access to this Shiftbuck changed" : "Live updates stopped. Reload to reconnect"); });
   })();

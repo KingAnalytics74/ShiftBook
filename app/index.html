@@ -814,10 +814,27 @@
         <h2 id="logTitle">Log a shift</h2>
         <form id="logForm" novalidate>
           <div class="field">
-            <label for="fDate">Shift date</label>
+            <span class="lbl">What are you adding?</span>
+            <div class="seg logkind" id="fKind" role="group" aria-label="Shift or holiday">
+              <button type="button" data-k="shift" aria-pressed="true">Shift</button>
+              <button type="button" data-k="holiday" aria-pressed="false">Holiday</button>
+            </div>
+          </div>
+          <div class="field">
+            <label for="fDate" id="fDateLbl">Shift date</label>
             <input type="date" id="fDate" required>
             <div class="banner info" id="editNote" hidden></div>
-          </div>        <div class="field" id="fUsersField">
+          </div>
+          <div class="holonly" id="fHolBox" hidden>
+            <div class="field"><label for="fHolTo">Last day off <span class="hint">same day for one day</span></label><input type="date" id="fHolTo"></div>
+            <div class="hlshifts" id="fHolShifts" hidden></div>
+            <div class="row2">
+              <div class="field"><label for="fHolHours">Holiday hours it uses <span class="hint" id="fHolHint">from your rota</span></label><input type="number" id="fHolHours" min="0" max="2000" step="0.25" inputmode="decimal"></div>
+              <div class="field"><label for="fHolStatus">Approved?</label><select id="fHolStatus"><option value="pending">Not yet, I've asked</option><option value="approved">Yes, it's approved</option></select></div>
+            </div>
+            <label class="check" id="fHolRemoveRow" hidden><input type="checkbox" id="fHolRemove" checked> <span id="fHolRemoveTxt">Take the shifts on these days out of my log, because I won't work them</span></label>
+            <div class="hlpreview" id="fHolPreview" hidden aria-live="polite"></div>
+          </div>        <div class="field shiftonly" id="fUsersField">
           <span class="lbl">Workplace <span class="hint">optional · never a person's name</span></span>
             <div class="chips" id="fUsers"></div>
             <div class="row2" id="addUserRow" hidden>
@@ -825,33 +842,33 @@
               <button type="button" class="btn secondary" id="addUserBtn">Add</button>
             </div>
           </div>
-          <div class="field">
+          <div class="field shiftonly">
             <span class="lbl">Shift type</span>          <div class="quick shiftpre" id="fPreset"></div>
           <span class="hint">Change these or add your own in Settings on the Timesheet tab.</span>
         </div>
-        <div class="row2">
-          <div class="field"><label for="fStart">Starts</label><input type="time" id="fStart"></div>
+        <div class="row2 shiftonly">
+          <div class="field shiftonly"><label for="fStart">Starts</label><input type="time" id="fStart"></div>
           <div class="field"><label for="fEnd">Finishes <span class="hint">next morning is fine</span></label><input type="time" id="fEnd"></div>
         </div>
-          <div class="field">
+          <div class="field shiftonly">
             <span class="lbl">Sleep-in?</span>
             <div class="seg" id="fSleep">
               <button type="button" data-v="yes" aria-pressed="false">Yes</button>
               <button type="button" data-v="no" aria-pressed="true">No</button>
             </div>
           </div>
-          <div class="row2">
-            <div class="field">
+          <div class="row2 shiftonly">
+            <div class="field shiftonly">
               <label for="fHours">Paid hours <span class="hint">worked out from the times · blank if sleep-in only</span></label>
               <input type="number" id="fHours" min="0" max="24" step="0.25" inputmode="decimal"></div>
             <div class="field">
               <label for="fBreak">Unpaid break (hrs) <span class="hint">blank if none</span></label>
               <input type="number" id="fBreak" min="0" max="24" step="0.25" inputmode="decimal"></div>
-          </div>        <div class="field">
+          </div>        <div class="field shiftonly">
           <label for="fRate">Hourly rate for this shift (£) <span class="hint" id="fRateHint">blank = your usual rate</span></label>
           <input type="number" id="fRate" min="0" max="200" step="0.01" inputmode="decimal" placeholder="Usual rate">
         </div>
-        <div class="field">
+        <div class="field shiftonly">
           <label for="fFare">Bus fare for this shift (£) <span class="hint">there and back · optional</span></label>
             <input type="number" id="fFare" min="0" max="200" step="0.05" inputmode="decimal" placeholder="0.00">
             <div class="quick" id="fFareQuick"><button type="button" data-fare="usual" id="fFareUsual"
@@ -861,10 +878,10 @@
             <label for="fNotes">Notes <span class="hint">optional</span></label>
             <textarea id="fNotes"></textarea>
           </div>
-          <div class="preview"><span>This shift pays</span><span class="num" id="fPreview">£0.00</span></div>
-          <p class="hint" id="fBreakNote" style="margin:-8px 0 0" hidden></p>
-          <p class="hint" id="fFareNote" style="margin:-8px 0 0" hidden></p>
-          <div class="banner" id="restWarn" hidden></div>
+          <div class="preview shiftonly"><span>This shift pays</span><span class="num" id="fPreview">£0.00</span></div>
+          <p class="hint shiftonly" id="fBreakNote" style="margin:-8px 0 0" hidden></p>
+          <p class="hint shiftonly" id="fFareNote" style="margin:-8px 0 0" hidden></p>
+          <div class="banner shiftonly" id="restWarn" hidden></div>
           <div class="banner bad" id="formError" hidden></div>
           <div class="actions">
             <button type="submit" class="btn" id="saveBtn">Save shift</button>
