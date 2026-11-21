@@ -228,6 +228,8 @@
           <h2>Earnings build-up</h2><span class="hint" id="cumNote"></span>
         </div>
         <div class="chart" id="cum"></div>
+        <p class="hint cumtip" id="cumTip">Tap a day, or drag across days, to pick them out on your shift calendar.</p>
+        <div class="cumsel" id="cumSel" hidden aria-live="polite"></div>
         <div class="legend" style="margin-top:8px">
           <span><span class="ln" style="border-top:2px solid var(--day)"></span>Earned</span>
           <span><span class="ln" style="border-top:2px dashed var(--day)"></span>Rostered</span>
@@ -240,7 +242,7 @@
           <ul class="insights" id="insights"></ul>
         </div>
 <div class="card">
-          <h2>Shift calendar</h2>
+          <div class="charthead"><h2>Shift calendar</h2><button type="button" class="calclear" id="calClear" hidden>Show all days</button></div>
           <div class="cal" id="cal"></div>
           <div class="legend" style="margin-top:10px">
             <span><span class="sw" style="background:var(--day-soft)"></span>Day</span>
@@ -1014,7 +1016,7 @@
         <p>Shiftbuck keeps your shift, pay and money details so it can work out your pay. We don't sell your data, show
           ads, track you with cookies or share anything with your employer.</p>
         <h3>Who we are</h3>
-        <p>Shiftbuck is made by <b>WestByte</b>, which is responsible for this app. Contact us by messaging the Shiftbuck
+        <p>Shiftbuck is made by <b>WesByte Systems</b>, which is responsible for this app. Contact us by messaging the Shiftbuck
           team in the app (Community → Messages).</p>
         <h3>What Shiftbuck keeps</h3>
         <ul>
@@ -1098,7 +1100,7 @@
         <p>Shiftbuck is free. Use it to track your own shifts, pay and rest, and be kind and safe in the community. Its
           figures are estimates, not advice. Never post anything that could identify the people you support.</p>
         <h3>Who we are</h3>
-        <p>Shiftbuck is made by <b>WestByte</b> ("we"). Contact us by messaging the Shiftbuck team in the app
+        <p>Shiftbuck is made by <b>WesByte Systems</b> ("we"). Contact us by messaging the Shiftbuck team in the app
           (Community → Messages).</p>
         <h3>Who can use Shiftbuck</h3>
         <ul>
@@ -1250,11 +1252,11 @@
         </details>
         <details class="faq">
           <summary>Who makes Shiftbuck?</summary>
-          <div>WestByte. Message the Shiftbuck team in the app (Community → Messages) to get in touch.</div>
+          <div>WesByte Systems. Message the Shiftbuck team in the app (Community → Messages) to get in touch.</div>
         </details>
       </div>
     </section>
-    <footer class="poweredby">Powered by <b>WestByte</b></footer>
+    <footer class="poweredby">Powered by <b>WesByte Systems</b></footer>
   </div>
 
   <div class="cmscrim" id="cmScrim" hidden></div>

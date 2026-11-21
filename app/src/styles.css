@@ -1226,3 +1226,15 @@ html.themeswap *,html.themeswap *::before,html.themeswap *::after{transition:bac
 .hlweek input{text-align:center;padding-left:2px;padding-right:2px;min-width:0}
 .hlro{display:flex;align-items:center;gap:10px;min-height:44px}
 @media (min-width:640px){.hlmodes{grid-template-columns:repeat(3,1fr)}}
+
+/* earnings build-up picks days out on the shift calendar (like a Power BI cross-filter) */
+.chart .hit{touch-action:pan-y}
+.cumtip{margin:6px 0 0}
+.cumsel{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;margin-top:8px;padding:10px 12px;border-radius:12px;background:var(--day-soft);font-size:14px}
+.cumsel b{font-family:var(--f-num)}
+.cumsel .what{font-weight:600;margin-right:auto}
+.cumsel button,.calclear{font:inherit;font-size:13px;font-weight:600;background:none;border:0;padding:6px 2px;min-height:36px;color:var(--ink);text-decoration:underline;cursor:pointer}
+.cal.filtering button{transition:opacity .2s,transform .2s}
+.cal.filtering button:not(.sel){opacity:.28}
+.cal.filtering button.sel{outline:2px solid var(--day);outline-offset:1px;transform:scale(1.04)}
+@media (prefers-reduced-motion:reduce){.cal.filtering button{transition:none}.cal.filtering button.sel{transform:none}}

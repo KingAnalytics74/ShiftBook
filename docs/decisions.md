@@ -42,3 +42,5 @@ The top of the Holiday tab is an "Annual leave" card: available balance, holiday
 - Every balance change is a line in the history, rebuilt from data each time; settings changes are logged too. Deleting approved holiday needs a second tap.
 - Reminders are in-app only: holiday starting within 14 days that isn't approved, or booking more than built up.
 - Not done: bank holidays for changing-hours workers (they're usually just not rostered), and notifications outside the app.
+- 2026-11-21: The company name is written **WesByte Systems** everywhere (it was written WestByte).
+- 2026-11-21: Overview: tapping or dragging on the Earnings build-up picks those days out on the Shift calendar (others fade), with shifts, pay, hours and running total under the chart. Tap the same day again or Clear to undo. Tapping a calendar day still opens it.
