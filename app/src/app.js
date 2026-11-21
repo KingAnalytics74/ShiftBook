@@ -288,7 +288,7 @@ import "./scene.js";
     const sm = holSummary(), box = $("#calHol");
     box.innerHTML = `<div class="left"><span>Holiday left</span><b>${hrsTxt(sm.left)}</b></div><div><span>Taken</span><b>${hrsTxt(sm.taken + sm.bankTaken)}</b></div><div><span>Booked</span><b>${hrsTxt(sm.booked + sm.bankBooked)}</b></div><div><span>Waiting</span><b>${hrsTxt(sm.pending)}</b></div><button type="button" id="calHolGo">Book or see holiday</button>`;
   }
-  $("#calHol").addEventListener("click", e => { if (e.target.closest("#calHolGo")) show("stats", "holiday"); });
+  $("#calHol").addEventListener("click", e => { if (e.target.closest("#calHolGo")) show("holiday"); });
 
   function renderCumulative(p, sm) {
     const rows = sm.rows, n = rows.length;
@@ -454,11 +454,12 @@ import "./scene.js";
   }
 
   // ---------- views ----------
-  // Five screens: Overview, Stats (five panes under pills), Community, Settings (the gear) and Log shift (the + button).
-  const VIEWS = ["overview", "stats", "community", "settings", "profile", "log"], PANES = ["earnings", "takehome", "spending", "forecast", "sheet", "holiday"];
+  // Screens: Overview, Stats (five panes under pills), Holiday, Community, Settings (the gear) and Log shift (the + button).
+  const VIEWS = ["overview", "stats", "holiday", "community", "settings", "profile", "log"], PANES = ["earnings", "takehome", "spending", "forecast", "sheet"];
   // saved from older versions of the app, when these were tabs of their own
   const LEGACY = { sheet: ["stats", "sheet"], money: ["stats", "takehome"], forecast: ["stats", "forecast"] };
   function setPane(name) {
+    if (name === "holiday") return show("holiday");
     if (!PANES.includes(name)) name = "earnings";
     state.pane = name;
     PANES.forEach(n => { $("#pane-" + n).hidden = n !== name; const b = $("#pill-" + n); b.setAttribute("aria-selected", String(n === name)); b.tabIndex = n === name ? 0 : -1; });
@@ -491,6 +492,7 @@ import "./scene.js";
   function show(view, pane) {
     if (state.needsSetup) return;
     if (LEGACY[view]) [view, pane] = LEGACY[view];
+    if (view === "stats" && pane === "holiday") view = "holiday"; // Holiday used to be a Stats pane
     if (!VIEWS.includes(view)) view = "overview";
     state.view = view;
     document.body.dataset.view = view; if (typeof cmFabSync === "function") cmFabSync();
