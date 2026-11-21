@@ -1628,6 +1628,14 @@ import "./scene.js";
   function cmFabSync() { document.body.classList.toggle("cmpost-on", state.view === "community" && cm.pane === "feed" && !!cm.store && !$("#cmMain").hidden); }
   function cmOpenComposer() { $("#cmComposer").classList.add("open"); $("#cmScrim").hidden = false; document.body.classList.add("cmcomposing"); requestAnimationFrame(() => $("#cmText").focus({ preventScroll: true })); }
   function cmCloseComposer() { $("#cmComposer").classList.remove("open"); $("#cmScrim").hidden = true; document.body.classList.remove("cmcomposing"); }
+  // The background refresh redraws these lists every few seconds. Skip the write when nothing changed, so nothing flickers, restarts or loses its scroll position.
+  (() => {
+    const d = Object.getOwnPropertyDescriptor(Element.prototype, "innerHTML");
+    ["#cmSpaces", "#cmFeed", "#cmMsgList", "#cmAnnList", "#cmModList"].forEach(q => {
+      const el = document.querySelector(q); if (!el) return;
+      Object.defineProperty(el, "innerHTML", { configurable: true, get() { return d.get.call(this); }, set(v) { if (this._h === v) return; this._h = v; d.set.call(this, v); } });
+    });
+  })();
   function renderCommunity() {
     if (!$("#view-community")) return;
     const me = cmMe(), joined = !!me.nick;

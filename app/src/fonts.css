@@ -12,3 +12,9 @@
 @font-face{font-family:'Poppins';font-style:normal;font-weight:600;font-display:swap;src:url(../fonts/poppins-latin-600-normal.woff2) format('woff2')}
 @font-face{font-family:'Poppins';font-style:normal;font-weight:700;font-display:swap;src:url(../fonts/poppins-latin-700-normal.woff2) format('woff2')}
 @font-face{font-family:'Poppins';font-style:normal;font-weight:800;font-display:swap;src:url(../fonts/poppins-latin-800-normal.woff2) format('woff2')}
+
+/* The mono font's % sign has a broken slash. Use Figtree's whole, continuous % wherever the numbers font is used. */
+@font-face{font-family:'PctFix';font-style:normal;font-weight:400;src:url(../fonts/figtree-latin-400-normal.woff2) format('woff2');unicode-range:U+0025}
+@font-face{font-family:'PctFix';font-style:normal;font-weight:500;src:url(../fonts/figtree-latin-500-normal.woff2) format('woff2');unicode-range:U+0025}
+@font-face{font-family:'PctFix';font-style:normal;font-weight:600;src:url(../fonts/figtree-latin-600-normal.woff2) format('woff2');unicode-range:U+0025}
+@font-face{font-family:'PctFix';font-style:normal;font-weight:700;src:url(../fonts/figtree-latin-700-normal.woff2) format('woff2');unicode-range:U+0025}
