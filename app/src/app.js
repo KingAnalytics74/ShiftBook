@@ -181,13 +181,18 @@ import "./scene.js";
     let cal = dows.map(d => `<div class="dow">${d[0]}</div>`).join("");
     const lead = (p.start.getDay() + 6) % 7;
     for (let i = 0; i < lead; i++) cal += `<div class="pad"></div>`;
+    const holD = holidayDays();
     sm.rows.forEach(r => {
       let cls = "";
-      if (r.s) cls = r.s.sleepIn && r.c.net ? "both" : r.s.sleepIn || isNight(r.s) ? "night" : "day";
+      const hd = holD.get(r.key);
+      if (hd) cls = "hol" + (hd.status === "pending" ? " pending" : "");
+      else if (r.s) cls = r.s.sleepIn && r.c.net ? "both" : r.s.sleepIn || isNight(r.s) ? "night" : "day";
       if (r.key > todayStr) cls += " future";
       if (r.key === todayStr) cls += " today";
       const rx = restDay(r.key); if (rx.level === "red") cls += " rest-red"; else if (rx.level === "amber") cls += " rest-amber";
-      cal += `<button class="${cls}" data-date="${r.key}" aria-label="${fmt(r.date, { weekday: "long", day: "numeric", month: "long" })}${r.c ? ", " + gbp(r.c.total) : ", day off"}"><span class="d">${r.date.getDate()}</span><span class="e">${r.c ? "£" + Math.round(r.c.total) : ""}</span></button>`;
+      cal += `<button class="${cls}" data-date="${r.key}" aria-label="${fmt(r.date, { weekday: "long", day: "numeric", month: "long" })}${hd ? `, holiday${hd.hours ? ", " + hrs(hd.hours) + " hours" : ""}${hd.status === "pending" ? ", waiting for approval" : ""}` : r.c ? ", " + gbp(r.c.total) : ", day off"}"><span class="d">${r.date.getDate()}</span><span class="e">${hd ? (hd.hours ? hrs(hd.hours) + "h" : "Hol") : r.c ? "£" + Math.round(r.c.total) : ""}</span></button>`;
+    // holiday left, booked and waiting, under the calendar
+    renderCalHol();
     });
     $("#cal").innerHTML = cal;
 
@@ -265,6 +270,26 @@ import "./scene.js";
   addEventListener("scroll", hideTip, { passive: true });
   const svgX = (svg, e) => { const pt = svg.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY; return pt.matrixTransform(svg.getScreenCTM().inverse()); };
 
+  // each day of booked holiday (approved or waiting) and the hours it uses: the rota shifts saved with the booking,
+  // else the hours shared across the days
+  function holidayDays() {
+    const m = new Map();
+    for (const [, h] of (state.holidays || new Map())) {
+      if (!h || !h.from || kindOf(h) !== "leave" || !["approved", "pending"].includes(statusOf(h))) continue;
+      const to = h.to || h.from, per = new Map((h.shifts || []).map(x => [x.date, Number(x.hours) || 0]));
+      const days = Math.round((parse(to) - parse(h.from)) / 864e5) + 1, share = per.size ? 0 : (Number(h.hours) || 0) / days;
+      for (let d = parse(h.from); ymd(d) <= to; d = addDays(d, 1)) {
+        const k = ymd(d); m.set(k, { hours: per.size ? per.get(k) || 0 : share, status: statusOf(h), note: h.note || "" });
+      }
+    }
+    return m;
+  }
+  function renderCalHol() {
+    const sm = holSummary(), box = $("#calHol");
+    box.innerHTML = `<div class="left"><span>Holiday left</span><b>${hrsTxt(sm.left)}</b></div><div><span>Taken</span><b>${hrsTxt(sm.taken + sm.bankTaken)}</b></div><div><span>Booked</span><b>${hrsTxt(sm.booked + sm.bankBooked)}</b></div><div><span>Waiting</span><b>${hrsTxt(sm.pending)}</b></div><button type="button" id="calHolGo">Book or see holiday</button>`;
+  }
+  $("#calHol").addEventListener("click", e => { if (e.target.closest("#calHolGo")) show("stats", "holiday"); });
+
   function renderCumulative(p, sm) {
     const rows = sm.rows, n = rows.length;
     let c = 0; const cum = rows.map(r => (c += r.c ? r.c.total : 0));
@@ -305,7 +330,7 @@ import "./scene.js";
       g.style.display = ""; const ln = g.querySelector("line"), cc = g.querySelector("circle");
       ln.setAttribute("x1", x(i)); ln.setAttribute("x2", x(i)); cc.setAttribute("cx", x(i)); cc.setAttribute("cy", y(cum[i]));
       const r = rows[i];
-      showTip(`<div class="t">${fmt(r.date, { weekday: "short", day: "numeric", month: "short" })}${r.key > todayStr && r.s ? " · rostered" : ""}</div>${r.s ? `${esc((r.s.users || []).join(", "))} · <b>${gbp(r.c.total)}</b>` : "Day off"}<br>Running total <b>${gbp(cum[i])}</b>${prev ? `<br>Last period by this day <b>${gbp(prev[Math.min(i, prev.length - 1)])}</b>` : ""}`, e.clientX, e.clientY);
+      showTip(`<div class="t">${fmt(r.date, { weekday: "short", day: "numeric", month: "short" })}${r.key > todayStr && r.s ? " · rostered" : ""}</div>${r.s ? `${esc((r.s.users || []).join(", "))} · <b>${gbp(r.c.total)}</b>` : (() => { const hd = holidayDays().get(r.key); return hd ? `Holiday${hd.hours ? ` · <b>${hrs(hd.hours)} hrs</b>` : ""}${hd.status === "pending" ? " (waiting)" : ""}` : "Day off"; })()}<br>Running total <b>${gbp(cum[i])}</b>${prev ? `<br>Last period by this day <b>${gbp(prev[Math.min(i, prev.length - 1)])}</b>` : ""}`, e.clientX, e.clientY);
     };
     // tap a day or drag across days: they're picked out on the shift calendar
     const idx = e => Math.max(0, Math.min(n - 1, Math.round(((svgX(svg, e).x - L) / pw) * (n - 1))));
@@ -344,9 +369,12 @@ import "./scene.js";
     const pay = sh.reduce((t, r) => t + r.c.total, 0), hrsW = sh.reduce((t, r) => t + r.c.net, 0), sl = sh.filter(r => r.s.sleepIn).length;
     const one = a === b, d = o => fmt(rows[a].date, o), when = one ? d({ weekday: "short", day: "numeric", month: "short" }) : `${fmt(rows[a].date, { day: "numeric", month: "short" })} – ${fmt(rows[b].date, { day: "numeric", month: "short" })}`;
     const fut = sh.some(r => r.key > todayStr);
+    const holD = holidayDays(); let holH = 0, holN = 0, holWait = false;
+    pick.forEach(r => { const hd = holD.get(r.key); if (hd) { holH += hd.hours; holN++; if (hd.status === "pending") holWait = true; } });
+    const holTxt = holN ? `<span class="holsel">Holiday ${holH ? hrsTxt(holH) : `${holN} day${holN === 1 ? "" : "s"}`}${holWait ? " (some waiting)" : ""}</span>` : "";
     box.innerHTML = `<span class="what">${when}</span>` + (sh.length
       ? `<span>${sh.length} shift${sh.length === 1 ? "" : "s"}</span><span><b>${gbp(pay)}</b>${fut ? " incl. rostered" : ""}</span><span>${hrs(hrsW)} hrs${sl ? ` + ${sl} sleep-in${sl === 1 ? "" : "s"}` : ""}</span><span>Running total <b>${gbp(cum[b])}</b></span>`
-      : `<span>${one ? "Day off" : "No shifts"}</span>`) + `<button type="button" data-cumclear>Clear</button>`;
+      : `<span>${holN ? "" : one ? "Day off" : "No shifts"}</span>`) + holTxt + `<span>Holiday left <b>${hrsTxt(holSummary().left)}</b></span><button type="button" data-cumclear>Clear</button>`;
     box.hidden = false;
   }
   $("#cumSel").addEventListener("click", e => { if (e.target.closest("[data-cumclear]")) { state.cumSel = null; applyCumSel(); } });
