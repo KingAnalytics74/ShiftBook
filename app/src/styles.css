@@ -632,7 +632,7 @@ html.booted .wrap{animation:bootin .22s var(--ease-out,ease-out) both}
 body.authing,body.onboarding{position:relative}
 body.authing .deco,body.onboarding .deco{display:block;position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none;contain:strict}
 body.authing .wrap,body.onboarding .wrap{position:relative;z-index:1}
-html.boot .deco{visibility:hidden}
+html.boot .deco,html.boot .bottombar,html.boot .fab{visibility:hidden}
 .deco .sh{position:absolute;display:block;opacity:0;
   animation:shpop .9s var(--spring,cubic-bezier(.34,1.35,.64,1)) var(--dl) forwards,shfl var(--fl) ease-in-out var(--dl) infinite alternate,shsp var(--sp) linear var(--dl) infinite}
 .deco .sh svg{display:block;width:100%;height:100%;overflow:visible}
