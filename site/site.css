@@ -212,8 +212,8 @@ a{color:inherit}
 @media (max-width:1080px){.grid{grid-template-columns:repeat(2,1fr)}.hero-in{grid-template-columns:1fr 340px}}
 @media (max-width:900px){
   :root{--s:.64}
-  .menu{display:flex}
-  .nav .btn.sm{margin-left:auto}.menu{margin-left:0}
+  .links{display:none!important}
+  .nav .btn.sm{margin-left:auto}
   .links{position:absolute;left:0;right:0;top:68px;background:var(--deep-2);flex-direction:column;align-items:stretch;gap:0;margin:0;padding:8px 20px 16px;border-bottom:3px solid var(--amber);display:none}
   .links.open{display:flex}
   .links a{padding:14px 0;border-bottom:1px solid rgba(255,255,255,.12)}
@@ -263,3 +263,13 @@ a{color:inherit}
   .nav .btn.sm{padding:10px 12px}
   .menu{width:42px;flex:none}
 }
+
+/* Start free: a slow shine across the button and a soft ring that breathes, so the eye goes there first */
+.btn.amber{position:relative;isolation:isolate;background-image:linear-gradient(105deg,transparent 38%,rgba(255,255,255,.72) 50%,transparent 62%);background-size:260% 100%;background-position:180% 0;background-repeat:no-repeat;animation:sbshine 3.6s ease-in-out 1.2s infinite}
+.btn.amber::before{content:"";position:absolute;inset:-5px;border-radius:inherit;border:2px solid var(--amber-hi);opacity:0;z-index:-1;animation:sbring 2.4s ease-out 1s infinite;pointer-events:none}
+@keyframes sbshine{0%{background-position:180% 0}45%,100%{background-position:-80% 0}}
+@keyframes sbring{0%{transform:scale(.94);opacity:.85}70%,100%{transform:scale(1.18);opacity:0}}
+.btn.amber:hover{animation-play-state:paused}
+@media (prefers-reduced-motion:reduce){.btn.amber,.btn.amber::before{animation:none}}
+.foot-in nav .fl{display:none}
+@media (max-width:900px){.foot-in nav{display:flex;flex-wrap:wrap;gap:8px 18px}.foot-in nav .fl{display:inline}}

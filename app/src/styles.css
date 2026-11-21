@@ -1272,7 +1272,7 @@ label.check input{width:20px;height:20px;margin-top:1px;flex:none;accent-color:v
 @media (max-width:759px){
   .bottombar{
     left:14px!important;right:14px!important;bottom:calc(12px + env(safe-area-inset-bottom,0px))!important;
-    max-width:420px;margin:0 auto;padding:6px!important;gap:0;
+    max-width:420px;margin:0 auto;padding:6px!important;gap:0;grid-template-columns:repeat(4,minmax(0,1fr))!important;
     border-radius:30px;border:1px solid rgba(255,255,255,.34)!important;border-top:1px solid rgba(255,255,255,.5)!important;
     background:
       radial-gradient(120% 140% at 10% 0%,rgba(190,160,225,.55) 0%,transparent 55%),
@@ -1284,12 +1284,12 @@ label.check input{width:20px;height:20px;margin-top:1px;flex:none;accent-color:v
   }
   .bottombar::after{content:"";position:absolute;left:10%;right:10%;top:0;height:46%;border-radius:0 0 50% 50%/0 0 100% 100%;background:linear-gradient(rgba(255,255,255,.28),transparent);pointer-events:none;z-index:0}
   .bottombar::before{
-    top:6px!important;bottom:6px!important;left:6px!important;width:calc((100% - 12px) / 4)!important;border-radius:24px!important;
+    box-sizing:border-box;top:6px!important;bottom:6px!important;left:6px!important;width:calc((100% - 12px) / 4)!important;border-radius:24px!important;
     background:linear-gradient(160deg,rgba(255,255,255,.46),rgba(255,255,255,.2))!important;
     border:1px solid rgba(255,255,255,.55);box-shadow:inset 0 1px 0 rgba(255,255,255,.7),0 4px 14px rgba(20,22,90,.25);
-    transition:transform .6s var(--m-spring,cubic-bezier(.22,1,.36,1)),opacity .2s!important
+    transition:transform .55s cubic-bezier(.3,1.08,.4,1),opacity .2s!important
   }
-  .bottombar button{color:rgba(255,255,255,.82)!important;border-radius:24px;padding:9px 4px 8px!important;text-shadow:0 1px 2px rgba(20,22,90,.35)}
+  .bottombar button{color:rgba(255,255,255,.82)!important;border-radius:24px;padding:9px 2px 8px!important;font-size:11.5px!important;letter-spacing:-.01em;text-shadow:0 1px 2px rgba(20,22,90,.35)}
   .bottombar button[aria-selected="true"]{color:#fff!important;text-shadow:0 1px 3px rgba(20,22,90,.45)}
   .bottombar svg{filter:drop-shadow(0 1px 2px rgba(20,22,90,.3))}
   .wrap{padding-bottom:128px}
@@ -1297,3 +1297,12 @@ label.check input{width:20px;height:20px;margin-top:1px;flex:none;accent-color:v
 }
 @media (max-width:759px) and (prefers-reduced-transparency:reduce){.bottombar{-webkit-backdrop-filter:none;backdrop-filter:none;background:rgba(52,54,140,.96)!important}}
 @supports not ((backdrop-filter:blur(2px)) or (-webkit-backdrop-filter:blur(2px))){@media (max-width:759px){.bottombar{background:rgba(52,54,140,.96)!important}}}
+
+/* Messages: the chat area runs down to the bottom of the screen, blank space and all */
+@media (max-width:759px){
+  #cmPaneMsgs{min-height:calc(100dvh - 250px)}
+  #cmMsgs{flex:1;display:flex;flex-direction:column}
+  #cmMsgs #cmThread:not([hidden]){flex:1;display:flex;flex-direction:column}
+  #cmMsgs .cmbubbles{flex:1;min-height:0;max-height:none}
+}
+@media (min-width:760px){#cmPaneMsgs{min-height:calc(100dvh - 300px)}#cmMsgs{flex:1;display:flex;flex-direction:column}#cmMsgs .cmbubbles{flex:1;max-height:none;min-height:360px}#cmMsgs #cmThread:not([hidden]){flex:1;display:flex;flex-direction:column}}
