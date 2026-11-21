@@ -518,15 +518,22 @@
       <div class="pane" id="pane-holiday" role="tabpanel" aria-labelledby="pill-holiday" hidden>
       <div class="card hldash">
         <div class="hldhead"><h2>Annual leave</h2><button type="button" class="hlbadge" id="hlYearChange" aria-label="Change your leave year"><span id="hlBadge">2026</span> <span aria-hidden="true">✎</span></button></div>
+        <div class="hlnotice" id="hlNotice" hidden></div>
         <div class="hltiles">
-          <div class="hltile main"><div class="v" id="hlLeft">0 hrs</div><div class="l">Available balance</div><div class="s" id="hlLeftDays"></div></div>
-          <div class="hltile"><div class="v" id="hlTaken">0 hrs</div><div class="l">Holiday taken</div><div class="s" id="hlTakenSub"></div></div>
-          <div class="hltile"><div class="v" id="hlEnt">0 hrs</div><div class="l" id="hlEntLbl">Annual entitlement</div><div class="s" id="hlEntSub"></div></div>
-          <div class="hltile"><div class="v" id="hlValue">£0</div><div class="l">Estimated remaining value</div><div class="s" id="hlValueSub"></div></div>
+          <div class="hltile main"><div class="v" id="hlLeft">0 hrs</div><div class="l">Holiday left</div><div class="s" id="hlLeftDays"></div></div>
+          <div class="hltile"><div class="v" id="hlEarned">0 hrs</div><div class="l">Built up so far</div><div class="s" id="hlEarnedSub"></div></div>
+          <div class="hltile"><div class="v" id="hlTaken">0 hrs</div><div class="l">Taken</div><div class="s" id="hlTakenSub"></div></div>
+          <div class="hltile"><div class="v" id="hlValue">£0</div><div class="l">Holiday pay for what's left</div><div class="s" id="hlValueSub"></div></div>
         </div>
-        <div class="hlused"><span>Holiday used</span><b id="hlUsedPct">0%</b></div>
-        <div class="hlbar" role="progressbar" id="hlBar" aria-valuemin="0" aria-valuemax="100"><i id="hlBarTaken"></i><i id="hlBarBooked"></i></div>
-        <div class="hllegend"><span><i class="t"></i>Taken</span><span><i class="b"></i>Booked</span><span id="hlYear" class="hint"></span></div>
+        <div class="hlstats">
+          <div><span id="hlEntLbl">This year's holiday</span><b id="hlEnt">0 hrs</b></div>
+          <div><span>Booked and approved</span><b id="hlBooked">0 hrs</b></div>
+          <div><span>Waiting for approval</span><b id="hlPending">0 hrs</b></div>
+        </div>
+        <div class="hlused"><span>Holiday year so far</span><b id="hlUsedPct">0% used</b></div>
+        <div class="hlbar" role="img" id="hlBar"><i id="hlBarTaken"></i><i id="hlBarBooked"></i><i id="hlBarLeft"></i></div>
+        <div class="hllegend"><span><i class="t"></i>Taken</span><span><i class="b"></i>Booked</span><span><i class="l"></i>Left</span><span><i class="n"></i>Still to build up</span></div>
+        <div class="hint" id="hlYear"></div>
         <button type="button" class="btn hlbook" id="hlBookBtn">Book holiday</button>
       </div>
       <div class="grid2">
@@ -539,41 +546,76 @@
           <div id="hlPay"></div>
         </div>
       </div>
-      <div class="card">
-        <div class="charthead"><h2>Book holiday</h2><span class="hint">Only you see this. Book it with your employer too.</span></div>
+      <div class="card" id="hlBookCard">
+        <div class="charthead"><h2 id="hlFormTitle">Book holiday</h2><span class="hint">Only you see this. Ask your employer too.</span></div>
         <form id="hlForm" class="settings" novalidate>
           <div class="field"><label for="hlFrom">First day off</label><input type="date" id="hlFrom" required></div>
           <div class="field"><label for="hlTo">Last day off</label><input type="date" id="hlTo" required></div>
-          <div class="field"><label for="hlHours">Holiday hours used <span class="hint" id="hlHoursHint">worked out from your holiday day</span></label><input type="number" id="hlHours" min="0" max="2000" step="0.5" inputmode="decimal"></div>
-          <div class="field"><label for="hlNote">Note <span class="hint">optional</span></label><input type="text" id="hlNote" maxlength="60" placeholder="e.g. Christmas"></div>
+          <div class="hlshifts" id="hlShifts" hidden style="grid-column:1/-1"></div>
+          <div class="field"><label for="hlHours">Holiday hours it uses <span class="hint" id="hlHoursHint">worked out from your rota</span></label><input type="number" id="hlHours" min="0" max="2000" step="0.25" inputmode="decimal"></div>
+          <div class="field"><label for="hlStatus">Has your employer approved it?</label><select id="hlStatus"><option value="pending">Not yet, I've asked</option><option value="approved">Yes, it's approved</option></select></div>
+          <div class="field" style="grid-column:1/-1"><label for="hlNote">Note <span class="hint">optional</span></label><input type="text" id="hlNote" maxlength="60" placeholder="e.g. Christmas"></div>
           <div class="hlpreview" id="hlPreview" hidden style="grid-column:1/-1" aria-live="polite"></div>
           <div class="banner bad" id="hlErr" hidden style="grid-column:1/-1"></div>
           <div class="actions" style="grid-column:1/-1"><button class="btn" type="submit" id="hlSave">Save holiday</button><button class="btn secondary" type="button" id="hlCancel" hidden>Cancel</button></div>
         </form>
+        <div class="hlfilter" role="group" aria-label="Show holidays"><button type="button" class="chip" data-hlf="upcoming" aria-pressed="true">Coming up</button><button type="button" class="chip" data-hlf="past" aria-pressed="false">Taken</button><button type="button" class="chip" data-hlf="all" aria-pressed="false">All</button></div>
         <div class="hllist" id="hlList"></div>
+        <details class="hladj"><summary>Record a change from your employer</summary>
+          <p class="hint">If payroll or your manager says your balance is different, add the difference here, for example +7.5 hours they gave back or −3 hours they took off. It shows in your history with the reason.</p>
+          <form id="hlAdjForm" class="settings" novalidate>
+            <div class="field"><label for="hlAdjDate">Date</label><input type="date" id="hlAdjDate"></div>
+            <div class="field"><label for="hlAdjHours">Hours <span class="hint">+ to add, − to take off</span></label><input type="number" id="hlAdjHours" min="-500" max="500" step="0.25" inputmode="decimal"></div>
+            <div class="field" style="grid-column:1/-1"><label for="hlAdjNote">Reason</label><input type="text" id="hlAdjNote" maxlength="80" placeholder="e.g. Payroll correction from October payslip"></div>
+            <div class="banner bad" id="hlAdjErr" hidden style="grid-column:1/-1"></div>
+            <div class="actions" style="grid-column:1/-1"><button class="btn secondary" type="submit">Add change</button></div>
+          </form>
+        </details>
+      </div>
+      <div class="card">
+        <div class="charthead"><h2>Holiday history</h2><span class="hint">Every change to your balance, and why</span></div>
+        <div class="hlledger" id="hlLedger"></div>
+        <button type="button" class="btn secondary" id="hlLedgerMore" hidden>Show all</button>
       </div>
       <div class="card">
         <h2>Your holiday settings</h2>
         <form id="hlSet" class="settings" novalidate>
-          <div class="field" style="grid-column:1/-1"><span class="lbl">How do you build up holiday?</span>
+          <h3 class="hlsec" style="grid-column:1/-1">Your job</h3>
+          <div class="field"><label for="hlEmployer">Employer <span class="hint">optional</span></label><input type="text" id="hlEmployer" maxlength="60" autocomplete="organization"></div>
+          <div class="field"><label for="hlContractType">Contract</label><select id="hlContractType"><option value="">Choose…</option><option value="permanent">Permanent</option><option value="parttime">Part-time</option><option value="zero">Zero-hours</option><option value="bank">Bank or relief</option><option value="agency">Agency</option><option value="fixedterm">Fixed-term</option><option value="seasonal">Term-time or seasonal</option></select></div>
+          <div class="field"><label for="hlStartedJob">Started this job</label><input type="date" id="hlStartedJob"></div>
+          <div class="field"><label for="hlLeaving">Leaving date <span class="hint">only if you're leaving</span></label><input type="date" id="hlLeaving"></div>
+          <div class="field"><label for="hlNation">Where you work</label><select id="hlNation"><option value="ew">England or Wales</option><option value="sc">Scotland</option><option value="ni">Northern Ireland</option></select></div>
+          <div class="field"><span class="lbl">Hourly pay</span><div class="hlro"><b id="hlRate">£0</b> <button type="button" class="hlchange" id="hlRateEdit">Change in Settings</button></div></div>
+          <h3 class="hlsec" style="grid-column:1/-1">How you build up holiday</h3>
+          <div class="field" style="grid-column:1/-1">
             <div class="hlmodes" id="hlMode" role="radiogroup" aria-label="How you build up holiday">
-              <button type="button" role="radio" data-mode="irregular" aria-checked="true"><b>My hours change</b><small>Shifts, rotas, zero-hours, bank or agency work. You earn 12.07% of every hour you work.</small></button>
-              <button type="button" role="radio" data-mode="regular" aria-checked="false"><b>Same days every week</b><small>Fixed days, full-time or part-time. You get a set amount for the year.</small></button>
-              <button type="button" role="radio" data-mode="rolledup" aria-checked="false"><b>Holiday pay on every payslip</b><small>"Rolled-up" pay: 12.07% extra each payday, and your time off is unpaid.</small></button>
-            </div></div>
+              <button type="button" role="radio" data-mode="irregular" aria-checked="true"><b>My hours change</b><small>Rotas, zero-hours, bank or agency. You earn 12.07% of every hour you work.</small></button>
+              <button type="button" role="radio" data-mode="partyear" aria-checked="false"><b>I only work part of the year</b><small>Term-time or seasonal. You earn 12.07% of every hour you work.</small></button>
+              <button type="button" role="radio" data-mode="regular" aria-checked="false"><b>Same days every week</b><small>Full-time or part-time on set days. You get days for the year.</small></button>
+              <button type="button" role="radio" data-mode="weekly" aria-checked="false"><b>Same hours every week</b><small>A set number of hours a week. You get 5.6 weeks of them.</small></button>
+              <button type="button" role="radio" data-mode="fixed" aria-checked="false"><b>My employer gives a set amount</b><small>Your contract says, for example, 210 hours or 33 days.</small></button>
+              <button type="button" role="radio" data-mode="rolledup" aria-checked="false"><b>Holiday pay on every payslip</b><small>"Rolled-up" pay: 12.07% extra each payday, and time off is unpaid.</small></button>
+            </div><small class="hint" id="hlModeHint"></small></div>
+          <div class="field" data-for="regular"><label for="hlDpw">Days you work each week</label><input type="number" id="hlDpw" min="0.5" max="7" step="0.5" inputmode="decimal"></div>
+          <div class="field" data-for="regular"><label for="hlContract">Days a year in your contract <span class="hint">blank = the legal minimum</span></label><input type="number" id="hlContract" min="0" max="60" step="0.5" inputmode="decimal"></div>
+          <div class="field" data-for="weekly"><label for="hlWeekly">Hours you work each week</label><input type="number" id="hlWeekly" min="1" max="80" step="0.25" inputmode="decimal"></div>
+          <div class="field" data-for="weekly"><label for="hlDpwW">Days you work each week</label><input type="number" id="hlDpwW" min="0.5" max="7" step="0.5" inputmode="decimal"></div>
+          <div class="field" data-for="fixed"><label for="hlAmount">Holiday a year in your contract</label><div class="hlamt"><input type="number" id="hlAmount" min="0" max="3000" step="0.25" inputmode="decimal" aria-label="Amount"><select id="hlAmountUnit" aria-label="Hours or days"><option value="hours">hours</option><option value="days">days</option></select></div></div>
+          <div class="field" data-for="fixed"><label for="hlAccrue">When can you use it?</label><select id="hlAccrue"><option value="upfront">All of it from the start of the year</option><option value="monthly">It builds up each month</option></select></div>
+          <div class="field" data-for="weeks"><label for="hlWeeks">Weeks of holiday in your contract <span class="hint">5.6 is the legal minimum</span></label><input type="number" id="hlWeeks" min="5.6" max="12" step="0.1" inputmode="decimal"></div>
+          <div class="field" data-for="accrual"><label for="hlSleep">Do sleep-ins build up holiday?</label><select id="hlSleep"><option value="no">No, only the hours I'm awake and working</option><option value="payroll">Yes, my payslip turns them into hours</option></select></div>
+          <h3 class="hlsec" style="grid-column:1/-1">Your holiday year</h3>
           <div class="field" style="grid-column:1/-1" id="hlYearField"><span class="lbl">Your leave year starts on <span class="hint">it's in your contract or handbook, or ask your manager</span></span>
             <div class="hlstart"><select id="hlStartDay" aria-label="Day the leave year starts"></select><select id="hlStart" aria-label="Month the leave year starts"></select></div>
             <div class="hlquick" id="hlQuick"><button type="button" data-d="1" data-m="1">1 January</button><button type="button" data-d="1" data-m="4">1 April</button><button type="button" data-d="6" data-m="4">6 April (tax year)</button><button type="button" data-d="1" data-m="9">1 September</button><button type="button" id="hlQuickJoined" hidden>The day I started</button></div>
             <small class="hint" id="hlStartShow"></small></div>
-          <div class="field"><label for="hlStartedJob">When did you start this job? <span class="hint">optional, for "the day I started"</span></label><input type="date" id="hlStartedJob"></div>
+          <div class="field"><label for="hlCarry">Hours carried over from last year</label><input type="number" id="hlCarry" min="0" max="500" step="0.25" inputmode="decimal"></div>
+          <div class="field" data-for="annual"><label for="hlBankHols">Bank holidays</label><select id="hlBankHols"><option value="separate">I work them or get them on top</option><option value="deduct">They come out of my holiday</option></select></div>
+          <h3 class="hlsec" style="grid-column:1/-1">Your normal week</h3>
           <div class="field"><label for="hlPerDay">Hours in one holiday day <span class="hint">usually your normal shift, after breaks</span></label><input type="number" id="hlPerDay" min="1" max="24" step="0.25" inputmode="decimal"></div>
-          <div class="field" data-for="regular"><label for="hlDpw">Days you work each week</label><input type="number" id="hlDpw" min="0.5" max="7" step="0.5" inputmode="decimal"></div>
-          <div class="field" data-for="regular"><label for="hlContract">Days a year in your contract <span class="hint">blank = the legal minimum</span></label><input type="number" id="hlContract" min="0" max="60" step="0.5" inputmode="decimal"></div>
-          <div class="field" data-for="regular"><label for="hlJoined">Started the job this leave year? <span class="hint">blank if not</span></label><input type="date" id="hlJoined"></div>
-          <div class="field" data-for="irregular"><label for="hlWeeks">Weeks of holiday in your contract <span class="hint">5.6 is the legal minimum</span></label><input type="number" id="hlWeeks" min="5.6" max="12" step="0.1" inputmode="decimal"></div>
-          <div class="field" data-for="irregular"><label for="hlSleep">Do sleep-ins build up holiday?</label><select id="hlSleep"><option value="no">No, only the hours I'm awake and working</option><option value="payroll">Yes, my payslip turns them into hours</option></select></div>
-          <div class="field"><label for="hlCarry">Hours carried over from last year</label><input type="number" id="hlCarry" min="0" max="500" step="0.5" inputmode="decimal"></div>
-          <div class="field"><label for="hlNation">Where you work</label><select id="hlNation"><option value="ew">England or Wales</option><option value="sc">Scotland</option><option value="ni">Northern Ireland</option></select></div>
+          <div class="field" style="grid-column:1/-1"><span class="lbl">Hours you normally work each day <span class="hint">optional. Used for days off when no shift is in your log</span></span>
+            <div class="hlweek" id="hlPattern"></div></div>
           <div class="actions" style="grid-column:1/-1"><button class="btn" type="submit">Save holiday settings</button></div>
         </form>
       </div>

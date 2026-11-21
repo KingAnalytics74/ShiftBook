@@ -32,3 +32,13 @@ Booking a holiday now shows what it uses, what it pays (hours × average pay per
 
 ## Holiday dashboard (Nov 2026)
 The top of the Holiday tab is an "Annual leave" card: available balance, holiday taken (+ booked), the year's holiday (entitlement for fixed hours, "expected this year" for changing hours) and the estimated value of what's left, then a "Holiday used" bar (taken and booked) and a Book holiday button. Hours first, because shift lengths differ across jobs. The year badge opens the leave year setting.
+
+## Leave and holiday pay, from the leave brief (Nov 2026)
+- Six ways to build up holiday: changing hours (12.07%), part-year (12.07%), rolled-up, same days a week (5.6 x days, max 28), same hours a week (5.6 x weekly hours, capped at 28 days for 6+ day weeks), and a set amount from the employer (hours or days, available up front or monthly). Never below the legal minimum; statutory and contract holiday shown separately.
+- Starting part-way: share by months, building up 1/12 a month. Leaving part-way: share by days.
+- Booking uses the rota: each shift's paid hours on days you're down to work (sleep-ins too when payroll counts them), then your normal week for days with nothing logged, then a 5-in-7 guess. Editable.
+- Requests are pending, approved, turned down or cancelled. Only approved holiday changes the balance; pending shows as "left if approved".
+- Holiday pay estimate: hours x your 52-week average pay per hour, never below basic; when extras lift the average, also a lower figure with 1.6 of 5.6 weeks at basic. Always labelled an estimate.
+- Every balance change is a line in the history, rebuilt from data each time; settings changes are logged too. Deleting approved holiday needs a second tap.
+- Reminders are in-app only: holiday starting within 14 days that isn't approved, or booking more than built up.
+- Not done: bank holidays for changing-hours workers (they're usually just not rostered), and notifications outside the app.

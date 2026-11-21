@@ -1,7 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { accrualRate, leaveYear, hoursCounted, irregularEarned, regularDaysPerYear, regularEntitlement, usedHours,
-    holidayPayRate, rolledUp, holidaySummary, bankHolidaysIn } from "../src/core/holiday.js";
+    holidayPayRate, rolledUp, holidaySummary, bankHolidaysIn, statutoryHours, annualHours, annualEntitlement,
+    rotaHours, payEstimate, ledger } from "../src/core/holiday.js";
 import { periodFor } from "../src/core/periods.js";
 import { ymd } from "../src/core/dates.js";
 
@@ -85,7 +86,7 @@ test("regular hours: a full year isn't rounded", () => {
 test("taken and booked holiday", () => {
     const y = leaveYear(new Date(2026, 10, 20), 1);
     const u = usedHours([{ from: "2026-08-03", to: "2026-08-07", hours: 50 }, { from: "2026-12-21", to: "2026-12-24", hours: 40 }, { from: "2025-12-29", to: "2025-12-31", hours: 30 }], y, "2026-11-20");
-    assert.deepEqual(u, { taken: 50, booked: 40 });
+    assert.deepEqual(u, { taken: 50, booked: 40, pending: 0 });
 });
 
 test("holiday pay rate: average of weeks with pay", () => {
@@ -117,4 +118,86 @@ test("bank holidays in the leave year", () => {
     assert.equal(bankHolidaysIn(y, "ew").length, 8);
     assert.equal(bankHolidaysIn(y, "sc").length, 9);
     assert.equal(bankHolidaysIn(y, "ni").length, 10);
+});
+
+// ---------- every kind of contract ----------
+const Y26 = leaveYear(new Date(2026, 10, 20), 1);
+
+test("same hours every week: 5.6 x weekly hours, capped at 28 days for 6-day weeks", () => {
+    assert.equal(statutoryHours({ weeklyHours: 37.5, daysPerWeek: 5 }), 210);           // 5.6 x 37.5 = the brief's 210 hours
+    assert.equal(statutoryHours({ weeklyHours: 20, daysPerWeek: 3 }), 112);
+    assert.equal(statutoryHours({ weeklyHours: 48, daysPerWeek: 6 }), 224);             // 28 days of 8 hours, not 33.6
+    assert.equal(annualHours({ mode: "weekly", weeklyHours: 36, daysPerWeek: 3, weeks: 6 }).hours, 216); // contract: 6 weeks
+});
+
+test("a set amount from the employer, and never below the legal minimum", () => {
+    const a = annualHours({ mode: "fixed", annualHours: 250, weeklyHours: 37.5, daysPerWeek: 5 });
+    assert.deepEqual([a.hours, a.statutory, a.contractual], [250, 210, 40]);
+    const low = annualHours({ mode: "fixed", annualDays: 20, hoursPerDay: 7.5, weeklyHours: 37.5, daysPerWeek: 5 });
+    assert.equal(low.belowMinimum, true); assert.equal(low.hours, 210);
+});
+
+test("leaving part-way: your share by days", () => {
+    const e = annualEntitlement({ mode: "weekly", weeklyHours: 37.5, daysPerWeek: 5, leaving: "2026-06-30" }, Y26, "2026-11-20");
+    assert.equal(e.yearHours, 104.25); // 210 x 181/365 = 104.14 -> nearest quarter
+});
+
+test("employer builds it up monthly", () => {
+    const e = annualEntitlement({ mode: "fixed", annualHours: 240, accrue: "monthly" }, Y26, "2026-11-20");
+    assert.equal(e.yearHours, 240); assert.equal(e.soFarHours, 220); // 11 months started x 20
+});
+
+// ---------- the rota ----------
+test("a week off takes the shifts you'd have worked: 4 x 12 hours = 48, not 7 days", () => {
+    const sh = new Map();
+    for (const k of ["2026-12-07", "2026-12-08", "2026-12-10", "2026-12-12"]) sh.set(k, { date: k, dayHours: 12, breakHrs: 0 });
+    const r = rotaHours(sh, "2026-12-07", "2026-12-13", cfg, { hoursPerDay: 12 });
+    assert.equal(r.total, 48); assert.equal(r.days.length, 4); assert.equal(r.source, "shifts");
+});
+
+test("days with no shift logged use your normal week", () => {
+    const pattern = [0, 12, 12, 0, 12, 0, 12]; // Sun..Sat
+    const r = rotaHours(new Map(), "2026-12-07", "2026-12-13", cfg, { pattern });
+    assert.equal(r.total, 48); assert.equal(r.source, "pattern");
+});
+
+test("unpaid breaks don't come out of holiday", () => {
+    const sh = new Map([["2026-12-07", { date: "2026-12-07", dayHours: 12, breakHrs: 2 }]]);
+    assert.equal(rotaHours(sh, "2026-12-07", "2026-12-07", cfg, {}).total, 10);
+});
+
+// ---------- holiday pay ----------
+test("holiday pay estimate: a range when regular extras lift the average above basic", () => {
+    const e = payEstimate(10, { perHour: 15 }, 13);
+    assert.equal(e.likely, 150);
+    assert.equal(e.low, 144.29); // 4/5.6 of the time at £15, 1.6/5.6 at £13
+    assert.equal(payEstimate(10, { perHour: 12 }, 13).likely, 130); // never below basic
+});
+
+// ---------- requests and the history ----------
+test("pending requests don't change the balance; turned-down ones are kept but ignored", () => {
+    const hs = [{ id: "a", from: "2026-12-21", to: "2026-12-22", hours: 20, status: "pending" },
+        { id: "b", from: "2026-12-28", to: "2026-12-28", hours: 10, status: "rejected" },
+        { id: "c", from: "2026-08-03", to: "2026-08-03", hours: 10 }]; // old booking with no status = approved
+    const s = holidaySummary({ shifts: new Map(), holidays: hs, cfg, hol: { mode: "fixed", annualHours: 100 }, todayStr: "2026-11-20", periodFor: pf });
+    assert.deepEqual([s.taken, s.booked, s.pending], [10, 0, 20]);
+    assert.equal(s.left, 90); assert.equal(s.leftIfPending, 70);
+});
+
+test("the history adds up to the balance, line by line", () => {
+    const shifts = new Map([["2026-11-02", { date: "2026-11-02", dayHours: 12, breakHrs: 2 }], ["2026-10-05", { date: "2026-10-05", dayHours: 50, breakHrs: 0 }]]);
+    const holidays = [{ id: "h", from: "2026-12-21", to: "2026-12-24", hours: 4 }, { id: "x", kind: "adjust", from: "2026-06-01", hours: 5, note: "Payroll correction" }];
+    const hol = { carriedHours: 8, changes: [{ at: "2026-11-01T10:00:00Z", text: "Sleep-ins now count" }] };
+    const L = ledger({ shifts, holidays, cfg, hol, todayStr: "2026-11-20", periodFor: pf });
+    const s = holidaySummary({ shifts, holidays, cfg, hol, todayStr: "2026-11-20", periodFor: pf });
+    assert.equal(L.balance, s.left);
+    assert.equal(L.rows.reduce((t, r) => t + r.change, 0), s.left);
+    assert.deepEqual(L.rows.map(r => r.type), ["Carried over", "Adjustment", "Built up from shifts", "Settings changed", "Built up from shifts", "Holiday booked"]);
+    assert.equal(s.adjustments, 5);
+});
+
+test("bank holidays can come out of the holiday", () => {
+    const s = holidaySummary({ shifts: new Map(), holidays: [], cfg, hol: { mode: "weekly", weeklyHours: 37.5, daysPerWeek: 5, hoursPerDay: 7.5, bankHols: "deduct" }, todayStr: "2026-11-20", periodFor: pf });
+    assert.equal(s.bank, 60); // 8 bank holidays x 7.5
+    assert.equal(s.left, 150);
 });
