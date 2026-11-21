@@ -1263,7 +1263,7 @@ import "./scene.js";
     document.querySelectorAll(".tabs, .bottombar, .period, .fab, .gear").forEach(el => { el.hidden = on; });
     document.body.classList.toggle("onboarding", on);
     if (window.SBReveal) SBReveal();
-    const tc = document.querySelector('meta[name="theme-color"]'); if (tc) tc.content = on ? "#EDF7FC" : "#3E4095";
+    const tc = document.querySelector('meta[name="theme-color"]'); if (tc) tc.content = on ? "#FFFFFF" : "#3E4095";
   }
   // ---------- first-time setup: one question per screen ----------
   // ---------- profile: age group, sex, area, employer, community nickname ----------
@@ -2238,6 +2238,7 @@ import "./scene.js";
 
   // ---------- boot ----------
   try { state.pane = localStorage.getItem("sb.pane") || "earnings"; const v = localStorage.getItem("sb.view"); if (v && v !== "log") show(v); } catch (e) { }
+  if (!document.body.dataset.view) document.body.dataset.view = state.view || "overview"; // so the bottom menu highlights the first screen too
   openLog(todayStr); fillSettings(); render();
 
   (async () => {

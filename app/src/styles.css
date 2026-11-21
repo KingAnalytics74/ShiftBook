@@ -1,6 +1,6 @@
 /* Layout: phone-first shift app — sticky period bar, three views (Overview / Log / Timesheet), bottom tab bar on phones, top tabs on wide screens */
 :root{
-  --bg:#EDF7FC; --brand:#3E4095; --brand-2:#2D2F78; --on-bg:#FFFFFF; --on-bg-muted:#CFE0F7;
+  --bg:#FFFFFF; --brand:#3E4095; --brand-2:#2D2F78; --on-bg:#FFFFFF; --on-bg-muted:#CFE0F7;
   --hero-bg:#3E4095; --hero-2:#2D2F78; --hero-fg:#FFFFFF; --hero-muted:#CFD3F5; --hero-accent:#D2BDE2; --c4-soft:#D5EEF8;
   --surface:#FFFFFF; --sunk:#DDF0F9; --line:#C9E3F0;
   --ink:#1B1D4E; --muted:#55587F; --faint:#8A8DB3;
@@ -484,7 +484,7 @@ body.authing .so{display:none}
 
 /* ===== Sign-up theme: light with gold. Only while signing in or setting up; the rest of the app keeps its look. ===== */
 body.authing,body.onboarding{
-  --g-bg:#EDF7FC; --g-card:#FFFFFF; --g-ink:#1B1D4E; --g-muted:#55587F; --g-line:#C9E3F0;
+  --g-bg:#FFFFFF; --g-card:#FFFFFF; --g-ink:#1B1D4E; --g-muted:#55587F; --g-line:#C9E3F0;
   --g-gold:#0098DA; --g-gold-hi:#4FC3F0; --g-gold-deep:#3E4095; --g-soft:#D5EEF8;
   --bg:var(--g-bg); --surface:var(--g-card); --sunk:#DDF0F9; --line:var(--g-line);
   --ink:var(--g-ink); --muted:var(--g-muted); --faint:#8A8DB3; --focus:var(--g-gold-deep);
@@ -568,7 +568,7 @@ body.onboarding .obpay b{color:var(--g-gold-hi)}
 .tpick select{appearance:none;-webkit-appearance:none;width:auto!important;min-width:52px;border:0!important;background:transparent!important;box-shadow:none!important;padding:8px 6px!important;text-align:center;text-align-last:center;font-family:var(--f-num);font-variant-numeric:tabular-nums;font-size:26px!important;font-weight:600;color:var(--ink);cursor:pointer;border-radius:10px!important}
 .tpick select:focus-visible{outline:2px solid var(--g-gold-deep,var(--focus));outline-offset:-2px}
 .tpick>span{font-family:var(--f-num);font-size:26px;font-weight:600;color:var(--g-gold-deep,var(--muted));padding-bottom:3px}
-html:has(body.authing),html:has(body.onboarding){--bg:#EDF7FC;background:#EDF7FC}
+html:has(body.authing),html:has(body.onboarding){--bg:#FFFFFF;background:#FFFFFF}
 
 /* ===== Motion system for the sign-up screens =====
    Rules: only transform and opacity move. Springs (slight overshoot, like iOS) for things that travel,
@@ -622,8 +622,8 @@ body.onboarding .tpick select{transition:background-color .15s var(--ease-out)}
 
 /* reload: hide the app until sign-in / setup / app is decided, so the previous screen never flashes */
 html.boot .wrap{visibility:hidden}
-html.boot-light,html.boot-light body{background:#EDF7FC!important}
-html.boot-light body::before{background:#EDF7FC!important}
+html.boot-light,html.boot-light body{background:#FFFFFF!important}
+html.boot-light body::before{background:#FFFFFF!important}
 html.booted .wrap{animation:bootin .22s var(--ease-out,ease-out) both}
 @keyframes bootin{from{opacity:0}to{opacity:1}}
 

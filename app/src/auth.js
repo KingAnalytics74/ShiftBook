@@ -501,7 +501,7 @@
   function needSignIn() {
     document.body.classList.add("authing");
     watchScreens();
-    const tc = document.querySelector('meta[name="theme-color"]'); if (tc) tc.content = "#EDF7FC";
+    const tc = document.querySelector('meta[name="theme-color"]'); if (tc) tc.content = "#FFFFFF";
     const box = $("#view-auth"); if (box) box.hidden = false;
     let out = false; try { out = sessionStorage.getItem("shiftbook:signedout") === "1"; sessionStorage.removeItem("shiftbook:signedout"); } catch (e) {}
     screenStart();
