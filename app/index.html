@@ -288,6 +288,7 @@
         <button type="button" class="pill" role="tab" id="pill-spending" data-pane="spending" aria-controls="pane-spending" aria-selected="false" tabindex="-1">Spending</button>
         <button type="button" class="pill" role="tab" id="pill-forecast" data-pane="forecast" aria-controls="pane-forecast" aria-selected="false" tabindex="-1">Forecast</button>
         <button type="button" class="pill" role="tab" id="pill-sheet" data-pane="sheet" aria-controls="pane-sheet" aria-selected="false" tabindex="-1">Timesheet</button>
+        <button type="button" class="pill" role="tab" id="pill-holiday" data-pane="holiday" aria-controls="pane-holiday" aria-selected="false" tabindex="-1">Holiday</button>
       </div>
       <div class="pane" id="pane-earnings" role="tabpanel" aria-labelledby="pill-earnings">
 <div class="grid2">
@@ -513,6 +514,128 @@
       </div>
 <div class="tablewrap">
         <table id="sheet"></table>
+      </div>
+      </div>
+      <div class="pane" id="pane-holiday" role="tabpanel" aria-labelledby="pill-holiday" hidden>
+      <div class="card hero">
+        <div class="eyebrow"><span id="hlYear">Holiday left this leave year</span> <button type="button" class="hlchange" id="hlYearChange">Change</button></div>
+        <div class="big" id="hlLeft">0 hrs</div>
+        <div class="hlsub" id="hlLeftDays"></div>
+        <div class="split" id="hlSplit" aria-hidden="true"></div>
+        <div class="legend" id="hlLegend"></div>
+      </div>
+      <div class="kpis" id="hlKpis"></div>
+      <div class="grid2">
+        <div class="card">
+          <h2>How we worked it out</h2>
+          <div class="hlmath" id="hlMath"></div>
+        </div>
+        <div class="card">
+          <h2>Holiday pay</h2>
+          <div id="hlPay"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="charthead"><h2>Book holiday</h2><span class="hint">Only you see this. Book it with your employer too.</span></div>
+        <form id="hlForm" class="settings" novalidate>
+          <div class="field"><label for="hlFrom">First day off</label><input type="date" id="hlFrom" required></div>
+          <div class="field"><label for="hlTo">Last day off</label><input type="date" id="hlTo" required></div>
+          <div class="field"><label for="hlHours">Holiday hours used <span class="hint" id="hlHoursHint">worked out from your holiday day</span></label><input type="number" id="hlHours" min="0" max="2000" step="0.5" inputmode="decimal"></div>
+          <div class="field"><label for="hlNote">Note <span class="hint">optional</span></label><input type="text" id="hlNote" maxlength="60" placeholder="e.g. Christmas"></div>
+          <div class="hlpreview" id="hlPreview" hidden style="grid-column:1/-1" aria-live="polite"></div>
+          <div class="banner bad" id="hlErr" hidden style="grid-column:1/-1"></div>
+          <div class="actions" style="grid-column:1/-1"><button class="btn" type="submit" id="hlSave">Save holiday</button><button class="btn secondary" type="button" id="hlCancel" hidden>Cancel</button></div>
+        </form>
+        <div class="hllist" id="hlList"></div>
+      </div>
+      <div class="card">
+        <h2>Your holiday settings</h2>
+        <form id="hlSet" class="settings" novalidate>
+          <div class="field" style="grid-column:1/-1"><span class="lbl">How do you build up holiday?</span>
+            <div class="hlmodes" id="hlMode" role="radiogroup" aria-label="How you build up holiday">
+              <button type="button" role="radio" data-mode="irregular" aria-checked="true"><b>My hours change</b><small>Shifts, rotas, zero-hours, bank or agency work. You earn 12.07% of every hour you work.</small></button>
+              <button type="button" role="radio" data-mode="regular" aria-checked="false"><b>Same days every week</b><small>Fixed days, full-time or part-time. You get a set amount for the year.</small></button>
+              <button type="button" role="radio" data-mode="rolledup" aria-checked="false"><b>Holiday pay on every payslip</b><small>"Rolled-up" pay: 12.07% extra each payday, and your time off is unpaid.</small></button>
+            </div></div>
+          <div class="field" style="grid-column:1/-1" id="hlYearField"><span class="lbl">Your leave year starts on <span class="hint">it's in your contract or handbook, or ask your manager</span></span>
+            <div class="hlstart"><select id="hlStartDay" aria-label="Day the leave year starts"></select><select id="hlStart" aria-label="Month the leave year starts"></select></div>
+            <div class="hlquick" id="hlQuick"><button type="button" data-d="1" data-m="1">1 January</button><button type="button" data-d="1" data-m="4">1 April</button><button type="button" data-d="6" data-m="4">6 April (tax year)</button><button type="button" data-d="1" data-m="9">1 September</button><button type="button" id="hlQuickJoined" hidden>The day I started</button></div>
+            <small class="hint" id="hlStartShow"></small></div>
+          <div class="field"><label for="hlStartedJob">When did you start this job? <span class="hint">optional, for "the day I started"</span></label><input type="date" id="hlStartedJob"></div>
+          <div class="field"><label for="hlPerDay">Hours in one holiday day <span class="hint">usually your normal shift, after breaks</span></label><input type="number" id="hlPerDay" min="1" max="24" step="0.25" inputmode="decimal"></div>
+          <div class="field" data-for="regular"><label for="hlDpw">Days you work each week</label><input type="number" id="hlDpw" min="0.5" max="7" step="0.5" inputmode="decimal"></div>
+          <div class="field" data-for="regular"><label for="hlContract">Days a year in your contract <span class="hint">blank = the legal minimum</span></label><input type="number" id="hlContract" min="0" max="60" step="0.5" inputmode="decimal"></div>
+          <div class="field" data-for="regular"><label for="hlJoined">Started the job this leave year? <span class="hint">blank if not</span></label><input type="date" id="hlJoined"></div>
+          <div class="field" data-for="irregular"><label for="hlWeeks">Weeks of holiday in your contract <span class="hint">5.6 is the legal minimum</span></label><input type="number" id="hlWeeks" min="5.6" max="12" step="0.1" inputmode="decimal"></div>
+          <div class="field" data-for="irregular"><label for="hlSleep">Do sleep-ins build up holiday?</label><select id="hlSleep"><option value="no">No, only the hours I'm awake and working</option><option value="payroll">Yes, my payslip turns them into hours</option></select></div>
+          <div class="field"><label for="hlCarry">Hours carried over from last year</label><input type="number" id="hlCarry" min="0" max="500" step="0.5" inputmode="decimal"></div>
+          <div class="field"><label for="hlNation">Where you work</label><select id="hlNation"><option value="ew">England or Wales</option><option value="sc">Scotland</option><option value="ni">Northern Ireland</option></select></div>
+          <div class="actions" style="grid-column:1/-1"><button class="btn" type="submit">Save holiday settings</button></div>
+        </form>
+      </div>
+      <div class="card hlguide">
+        <h2>Holiday in your kind of work</h2>
+        <p class="hint" style="margin-top:0">Tap your job. Everyone gets at least 5.6 weeks of paid holiday a year, whatever their contract says.</p>
+        <details><summary>Care and support work</summary>
+          <ul>
+            <li><b>Changing shifts?</b> Choose "My hours change". You earn 12.07% of every hour you work, so 10 hours earns about 1.2 hours of holiday.</li>
+            <li><b>Sleep-ins:</b> time asleep usually isn't counted as working time. If your payslip turns sleep-ins into hours (for example £40 ÷ £13 = 3.08 hours), they may count. Check your payslip or ask HR, then set it above.</li>
+            <li><b>Waking nights</b> are work, so every paid hour counts.</li>
+            <li><b>Travel between visits</b> in home care is working time and should count too.</li>
+            <li><b>Holiday pay</b> should include regular overtime and shift enhancements, not just your basic rate.</li>
+          </ul></details>
+        <details><summary>NHS and hospitals</summary>
+          <ul>
+            <li><b>Agenda for Change staff</b> usually get 27 days plus 8 bank holidays, rising to 29 days after 5 years and 33 after 10 (full-time). Choose "Same days every week" and type your contract days.</li>
+            <li><b>Bank staff</b> usually build up 12.07% of hours worked, or get it added to each payslip. Choose "My hours change" or "Holiday pay on every payslip".</li>
+            <li>Part-time staff get the same pro-rata, worked out in hours.</li>
+          </ul></details>
+        <details><summary>Factory, warehouse and production</summary>
+          <ul>
+            <li><b>Fixed rotas</b> (like 4 on, 4 off) count as regular hours even if the days move. Use "Same days every week" with your average days a week, for example 3.5.</li>
+            <li><b>Varying shifts or overtime-only work:</b> choose "My hours change".</li>
+            <li><b>Shutdowns:</b> your employer can make you take holiday, for example at Christmas, if they tell you at least twice as many days before as the holiday lasts.</li>
+            <li><b>Night and shift premiums</b> that you're paid regularly should be in your holiday pay.</li>
+          </ul></details>
+        <details><summary>Retail, hospitality and leisure</summary>
+          <ul>
+            <li><b>Zero-hours or casual?</b> Choose "My hours change". Holiday builds up from your first shift.</li>
+            <li>Many employers pay it as <b>rolled-up holiday pay</b>: a separate "holiday pay" line on every payslip. If yours does, choose "Holiday pay on every payslip". You still have the right to take the time off, unpaid.</li>
+            <li>Regular overtime and commission should be included in holiday pay.</li>
+          </ul></details>
+        <details><summary>Agency and temporary work</summary>
+          <ul>
+            <li>You build up holiday from day one. The agency pays it, not the place you work at.</li>
+            <li>After 12 weeks in the same job you're entitled to the same holiday as staff employed directly there.</li>
+            <li>If you leave or the job ends, you must be paid for holiday you've built up but not taken.</li>
+          </ul></details>
+        <details><summary>Delivery, driving, security and cleaning</summary>
+          <ul>
+            <li>Paid hours count, including waiting time when you have to stay on site or with the vehicle.</li>
+            <li>Two jobs? You build up holiday separately in each one.</li>
+            <li>Self-employed couriers and drivers don't get holiday pay, unless they're really workers. If an app or company controls your shifts and pay, you may be a worker. Check with ACAS.</li>
+          </ul></details>
+        <details><summary>School and term-time work</summary>
+          <ul>
+            <li>If you only work during term, you're a <b>part-year worker</b>. You build up 12.07% of hours you work, so choose "My hours change".</li>
+            <li>Your employer can't give you less than 5.6 weeks' worth just because you don't work all year.</li>
+          </ul></details>
+      </div>
+      <div class="card hlguide">
+        <h2>Your holiday rights in plain English</h2>
+        <details><summary>Booking holiday</summary>
+          <p>Give at least twice as many days' notice as the holiday you want: 2 days off needs 4 days' notice, unless your contract says otherwise. Your employer can say no, but must tell you at least as many days before as the holiday you asked for.</p></details>
+        <details><summary>Bank holidays</summary>
+          <p>There's no legal right to a paid day off on a bank holiday. Many employers count bank holidays as part of your 5.6 weeks. If you work one, you get the day off another time, or extra pay only if your contract says so. <span id="hlBank"></span></p></details>
+        <details><summary>Carrying holiday over</summary>
+          <p>Most people can carry up to 8 days (1.6 weeks) into the next year if their employer agrees. If you couldn't take holiday because you were off sick, on maternity or family leave, or your employer stopped you, you can usually carry more over.</p></details>
+        <details><summary>Sick on holiday</summary>
+          <p>If you're ill during your holiday, tell your employer straight away. You can usually take those days as sick leave and have the holiday back later.</p></details>
+        <details><summary>Leaving your job</summary>
+          <p>You must be paid for holiday you've built up but not taken. Your employer can take back pay for holiday you took but hadn't built up yet only if your contract allows it.</p></details>
+        <details><summary>What holiday pay should include</summary>
+          <p>For at least 4 weeks of your holiday, pay should include regular overtime, commission and shift enhancements, worked out as the average of the last 52 weeks you were paid. Weeks you weren't paid don't count.</p></details>
+        <p class="hint" style="margin:12px 0 0">These are the legal minimums in England, Scotland and Wales. Northern Ireland has its own rules, so check nidirect. Your contract can give you more, never less. Shiftbuck's figures are estimates, not legal advice. For help, contact <a href="https://www.acas.org.uk/irregular-hours-and-part-year-workers" target="_blank" rel="noopener">ACAS</a> or see <a href="https://www.gov.uk/holiday-entitlement-rights" target="_blank" rel="noopener">GOV.UK</a>.</p>
       </div>
       </div>
     </section>
