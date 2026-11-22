@@ -865,6 +865,24 @@
         </div>
           <label class="check shiftonly" id="fSleepAddRow" hidden><input type="checkbox" id="fSleepAdd"> <span>Sleep-in straight after this shift</span></label>
           <label class="check shiftonly" id="fWakeAddRow" hidden><input type="checkbox" id="fWakeAdd"> <span>Waking night straight after this shift</span></label>
+          <fieldset class="xpart shiftonly" id="fSleepBox" hidden>
+            <legend>Sleep-in</legend>
+            <div class="row2">
+              <div class="field"><label for="fSleepStart">Sleep-in starts</label><input type="time" id="fSleepStart"></div>
+              <div class="field"><label for="fSleepEnd">Sleep-in finishes</label><input type="time" id="fSleepEnd"></div>
+            </div>
+          </fieldset>
+          <fieldset class="xpart shiftonly" id="fWakeBox" hidden>
+            <legend>Waking night</legend>
+            <div class="row2">
+              <div class="field"><label for="fWakeStart">Waking night starts</label><input type="time" id="fWakeStart"></div>
+              <div class="field"><label for="fWakeEnd">Waking night finishes</label><input type="time" id="fWakeEnd"></div>
+            </div>
+            <div class="row2">
+              <div class="field"><label for="fWakeHours">Waking night hours <span class="hint">worked out from the times</span></label><input type="number" id="fWakeHours" min="0" max="24" step="0.25" inputmode="decimal"></div>
+              <div class="field"><label for="fWakeRate">Waking night pay (£ an hour) <span class="hint" id="fWakeRateHint">blank = this shift's rate</span></label><input type="number" id="fWakeRate" min="0" max="200" step="0.01" inputmode="decimal" placeholder="Same rate"></div>
+            </div>
+          </fieldset>
           <div class="banner info shiftonly sleepnote" id="fSleepNote" hidden><span id="fSleepNoteTxt"></span></div>
           <div class="field shiftonly" id="fSleepRateField" hidden>
             <label for="fSleepRate">Sleep-in pay for this shift (£) <span class="hint" id="fSleepRateHint">blank = your usual</span></label>

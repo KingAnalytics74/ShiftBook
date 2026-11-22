@@ -454,7 +454,7 @@ import "./scene.js";
       }
       if (!r.s) { h += `<tr class="off clickable${wk ? " wkend" : ""}" data-date="${r.key}"><td>${fmt(r.date, { day: "2-digit", month: "short" })}</td><td>${fmt(r.date, { weekday: "short" })}</td><td></td><td>Day off</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>`; return; }
       const s = r.s, c = r.c;
-      h += `<tr class="clickable${wk ? " wkend" : ""}" data-date="${r.key}"><td>${fmt(r.date, { day: "2-digit", month: "short" })}</td><td>${fmt(r.date, { weekday: "short" })}</td><td>${s.start && s.end ? `${esc(s.start)}–${esc(s.end)}` : ""}${s.type ? `<br><small>${esc(s.type)}${s.wakingNight ? " + waking night" : ""}</small>` : ""}</td><td>${esc((s.users || []).join(", "))}</td><td>${s.sleepIn ? '<span class="pill sleep">Yes</span>' : "No"}</td><td class="num">${s.dayHours == null || s.dayHours === "" ? "" : hrs(s.dayHours)}</td><td class="num">${s.breakHrs ? hrs(s.breakHrs) : ""}</td><td class="num">${c.net ? hrs(c.net) : ""}</td><td class="num">${c.hourly ? gbp(c.hourly) : ""}</td><td class="num">${c.sleep ? gbp(c.sleep) : ""}</td><td class="num"><b>${gbp(c.total)}</b></td><td><span class="pill ${c.status.toLowerCase()}">${c.status}</span>${hd ? ` <span class="pill holiday${hd.status === "pending" ? " wait" : ""}">Holiday</span>` : ""}</td></tr>`;
+      h += `<tr class="clickable${wk ? " wkend" : ""}" data-date="${r.key}"><td>${fmt(r.date, { day: "2-digit", month: "short" })}</td><td>${fmt(r.date, { weekday: "short" })}</td><td>${s.start && s.end ? `${esc(s.start)}–${esc(s.end)}` : ""}${s.type ? `<br><small>${esc(s.type)}${s.wakingNight ? " + waking night" : ""}</small>` : ""}</td><td>${esc((s.users || []).join(", "))}</td><td>${s.sleepIn ? '<span class="pill sleep">Yes</span>' : "No"}</td><td class="num">${s.dayHours == null || s.dayHours === "" ? "" : hrs(Number(s.dayHours) + (s.wakingNight ? Number(s.wakeHours) || 0 : 0))}</td><td class="num">${s.breakHrs ? hrs(s.breakHrs) : ""}</td><td class="num">${c.net ? hrs(c.net) : ""}</td><td class="num">${c.hourly ? gbp(c.hourly) : ""}</td><td class="num">${c.sleep ? gbp(c.sleep) : ""}</td><td class="num"><b>${gbp(c.total)}</b></td><td><span class="pill ${c.status.toLowerCase()}">${c.status}</span>${hd ? ` <span class="pill holiday${hd.status === "pending" ? " wait" : ""}">Holiday</span>` : ""}</td></tr>`;
     });
     const holPay = holH ? est(holH) : null;
     h += `</tbody><tfoot><tr><td colspan="4">Total · ${t.shifts} shifts</td><td>${t.sleepIns}</td><td class="num">${hrs(t.dayHours)}</td><td class="num">${hrs(t.breaks)}</td><td class="num">${hrs(t.net)}</td><td class="num">${gbp(t.hourly)}</td><td class="num">${gbp(t.sleep)}</td><td class="num">${gbp(t.gross)}</td><td></td></tr>${holDays ? `<tr class="holtot"><td colspan="4">Holiday · ${holDays} day${holDays === 1 ? "" : "s"} (not in the total above)</td><td></td><td></td><td></td><td class="num">${hrs(holH)}</td><td></td><td></td><td class="num">${holPay != null ? `about ${gbp(holPay)}` : ""}</td><td></td></tr>` : ""}</tfoot>`;
@@ -553,41 +553,54 @@ import "./scene.js";
     const own = shiftTypes(), have = new Set(own.map(t => t.name.toLowerCase()));
     return [...own, ...FIXED_SHIFTS.filter(n => !have.has(n.toLowerCase())).map(n => ({ ...FIXED_TYPES[n] }))];
   }
+  // Sleep-in on its own (picked as the shift, or an old shift with no paid hours) is paid a set amount, not by the hour.
+  function sleepOnlyNow() {
+    if (!state.form.sleep || state.form.extra === "sleep") return false;
+    const t = logTypes().find(x => x.name === state.form.type);
+    return t ? t.paid === "sleep" : !hasDayHrs({ dayHours: $("#fHours").value === "" ? null : Number($("#fHours").value) });
+  }
   function sleepUI() {
-    const t = logTypes().find(x => x.name === state.form.type), sleepOnly = !!state.form.sleep && (t ? t.paid === "sleep" : !hasDayHrs({ dayHours: $("#fHours").value === "" ? null : Number($("#fHours").value) }));
+    const sleepOnly = sleepOnlyNow(), x = state.form.extra;
     $("#fHoursRow").hidden = sleepOnly;
-    // a day shift that runs straight into a sleep-in is one record (paid hours plus the sleep-in), so the person can tick it
-    // the tick boxes only make sense once there's a shift with times to follow on from (or one is already ticked, so it can be unticked)
+    // what comes straight after the shift (a sleep-in or a waking night) is the person's choice: a tick box, then its own
+    // times and pay. The boxes need a shift with times first, and stay visible while ticked so they can be unticked.
     const hasTimes = !!($("#fStart").value && $("#fEnd").value), canTick = hasTimes && !sleepOnly && state.form.type !== "Waking night";
-    $("#fSleepAddRow").hidden = !canTick && !(state.form.sleep && !sleepOnly);
-    $("#fSleepAdd").checked = !!state.form.sleep && !sleepOnly;
-    // the same for a waking night straight after: all of it is paid by the hour, so the hours just run on
-    $("#fWakeAddRow").hidden = !canTick && !state.form.wake;
-    $("#fWakeAdd").checked = !!state.form.wake;
-    $("#fSleepNote").hidden = !state.form.sleep && !state.form.wake;
-    $("#fTypeUndo").hidden = !state.form.type && !state.form.sleep && !state.form.wake;
-    $("#fTypeUndo").setAttribute("aria-label", `Undo ${state.form.type || (state.form.sleep ? "sleep-in" : state.form.wake ? "waking night" : "shift")}: clear the shift type and times`);
-    // a sleep-in shows a box for its pay (blank = the usual); a waking night uses the hourly rate box, labelled for it
+    $("#fSleepAddRow").hidden = !canTick && x !== "sleep"; $("#fSleepAdd").checked = x === "sleep";
+    $("#fWakeAddRow").hidden = !canTick && x !== "wake"; $("#fWakeAdd").checked = x === "wake";
+    $("#fSleepBox").hidden = x !== "sleep"; $("#fWakeBox").hidden = x !== "wake";
+    $("#fTypeUndo").hidden = !state.form.type && !state.form.sleep && !x;
+    $("#fTypeUndo").setAttribute("aria-label", `Undo ${state.form.type || (x === "wake" ? "waking night" : state.form.sleep ? "sleep-in" : "shift")}: clear the shift type and times`);
+    // pay boxes: a sleep-in has its own amount (blank = usual); a waking night has its own hourly rate (blank = the shift's)
     $("#fSleepRateField").hidden = !state.form.sleep;
     $("#fSleepRateHint").textContent = `blank = your usual ${gbp(Number(state.cfg.sleepInRate) || 0)}`;
-    const waking = state.form.wake || /\bwaking\b/i.test(state.form.type || "");
-    $("#fRateLbl").textContent = waking ? "Hourly rate for the waking night (£)" : "Hourly rate for this shift (£)";
+    $("#fRateLbl").textContent = /\bwaking\b/i.test(state.form.type || "") ? "Hourly rate for the waking night (£)" : "Hourly rate for this shift (£)";
     $("#fRate").closest(".field").hidden = sleepOnly;
-    const usualSleep = gbp(Number($("#fSleepRate").value) > 0 ? Number($("#fSleepRate").value) : Number(state.cfg.sleepInRate) || 0);
-    $("#fSleepNoteTxt").textContent = state.form.wake ? (Number($("#fHours").value) > 0 ? `Paid by the hour all the way through, including the waking night: ${hrs(Number($("#fHours").value))} hours.` : "Paid by the hour, including the waking night. Set the start and finish.") : sleepOnly ? `Sleep-in: paid ${usualSleep}, not by the hour.` : `Paid by the hour, then the sleep-in, ${usualSleep}.`;
+    const dayRate = Number($("#fRate").value) > 0 ? Number($("#fRate").value) : Number(state.cfg.hourlyRate) || 0;
+    $("#fWakeRateHint").textContent = `blank = ${gbp(dayRate)}, this shift's rate`;
+    const sleepPay = gbp(Number($("#fSleepRate").value) > 0 ? Number($("#fSleepRate").value) : Number(state.cfg.sleepInRate) || 0);
+    const dayNet = Math.max(0, (Number($("#fHours").value) || 0) - (Number($("#fBreak").value) || 0)), wh = Number($("#fWakeHours").value) || 0;
+    const wr = Number($("#fWakeRate").value) > 0 ? Number($("#fWakeRate").value) : dayRate;
+    $("#fSleepNote").hidden = !state.form.sleep && x !== "wake";
+    $("#fSleepNoteTxt").textContent = x === "wake" ? (wh > 0 ? `Your shift: ${hrs(dayNet)} paid hours, then the waking night: ${hrs(wh)} hours at ${gbp(wr)} an hour.` : "Set when the waking night starts and finishes.")
+      : sleepOnly ? `Sleep-in: paid ${sleepPay}, not by the hour.` : `Your shift: ${hrs(dayNet)} paid hours, then the sleep-in, ${sleepPay}.`;
   }
   function renderPresets() {
     $("#fPreset").innerHTML = logTypes().map((t, i) => `<button type="button" data-pre="${i}" aria-pressed="${state.form.type === t.name}">${esc(t.name)} · ${esc(t.start)}–${esc(t.end)}</button>`).join("");
     $("#fRateHint").textContent = `blank = your usual ${gbp(Number(state.cfg.hourlyRate) || 0)}`;
   }
   function applyType(t) {
-    state.form.type = t.name; state.form.wake = false;
+    state.form.type = t.name; clearExtra();
     $("#fStart").value = t.start || ""; $("#fEnd").value = t.end || "";
     const h = typeHours(t);
     $("#fHours").value = h == null ? "" : h; $("#fBreak").value = h == null ? "" : (t.breakHrs ?? "");
     $("#fRate").value = Number(t.rate) > 0 ? t.rate : ""; $("#fSleepRate").value = "";
+    if (t.paid === "both" && t.start && h) {
+      // an old "hours + sleep-in" type: the hours are the shift, then the sleep-in runs to the type's finish
+      $("#fEnd").value = addHrs(t.start, h); state.form.extra = "sleep";
+      $("#fSleepStart").value = $("#fEnd").value; $("#fSleepEnd").value = t.end || "";
+    }
     setSleep(t.paid !== "hours"); renderPresets();
-    if (t.start) $("#fStart").dispatchEvent(new Event("change"));
+    if (t.start && t.paid !== "both") $("#fStart").dispatchEvent(new Event("change"));
   }
   // add a new shift name right here; it joins the person's shift list (saved with Settings' list)
   $("#fAddType").addEventListener("click", () => { $("#fAddTypeRow").hidden = false; $("#fNewType").focus(); });
@@ -614,7 +627,7 @@ import "./scene.js";
     applyType(t);
   });
   function clearType() {
-    state.form.type = null; state.form.wake = false; state.form.dayEnd = null;
+    state.form.type = null; clearExtra();
     ["#fStart", "#fEnd", "#fHours", "#fBreak", "#fRate", "#fSleepRate"].forEach(id => { $(id).value = ""; });
     setSleep(false); renderPresets(); preview();
     $("#fPreset button")?.focus();
@@ -622,45 +635,44 @@ import "./scene.js";
   }
   $("#fTypeUndo").addEventListener("click", clearType);
   $("#fSleepRate").addEventListener("input", () => { sleepUI(); preview(); });
-  // changing the times works out the paid hours (not for sleep-ins, where the hours are separate)
+  // changing the times works out the paid hours (not for a sleep-in on its own, which isn't paid by the hour)
   ["#fStart", "#fEnd"].forEach(id => $(id).addEventListener("change", () => {
-    if (!state.form.sleep && $("#fStart").value && $("#fEnd").value) $("#fHours").value = spanHrs($("#fStart").value, $("#fEnd").value);
+    if (!sleepOnlyNow() && $("#fStart").value && $("#fEnd").value) $("#fHours").value = spanHrs($("#fStart").value, $("#fEnd").value);
+    // the part straight after follows on from the shift's finish
+    if (id === "#fEnd" && $("#fEnd").value) { if (state.form.extra === "sleep") $("#fSleepStart").value = $("#fEnd").value; if (state.form.extra === "wake") { $("#fWakeStart").value = $("#fEnd").value; wakeHoursFromTimes(); } }
     preview();
   }));
   $("#fRate").addEventListener("input", preview);
-  // tick boxes for what comes straight after the shift: a sleep-in, or a waking night (only one of them)
-  function wakeOff() {
-    if (!state.form.wake) return;
-    state.form.wake = false;
-    $("#fEnd").value = state.form.dayEnd || $("#fEnd").value; $("#fEnd").dispatchEvent(new Event("change"));
+  // tick boxes for what comes straight after the shift: a sleep-in or a waking night (one of them), each with its own times and pay
+  function clearExtra() {
+    state.form.extra = null; state.form.wake = false;
+    ["#fSleepStart", "#fSleepEnd", "#fWakeStart", "#fWakeEnd", "#fWakeHours", "#fWakeRate"].forEach(id => { $(id).value = ""; });
   }
+  function wakeHoursFromTimes() { if ($("#fWakeStart").value && $("#fWakeEnd").value) $("#fWakeHours").value = spanHrs($("#fWakeStart").value, $("#fWakeEnd").value); }
   // a tick box needs the shift's times first; say so rather than leave a 0-hour shift
   const needTimes = box => { if ($("#fStart").value && $("#fEnd").value) return false; box.checked = false; toast("Pick your shift, or set its start and finish, first"); sleepUI(); return true; };
+  const fixedEnd = name => (logTypes().find(t => t.name === name) || {}).end || "08:00";
   $("#fWakeAdd").addEventListener("change", () => {
     if ($("#fWakeAdd").checked && needTimes($("#fWakeAdd"))) return;
-    if ($("#fWakeAdd").checked) {
-      if (state.form.sleep) { $("#fSleepAdd").checked = false; $("#fSleepAdd").dispatchEvent(new Event("change")); }
-      state.form.dayEnd = $("#fEnd").value; state.form.wake = true;
-      const wn = logTypes().find(t => t.name === "Waking night"); if ($("#fStart").value) $("#fEnd").value = (wn && wn.end) || "08:00";
-      $("#fEnd").dispatchEvent(new Event("change"));
-    } else wakeOff();
-    sleepUI();
+    const on = $("#fWakeAdd").checked; clearExtra();
+    if (on) {
+      state.form.extra = "wake"; state.form.wake = true;
+      $("#fWakeStart").value = $("#fEnd").value; $("#fWakeEnd").value = fixedEnd("Waking night"); wakeHoursFromTimes();
+    }
+    setSleep(false);
+    if (on) $("#fWakeStart-tp")?.focus();
   });
   $("#fSleepAdd").addEventListener("change", () => {
     if ($("#fSleepAdd").checked && needTimes($("#fSleepAdd"))) return;
-    const on = $("#fSleepAdd").checked;
-    if (on) {
-      wakeOff();
-      state.form.dayEnd = $("#fEnd").value;
-      if ($("#fHours").value === "" && $("#fStart").value && $("#fEnd").value) $("#fHours").value = spanHrs($("#fStart").value, $("#fEnd").value);
-      const sl = logTypes().find(t => t.paid === "sleep"); if ($("#fStart").value) $("#fEnd").value = (sl && sl.end) || "08:00";
-      setSleep(true);
-    } else {
-      const st = $("#fStart").value, h = Number($("#fHours").value) || 0;
-      $("#fEnd").value = state.form.dayEnd || (st && h ? addHrs(st, h) : $("#fEnd").value);
-      setSleep(false);
-    }
+    const on = $("#fSleepAdd").checked; clearExtra();
+    if (on) { state.form.extra = "sleep"; $("#fSleepStart").value = $("#fEnd").value; $("#fSleepEnd").value = fixedEnd("Sleep-in"); }
+    else $("#fSleepRate").value = "";
+    setSleep(on);
+    if (on) $("#fSleepStart-tp")?.focus();
   });
+  ["#fWakeStart", "#fWakeEnd"].forEach(id => $(id).addEventListener("change", () => { wakeHoursFromTimes(); sleepUI(); preview(); }));
+  ["#fWakeHours", "#fWakeRate", "#fHours", "#fBreak"].forEach(id => $(id).addEventListener("input", () => { sleepUI(); preview(); }));
+  ["#fSleepStart", "#fSleepEnd"].forEach(id => $(id).addEventListener("change", preview));
   // sleep-in comes from the shift picked (Sleep-in, or an old "hours + sleep-in" type); we don't ask
   function setSleep(v) { state.form.sleep = v; sleepUI(); preview(); }
   ["#fStart", "#fEnd"].forEach(id => $(id).addEventListener("change", sleepUI));
@@ -683,8 +695,13 @@ import "./scene.js";
   }
   function formShift() {
     const h = $("#fHours").value, b = $("#fBreak").value;
-    const st = $("#fStart").value, en = $("#fEnd").value, rt = $("#fRate").value;
-    return { date: $("#fDate").value, type: state.form.type || null, start: st || null, end: en || null, users: [...state.form.users], sleepIn: state.form.sleep, ...(state.form.wake ? { wakingNight: true } : {}), ...(state.form.sleep && Number($("#fSleepRate").value) > 0 ? { sleepRate: Math.round(Number($("#fSleepRate").value) * 100) / 100 } : {}), dayHours: h === "" ? null : Number(h), breakHrs: b === "" ? null : Number(b), rate: rt === "" || !(Number(rt) > 0) ? null : Math.round(Number(rt) * 100) / 100, fare: $("#fFare").value === "" ? null : Math.round(Number($("#fFare").value) * 100) / 100, notes: $("#fNotes").value.trim() };
+    const st = $("#fStart").value, en = $("#fEnd").value, rt = $("#fRate").value, x = state.form.extra;
+    // with a part straight after, the shift's times run from the start to the end of that part; the day finish is kept too
+    const xEnd = x === "wake" ? $("#fWakeEnd").value : x === "sleep" ? $("#fSleepEnd").value : "";
+    const num = (v, d = 2) => v === "" || !(Number(v) > 0) ? null : Math.round(Number(v) * 10 ** d) / 10 ** d;
+    const extra = x === "wake" ? { wakingNight: true, dayEnd: en || null, wakeStart: $("#fWakeStart").value || null, wakeEnd: $("#fWakeEnd").value || null, wakeHours: num($("#fWakeHours").value), wakeRate: num($("#fWakeRate").value) }
+      : x === "sleep" ? { dayEnd: en || null, sleepStart: $("#fSleepStart").value || null, sleepEnd: $("#fSleepEnd").value || null } : {};
+    return { date: $("#fDate").value, type: state.form.type || null, start: st || null, end: (xEnd || en) || null, users: [...state.form.users], sleepIn: state.form.sleep, ...extra, ...(state.form.sleep && Number($("#fSleepRate").value) > 0 ? { sleepRate: Math.round(Number($("#fSleepRate").value) * 100) / 100 } : {}), dayHours: h === "" ? null : Number(h), breakHrs: b === "" ? null : Number(b), rate: rt === "" || !(Number(rt) > 0) ? null : Math.round(Number(rt) * 100) / 100, fare: $("#fFare").value === "" ? null : Math.round(Number($("#fFare").value) * 100) / 100, notes: $("#fNotes").value.trim() };
   }
   function preview() {
     const f = formShift();
@@ -720,8 +737,14 @@ import "./scene.js";
     state.form.users = new Set(s?.users || []);
     $("#fHours").value = s?.dayHours ?? "";
     $("#fBreak").value = s?.breakHrs ?? "";
-    state.form.type = s?.type || null; state.form.wake = !!s?.wakingNight; state.form.dayEnd = null;
-    $("#fStart").value = s?.start || ""; $("#fEnd").value = s?.end || "";
+    state.form.type = s?.type || null; clearExtra();
+    $("#fStart").value = s?.start || ""; $("#fEnd").value = s?.dayEnd || s?.end || "";
+    if (s?.wakingNight && s.wakeHours != null) {
+      state.form.extra = "wake"; state.form.wake = true;
+      $("#fWakeStart").value = s.wakeStart || ""; $("#fWakeEnd").value = s.wakeEnd || ""; $("#fWakeHours").value = s.wakeHours ?? ""; $("#fWakeRate").value = s.wakeRate ?? "";
+    } else if (s?.sleepIn && (s.dayEnd || hasDayHrs(s))) {
+      state.form.extra = "sleep"; $("#fSleepStart").value = s.sleepStart || ""; $("#fSleepEnd").value = s.sleepEnd || "";
+    }
     $("#fRate").value = s?.rate ?? ""; $("#fSleepRate").value = s?.sleepRate ?? "";
     $("#fNotes").value = s?.notes || "";
     $("#fFare").value = s ? (s.fare ?? "") : (Number(state.cfg.busFare) || "");
@@ -832,6 +855,9 @@ import "./scene.js";
   function validate(s) {
     if (!s.date) return "Pick the shift date.";
     if (s.dayHours == null && !s.sleepIn) return "Add paid hours, or mark it as a sleep-in.";
+    if (s.wakingNight && s.wakeHours != null && !(s.wakeHours > 0)) return "Set when the waking night starts and finishes.";
+    if (s.wakingNight && s.wakeHours == null && state.form.extra === "wake") return "Set when the waking night starts and finishes.";
+    if ((Number(s.dayHours) || 0) + (Number(s.wakeHours) || 0) > 24) return "The shift and waking night come to more than 24 hours. Check the times.";
     if (s.dayHours != null && (s.dayHours < 0 || s.dayHours > 24)) return "Paid hours must be between 0 and 24.";
     if (s.breakHrs != null && s.dayHours == null) return "A break needs paid hours too.";
     if ((s.start && !s.end) || (!s.start && s.end)) return "Add both the start and finish times, or neither.";
@@ -909,7 +935,7 @@ import "./scene.js";
     const holD = holidayDays(); let holH = 0;
     sm.rows.forEach(r => { const s = r.s, c = r.c, hd = holD.get(r.key); if (hd) holH += hd.hours;
       if (hd && !s) { lines.push([r.key, fmt(r.date, { weekday: "short" }), "Holiday", "", "", hd.status === "pending" ? "Holiday (waiting for approval)" : "Holiday", "", "", "", hd.hours ? Math.round(hd.hours * 100) / 100 : "", "", "", "", hd.note ? q(hd.note) : ""].join(",")); return; }
-      lines.push([r.key, fmt(r.date, { weekday: "short" }), s?.type ? q(s.type + (s.wakingNight ? " + waking night" : "")) : "", s?.start || "", s?.end || "", s ? q((s.users || []).join(", ")) : "Day off", s ? (s.sleepIn ? "Y" : "N") : "", s?.dayHours ?? "", s?.breakHrs ?? "", c ? c.net : "", c ? c.hourly.toFixed(2) : "", c ? c.sleep.toFixed(2) : "", c ? c.total.toFixed(2) : "", s?.notes ? q(s.notes) : ""].join(",")); });
+      lines.push([r.key, fmt(r.date, { weekday: "short" }), s?.type ? q(s.type + (s.wakingNight ? " + waking night" : "")) : "", s?.start || "", s?.end || "", s ? q((s.users || []).join(", ")) : "Day off", s ? (s.sleepIn ? "Y" : "N") : "", s?.dayHours == null ? "" : Number(s.dayHours) + (s.wakingNight ? Number(s.wakeHours) || 0 : 0), s?.breakHrs ?? "", c ? c.net : "", c ? c.hourly.toFixed(2) : "", c ? c.sleep.toFixed(2) : "", c ? c.total.toFixed(2) : "", s?.notes ? q(s.notes) : ""].join(",")); });
     lines.push(["TOTAL", "", "", "", "", "", sm.t.sleepIns, sm.t.dayHours, sm.t.breaks, sm.t.net, sm.t.hourly.toFixed(2), sm.t.sleep.toFixed(2), sm.t.gross.toFixed(2), ""].join(","));
     if (holH) lines.push(["HOLIDAY HOURS", "", "", "", "", "", "", "", "", Math.round(holH * 100) / 100, "", "", "", "Not in the total above"].join(","));
     return { text: lines.join("\n"), name: `Timesheet_${(name || "worker").replace(/[^A-Za-z0-9]+/g, "_").replace(/^_|_$/g, "")}_${ymd(p.start)}_to_${ymd(p.end)}.csv` };
