@@ -856,13 +856,14 @@
             <button type="button" class="btn secondary" id="fAddTypeBtn">Add</button>
           </div>
           <p class="oberr" id="fTypeErr" role="alert" hidden></p>
-          <span class="hint">Your shifts are paid by the hour. Sleep-in is paid your sleep-in rate. Going straight into a sleep-in after your shift? Pick your shift, then tick "Sleep-in straight after this shift". Change times in Settings.</span>
+          <span class="hint">Your shifts are paid by the hour. Sleep-in is paid your sleep-in rate. Going straight into a sleep-in or a waking night after your shift? Pick your shift, then tick the box for it. Change times in Settings.</span>
         </div>
         <div class="row2 shiftonly">
           <div class="field shiftonly"><label for="fStart">Starts</label><input type="time" id="fStart"></div>
           <div class="field"><label for="fEnd">Finishes <span class="hint">next morning is fine</span></label><input type="time" id="fEnd"></div>
         </div>
           <label class="check shiftonly" id="fSleepAddRow" hidden><input type="checkbox" id="fSleepAdd"> <span>Sleep-in straight after this shift</span></label>
+          <label class="check shiftonly" id="fWakeAddRow" hidden><input type="checkbox" id="fWakeAdd"> <span>Waking night straight after this shift</span></label>
           <p class="banner info shiftonly" id="fSleepNote" hidden></p>
           <div class="row2 shiftonly" id="fHoursRow">
             <div class="field shiftonly">
