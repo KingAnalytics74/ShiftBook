@@ -52,3 +52,15 @@ test("a sleep-in can have its own pay for that shift", () => {
     assert.equal(calc({ date: "2026-11-01", sleepIn: true, sleepRate: "" }, cfg, "2026-11-30").total, 40);
     assert.equal(calc({ date: "2026-11-01", sleepIn: false, sleepRate: 55, dayHours: 2 }, cfg, "2026-11-30").total, 26);
 });
+
+test("a waking night straight after a shift has its own hours and rate", () => {
+    const s = { date: "2026-11-01", dayHours: 12, breakHrs: 1, wakingNight: true, wakeHours: 12, wakeRate: 14 };
+    const c = calc(s, cfg, "2026-11-30");
+    assert.equal(c.net, 23);
+    assert.equal(c.hourly, 11 * 13 + 12 * 14);
+    assert.equal(calc({ ...s, wakeRate: null }, cfg, "2026-11-30").hourly, 23 * 13);
+    assert.equal(calc({ ...s, rate: 15, wakeRate: null }, cfg, "2026-11-30").hourly, 23 * 15);
+    assert.equal(calc({ ...s, wakingNight: false }, cfg, "2026-11-30").hourly, 11 * 13);
+    // a sleep-in after a shift: day hours by the hour plus its own sleep-in pay
+    assert.equal(calc({ date: "2026-11-01", dayHours: 12, breakHrs: 1, sleepIn: true, sleepRate: 50 }, cfg, "2026-11-30").total, 143 + 50);
+});

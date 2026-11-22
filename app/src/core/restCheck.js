@@ -24,7 +24,7 @@ export function worked(s) { return !!s && (!!s.sleepIn || hasDayHrs(s)); }
 // Hours worked in the 7 days ending on day d. m is a Map of "YYYY-MM-DD" -> shift.
 export function hours7(d, m) {
     let h = 0;
-    for (let i = 0; i < 7; i++) { const s = m.get(ymd(addDays(d, -i))); if (hasDayHrs(s)) h += Math.max(0, Number(s.dayHours) - (Number(s.breakHrs) || 0)); }
+    for (let i = 0; i < 7; i++) { const s = m.get(ymd(addDays(d, -i))); if (hasDayHrs(s)) h += Math.max(0, Number(s.dayHours) - (Number(s.breakHrs) || 0)); if (s && s.wakingNight) h += Number(s.wakeHours) || 0; }
     return Math.round(h * 10) / 10;
 }
 
