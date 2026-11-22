@@ -29,7 +29,7 @@ import { resolveArea } from "./core/areas.js";
 import { FIXED_SHIFTS, checkShiftName, paidFor, workKind } from "./core/shiftNames.js";
 import { mountAreaPicker } from "./area-picker.js";
 import "./timepicker.js";
-import { dragSheet, swipeTabs } from "./fluid.js";
+import { dragSheet, swipeTabs, swipePages } from "./fluid.js";
 import "./datepicker.js";
 import "./scene.js";
 
@@ -2500,6 +2500,13 @@ import "./scene.js";
   if (bar) {
     const tabs = [...bar.querySelectorAll("[data-view]")];
     swipeTabs(bar, tabs, () => Math.max(0, tabs.findIndex(b => b.getAttribute("aria-selected") === "true")));
+  }
+  const main = document.getElementById("view-overview")?.parentElement;
+  if (main && bar) {
+    const tabs2 = [...bar.querySelectorAll("[data-view]")], order = tabs2.map(b => b.dataset.view);
+    const compOpen = () => comp && !comp.hidden && getComputedStyle(comp).display !== "none";
+    swipePages(main, order, () => document.body.dataset.view, v => tabs2.find(b => b.dataset.view === v)?.click(),
+      { blocked: () => document.body.classList.contains("authing") || document.body.classList.contains("onboarding") || !!document.querySelector(".tpov") || compOpen() });
   }
   document.addEventListener("touchstart", () => { }, { passive: true });   // lets :active press styles fire straight away on iOS
 })();

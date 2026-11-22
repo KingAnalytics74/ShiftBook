@@ -100,3 +100,50 @@ export function swipeTabs(bar, tabs, current) {
   bar.addEventListener("pointerup", up); bar.addEventListener("pointercancel", up); bar.addEventListener("lostpointercapture", up);
   addEventListener("blur", () => d && up({ pointerId: d.id }));
 }
+
+/* Swipe between the main pages. The page follows the finger 1:1 (rubber band at the ends); on release its momentum decides.
+   The next page arrives from the side the last one left towards, so the path is the same both ways. Touch and pen only. */
+export function swipePages(root, order, current, go, { blocked = () => false } = {}) {
+  let d = null, sp = null, cur = null;
+  const view = () => root.querySelector(".view:not([hidden])");
+  const free = el => { for (let n = el; n && n !== root; n = n.parentElement) {
+    if (n.matches("input,select,textarea,[contenteditable],.tpov,.bottombar,.fab,.cmfab,[data-noswipe]")) return false;
+    const s = getComputedStyle(n); if (/(auto|scroll)/.test(s.overflowX) && n.scrollWidth > n.clientWidth + 2) return false; } return true; };
+  const put = (v, x, w) => { v.style.transform = `translateX(${x}px)`; v.style.opacity = String(1 - Math.min(1, Math.abs(x) / w) * 0.45); };
+  const clear = v => { if (v) { v.style.transform = ""; v.style.opacity = ""; v.classList.remove("swp"); } };
+  root.addEventListener("pointerdown", e => {
+    if (e.pointerType === "mouse" || d || blocked() || !free(e.target)) return;
+    const i = order.indexOf(current()); if (i < 0) return;
+    if (sp) { sp.stop(); sp = null; clear(cur); }
+    d = { id: e.pointerId, x0: e.clientX, y0: e.clientY, i, on: false, x: 0, s: [{ t: e.timeStamp, p: e.clientX }] };
+  });
+  root.addEventListener("pointermove", e => {
+    if (!d || e.pointerId !== d.id) return;
+    const dx = e.clientX - d.x0, dy = e.clientY - d.y0;
+    if (!d.on) {
+      if (Math.abs(dy) > 10 && Math.abs(dy) > Math.abs(dx)) { d = null; return; }       // it's a scroll
+      if (Math.abs(dx) < 10 || Math.abs(dx) < Math.abs(dy) * 1.3) return;
+      d.on = true; cur = view(); if (!cur) { d = null; return; } cur.classList.add("swp"); try { root.setPointerCapture(e.pointerId); } catch (err) { }
+    }
+    const w = innerWidth, atEdge = (d.i === 0 && dx > 0) || (d.i === order.length - 1 && dx < 0);
+    d.x = atEdge ? Math.sign(dx) * 70 * (1 - 1 / (Math.abs(dx) / 70 + 1)) : dx;
+    put(cur, d.x, w); d.s.push({ t: e.timeStamp, p: e.clientX }); if (d.s.length > 12) d.s.shift();
+  });
+  const up = e => {
+    if (!d || e.pointerId !== d.id) return;
+    const was = d; d = null; if (!was.on) return;
+    const w = innerWidth, v = speed(was.s), end = project(was.x, v), dir = (end < -w * 0.45 || v < -450) ? 1 : (end > w * 0.45 || v > 450) ? -1 : 0;
+    const to = was.i + dir, v0 = cur;
+    if (!dir || to < 0 || to > order.length - 1 || (dir === 1 ? was.x > 0 : was.x < 0)) {
+      sp = spring({ from: was.x, to: 0, velocity: v, response: 0.4, damping: Math.abs(v) > 300 ? 0.8 : 1, onUpdate: x => put(v0, x, w), onDone: () => { sp = null; clear(v0); } }); return;
+    }
+    sp = spring({ from: was.x, to: -dir * w, velocity: v, response: 0.26, damping: 1, onUpdate: x => put(v0, x, w), onDone: () => {
+      clear(v0); go(order[to]);
+      const nv = view(); if (!nv) { sp = null; return; }
+      nv.classList.add("swp"); put(nv, dir * w * 0.3, w);
+      sp = spring({ from: dir * w * 0.3, to: 0, response: 0.38, damping: 1, onUpdate: x => { put(nv, x, w * 0.6); }, onDone: () => { sp = null; clear(nv); } }); cur = nv;
+    } });
+  };
+  root.addEventListener("pointerup", up); root.addEventListener("pointercancel", up); root.addEventListener("lostpointercapture", up);
+  addEventListener("blur", () => d && up({ pointerId: d.id }));
+}
