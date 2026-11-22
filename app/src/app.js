@@ -563,7 +563,16 @@ import "./scene.js";
     $("#fWakeAddRow").hidden = sleepOnly || state.form.type === "Waking night";
     $("#fWakeAdd").checked = !!state.form.wake;
     $("#fSleepNote").hidden = !state.form.sleep && !state.form.wake;
-    $("#fSleepNote").textContent = state.form.wake ? `Paid by the hour all the way through, including the waking night: ${hrs(Number($("#fHours").value) || 0)} hours.` : sleepOnly ? `Paid your sleep-in rate, ${gbp(Number(state.cfg.sleepInRate) || 0)}, not by the hour.` : `Paid by the hour, then your sleep-in rate, ${gbp(Number(state.cfg.sleepInRate) || 0)}.`;
+    $("#fTypeUndo").hidden = !state.form.type;
+    $("#fTypeUndo").setAttribute("aria-label", `Undo ${state.form.type || "shift"}: clear the shift type and times`);
+    // a sleep-in shows a box for its pay (blank = the usual); a waking night uses the hourly rate box, labelled for it
+    $("#fSleepRateField").hidden = !state.form.sleep;
+    $("#fSleepRateHint").textContent = `blank = your usual ${gbp(Number(state.cfg.sleepInRate) || 0)}`;
+    const waking = state.form.wake || /\bwaking\b/i.test(state.form.type || "");
+    $("#fRateLbl").textContent = waking ? "Hourly rate for the waking night (£)" : "Hourly rate for this shift (£)";
+    $("#fRate").closest(".field").hidden = sleepOnly;
+    const usualSleep = gbp(Number($("#fSleepRate").value) > 0 ? Number($("#fSleepRate").value) : Number(state.cfg.sleepInRate) || 0);
+    $("#fSleepNoteTxt").textContent = state.form.wake ? `Paid by the hour all the way through, including the waking night: ${hrs(Number($("#fHours").value) || 0)} hours.` : sleepOnly ? `Sleep-in: paid ${usualSleep}, not by the hour.` : `Paid by the hour, then the sleep-in, ${usualSleep}.`;
   }
   function renderPresets() {
     $("#fPreset").innerHTML = logTypes().map((t, i) => `<button type="button" data-pre="${i}" aria-pressed="${state.form.type === t.name}">${esc(t.name)} · ${esc(t.start)}–${esc(t.end)}</button>`).join("");
@@ -574,7 +583,7 @@ import "./scene.js";
     $("#fStart").value = t.start || ""; $("#fEnd").value = t.end || "";
     const h = typeHours(t);
     $("#fHours").value = h == null ? "" : h; $("#fBreak").value = h == null ? "" : (t.breakHrs ?? "");
-    $("#fRate").value = Number(t.rate) > 0 ? t.rate : "";
+    $("#fRate").value = Number(t.rate) > 0 ? t.rate : ""; $("#fSleepRate").value = "";
     setSleep(t.paid !== "hours"); renderPresets();
     if (t.start) $("#fStart").dispatchEvent(new Event("change"));
   }
@@ -598,8 +607,19 @@ import "./scene.js";
   $("#fNewType").addEventListener("input", () => { $("#fTypeErr").hidden = true; });
   $("#fPreset").addEventListener("click", e => {
     const b = e.target.closest("[data-pre]"); if (!b) return;
-    const t = logTypes()[Number(b.dataset.pre)]; if (t) applyType(t);
+    const t = logTypes()[Number(b.dataset.pre)]; if (!t) return;
+    if (state.form.type === t.name) { clearType(); return; }   // tap the picked shift again to undo it
+    applyType(t);
   });
+  function clearType() {
+    state.form.type = null; state.form.wake = false; state.form.dayEnd = null;
+    ["#fStart", "#fEnd", "#fHours", "#fBreak", "#fRate", "#fSleepRate"].forEach(id => { $(id).value = ""; });
+    setSleep(false); renderPresets(); preview();
+    $("#fPreset button")?.focus();
+    toast("Shift type cleared");
+  }
+  $("#fTypeUndo").addEventListener("click", clearType);
+  $("#fSleepRate").addEventListener("input", () => { sleepUI(); preview(); });
   // changing the times works out the paid hours (not for sleep-ins, where the hours are separate)
   ["#fStart", "#fEnd"].forEach(id => $(id).addEventListener("change", () => {
     if (!state.form.sleep && $("#fStart").value && $("#fEnd").value) $("#fHours").value = spanHrs($("#fStart").value, $("#fEnd").value);
@@ -658,7 +678,7 @@ import "./scene.js";
   function formShift() {
     const h = $("#fHours").value, b = $("#fBreak").value;
     const st = $("#fStart").value, en = $("#fEnd").value, rt = $("#fRate").value;
-    return { date: $("#fDate").value, type: state.form.type || null, start: st || null, end: en || null, users: [...state.form.users], sleepIn: state.form.sleep, ...(state.form.wake ? { wakingNight: true } : {}), dayHours: h === "" ? null : Number(h), breakHrs: b === "" ? null : Number(b), rate: rt === "" || !(Number(rt) > 0) ? null : Math.round(Number(rt) * 100) / 100, fare: $("#fFare").value === "" ? null : Math.round(Number($("#fFare").value) * 100) / 100, notes: $("#fNotes").value.trim() };
+    return { date: $("#fDate").value, type: state.form.type || null, start: st || null, end: en || null, users: [...state.form.users], sleepIn: state.form.sleep, ...(state.form.wake ? { wakingNight: true } : {}), ...(state.form.sleep && Number($("#fSleepRate").value) > 0 ? { sleepRate: Math.round(Number($("#fSleepRate").value) * 100) / 100 } : {}), dayHours: h === "" ? null : Number(h), breakHrs: b === "" ? null : Number(b), rate: rt === "" || !(Number(rt) > 0) ? null : Math.round(Number(rt) * 100) / 100, fare: $("#fFare").value === "" ? null : Math.round(Number($("#fFare").value) * 100) / 100, notes: $("#fNotes").value.trim() };
   }
   function preview() {
     const f = formShift();
@@ -696,7 +716,7 @@ import "./scene.js";
     $("#fBreak").value = s?.breakHrs ?? "";
     state.form.type = s?.type || null; state.form.wake = !!s?.wakingNight; state.form.dayEnd = null;
     $("#fStart").value = s?.start || ""; $("#fEnd").value = s?.end || "";
-    $("#fRate").value = s?.rate ?? "";
+    $("#fRate").value = s?.rate ?? ""; $("#fSleepRate").value = s?.sleepRate ?? "";
     $("#fNotes").value = s?.notes || "";
     $("#fFare").value = s ? (s.fare ?? "") : (Number(state.cfg.busFare) || "");
     fareUsualUI();

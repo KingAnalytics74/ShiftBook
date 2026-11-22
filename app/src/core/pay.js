@@ -1,13 +1,13 @@
 import { ymd } from "./dates.js";
 import { daysIn } from "./periods.js";
 
-// PAY RULES: net hours = paid hours - break; pay = net hours x (the shift's own rate, or hourlyRate) + (sleepIn ? sleepInRate : 0)
+// PAY RULES: net hours = paid hours - break; pay = net hours x (the shift's own rate, or hourlyRate) + (sleepIn ? (the shift's own sleep-in pay, or sleepInRate) : 0)
 // cfg is the user's settings ({ hourlyRate, sleepInRate }); todayStr is "YYYY-MM-DD".
 export function calc(s, cfg, todayStr) {
     const day = Number(s.dayHours) || 0, brk = Number(s.breakHrs) || 0;
     const net = s.dayHours == null || s.dayHours === "" ? 0 : Math.max(0, day - brk);
     const hourly = net * (Number(s.rate) > 0 ? Number(s.rate) : cfg.hourlyRate);
-    const sleep = s.sleepIn ? cfg.sleepInRate : 0;
+    const sleep = s.sleepIn ? (Number(s.sleepRate) > 0 ? Number(s.sleepRate) : cfg.sleepInRate) : 0;
     return { net, hourly, sleep, total: hourly + sleep, status: s.date > todayStr ? "Rostered" : "Worked" };
 }
 
