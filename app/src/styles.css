@@ -1393,3 +1393,17 @@ button.hlbadge{min-height:44px}
   :root:not([data-theme="dark"]) .bottombar button[aria-selected="true"]{color:#1B1D4E!important;text-shadow:none}
   :root:not([data-theme="dark"]) .bottombar svg{filter:none}
 }
+
+/* info button: the shift-type notes drop down on request (Apple/Emil: press feedback now, strong ease-out, quicker out than in) */
+.lblrow{display:flex;align-items:center;gap:2px}
+.infobtn{position:relative;display:inline-grid;place-items:center;width:30px;height:30px;margin:-6px 0 -6px 2px;padding:0;border:0;border-radius:50%;background:transparent;color:var(--day);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .16s cubic-bezier(.23,1,.32,1),background-color .2s}
+.infobtn::before{content:"";position:absolute;inset:-7px}
+.infobtn svg{width:20px;height:20px}
+.infobtn:active{transform:scale(.9)}
+.infobtn[aria-expanded="true"]{background:color-mix(in srgb,var(--day) 14%,transparent)}
+@media (hover:hover) and (pointer:fine){.infobtn:hover{background:color-mix(in srgb,var(--day) 10%,transparent)}}
+.infodrop{display:grid;grid-template-rows:0fr;opacity:0;transform:translateY(-6px);transition:grid-template-rows .22s cubic-bezier(.23,1,.32,1),opacity .15s ease-out,transform .22s cubic-bezier(.23,1,.32,1)}
+.infodrop.open{grid-template-rows:1fr;opacity:1;transform:none;transition-duration:.32s,.25s,.32s}
+.infodrop>.infoin{overflow:hidden;min-height:0}
+.infodrop .hint{margin:0;padding:10px 12px;border-radius:12px;background:var(--sunk);line-height:1.5}
+.infodrop:not(.open) .infoin{visibility:hidden;transition:visibility 0s .22s}

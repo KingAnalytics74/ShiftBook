@@ -585,16 +585,16 @@ import "./scene.js";
     $("#fSleepNoteTxt").textContent = x === "wake" ? (wh > 0 ? `Your shift: ${hrs(dayNet)} paid hours, then the waking night: ${hrs(wh)} hours at ${gbp(wr)} an hour.` : "Set when the waking night starts and finishes.")
       : sleepOnly ? `Sleep-in: paid ${sleepPay}, not by the hour.` : `Your shift: ${hrs(dayNet)} paid hours, then the sleep-in, ${sleepPay}.`;
   }
+  const usualRate = () => Number(state.cfg.hourlyRate) > 0 ? String(Number(state.cfg.hourlyRate)) : "";
   function renderPresets() {
     $("#fPreset").innerHTML = logTypes().map((t, i) => `<button type="button" data-pre="${i}" aria-pressed="${state.form.type === t.name}">${esc(t.name)} · ${esc(t.start)}–${esc(t.end)}</button>`).join("");
-    $("#fRateHint").textContent = `blank = your usual ${gbp(Number(state.cfg.hourlyRate) || 0)}`;
   }
   function applyType(t) {
     state.form.type = t.name; clearExtra();
     $("#fStart").value = t.start || ""; $("#fEnd").value = t.end || "";
     const h = typeHours(t);
     $("#fHours").value = h == null ? "" : h; $("#fBreak").value = h == null ? "" : (t.breakHrs ?? "");
-    $("#fRate").value = Number(t.rate) > 0 ? t.rate : ""; $("#fSleepRate").value = "";
+    $("#fRate").value = Number(t.rate) > 0 ? t.rate : usualRate(); $("#fSleepRate").value = "";
     if (t.paid === "both" && t.start && h) {
       // an old "hours + sleep-in" type: the hours are the shift, then the sleep-in runs to the type's finish
       $("#fEnd").value = addHrs(t.start, h); state.form.extra = "sleep";
@@ -629,7 +629,7 @@ import "./scene.js";
   });
   function clearType() {
     state.form.type = null; clearExtra();
-    ["#fStart", "#fEnd", "#fHours", "#fBreak", "#fRate", "#fSleepRate"].forEach(id => { $(id).value = ""; });
+    ["#fStart", "#fEnd", "#fHours", "#fBreak", "#fSleepRate"].forEach(id => { $(id).value = ""; }); $("#fRate").value = usualRate();
     setSleep(false); renderPresets(); preview();
     $("#fPreset button")?.focus();
     toast("Shift type cleared");
@@ -644,6 +644,10 @@ import "./scene.js";
     preview();
   }));
   $("#fRate").addEventListener("input", preview);
+  $("#fTypeInfoBtn").addEventListener("click", () => {
+    const b = $("#fTypeInfoBtn"), open = b.getAttribute("aria-expanded") !== "true", d = $("#fTypeInfo");
+    b.setAttribute("aria-expanded", String(open)); d.classList.toggle("open", open); d.inert = !open;
+  });
   // tick boxes for what comes straight after the shift: a sleep-in or a waking night (one of them), each with its own times and pay
   function clearExtra() {
     state.form.extra = null; state.form.wake = false;
@@ -702,7 +706,7 @@ import "./scene.js";
     const num = (v, d = 2) => v === "" || !(Number(v) > 0) ? null : Math.round(Number(v) * 10 ** d) / 10 ** d;
     const extra = x === "wake" ? { wakingNight: true, dayEnd: en || null, wakeStart: $("#fWakeStart").value || null, wakeEnd: $("#fWakeEnd").value || null, wakeHours: num($("#fWakeHours").value), wakeRate: num($("#fWakeRate").value) }
       : x === "sleep" ? { dayEnd: en || null, sleepStart: $("#fSleepStart").value || null, sleepEnd: $("#fSleepEnd").value || null } : {};
-    return { date: $("#fDate").value, type: state.form.type || null, start: st || null, end: (xEnd || en) || null, users: [...state.form.users], sleepIn: state.form.sleep, ...extra, ...(state.form.sleep && Number($("#fSleepRate").value) > 0 ? { sleepRate: Math.round(Number($("#fSleepRate").value) * 100) / 100 } : {}), dayHours: h === "" ? null : Number(h), breakHrs: b === "" ? null : Number(b), rate: rt === "" || !(Number(rt) > 0) ? null : Math.round(Number(rt) * 100) / 100, fare: $("#fFare").value === "" ? null : Math.round(Number($("#fFare").value) * 100) / 100, notes: $("#fNotes").value.trim() };
+    return { date: $("#fDate").value, type: state.form.type || null, start: st || null, end: (xEnd || en) || null, users: [...state.form.users], sleepIn: state.form.sleep, ...extra, ...(state.form.sleep && Number($("#fSleepRate").value) > 0 ? { sleepRate: Math.round(Number($("#fSleepRate").value) * 100) / 100 } : {}), dayHours: h === "" ? null : Number(h), breakHrs: b === "" ? null : Number(b), rate: rt === "" || !(Number(rt) > 0) || Number(rt) === Number(state.cfg.hourlyRate) ? null : Math.round(Number(rt) * 100) / 100, fare: $("#fFare").value === "" ? null : Math.round(Number($("#fFare").value) * 100) / 100, notes: $("#fNotes").value.trim() };
   }
   function preview() {
     const f = formShift();
@@ -746,7 +750,7 @@ import "./scene.js";
     } else if (s?.sleepIn && (s.dayEnd || hasDayHrs(s))) {
       state.form.extra = "sleep"; $("#fSleepStart").value = s.sleepStart || ""; $("#fSleepEnd").value = s.sleepEnd || "";
     }
-    $("#fRate").value = s?.rate ?? ""; $("#fSleepRate").value = s?.sleepRate ?? "";
+    $("#fRate").value = s?.rate ?? usualRate(); $("#fSleepRate").value = s?.sleepRate ?? "";
     $("#fNotes").value = s?.notes || "";
     $("#fFare").value = s ? (s.fare ?? "") : (Number(state.cfg.busFare) || "");
     fareUsualUI();
@@ -1636,7 +1640,7 @@ import "./scene.js";
     const x = forecast().days.find(y => y.key === b.dataset.fc); if (!x || !x.guess) return;
     openLog(x.key);
     state.form.users = new Set(x.guess.users); $("#fHours").value = x.guess.dayHours ?? ""; $("#fBreak").value = x.guess.breakHrs ?? "";
-    state.form.type = x.guess.type; $("#fStart").value = x.guess.start || ""; $("#fEnd").value = x.guess.end || ""; $("#fRate").value = x.guess.rate ?? "";
+    state.form.type = x.guess.type; $("#fStart").value = x.guess.start || ""; $("#fEnd").value = x.guess.end || ""; $("#fRate").value = x.guess.rate ?? usualRate();
     setSleep(!!x.guess.sleepIn); renderUserChips(); preview();
     show("log"); toast("Predicted shift filled in. Check it, then tap Save shift");
   });
