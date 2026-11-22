@@ -454,7 +454,7 @@ import "./scene.js";
       }
       if (!r.s) { h += `<tr class="off clickable${wk ? " wkend" : ""}" data-date="${r.key}"><td>${fmt(r.date, { day: "2-digit", month: "short" })}</td><td>${fmt(r.date, { weekday: "short" })}</td><td></td><td>Day off</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>`; return; }
       const s = r.s, c = r.c;
-      h += `<tr class="clickable${wk ? " wkend" : ""}" data-date="${r.key}"><td>${fmt(r.date, { day: "2-digit", month: "short" })}</td><td>${fmt(r.date, { weekday: "short" })}</td><td>${s.start && s.end ? `${esc(s.start)}–${esc(s.end)}` : ""}${s.type ? `<br><small>${esc(s.type)}</small>` : ""}</td><td>${esc((s.users || []).join(", "))}</td><td>${s.sleepIn ? '<span class="pill sleep">Yes</span>' : "No"}</td><td class="num">${s.dayHours == null || s.dayHours === "" ? "" : hrs(s.dayHours)}</td><td class="num">${s.breakHrs ? hrs(s.breakHrs) : ""}</td><td class="num">${c.net ? hrs(c.net) : ""}</td><td class="num">${c.hourly ? gbp(c.hourly) : ""}</td><td class="num">${c.sleep ? gbp(c.sleep) : ""}</td><td class="num"><b>${gbp(c.total)}</b></td><td><span class="pill ${c.status.toLowerCase()}">${c.status}</span>${hd ? ` <span class="pill holiday${hd.status === "pending" ? " wait" : ""}">Holiday</span>` : ""}</td></tr>`;
+      h += `<tr class="clickable${wk ? " wkend" : ""}" data-date="${r.key}"><td>${fmt(r.date, { day: "2-digit", month: "short" })}</td><td>${fmt(r.date, { weekday: "short" })}</td><td>${s.start && s.end ? `${esc(s.start)}–${esc(s.end)}` : ""}${s.type ? `<br><small>${esc(s.type)}${s.wakingNight ? " + waking night" : ""}</small>` : ""}</td><td>${esc((s.users || []).join(", "))}</td><td>${s.sleepIn ? '<span class="pill sleep">Yes</span>' : "No"}</td><td class="num">${s.dayHours == null || s.dayHours === "" ? "" : hrs(s.dayHours)}</td><td class="num">${s.breakHrs ? hrs(s.breakHrs) : ""}</td><td class="num">${c.net ? hrs(c.net) : ""}</td><td class="num">${c.hourly ? gbp(c.hourly) : ""}</td><td class="num">${c.sleep ? gbp(c.sleep) : ""}</td><td class="num"><b>${gbp(c.total)}</b></td><td><span class="pill ${c.status.toLowerCase()}">${c.status}</span>${hd ? ` <span class="pill holiday${hd.status === "pending" ? " wait" : ""}">Holiday</span>` : ""}</td></tr>`;
     });
     const holPay = holH ? est(holH) : null;
     h += `</tbody><tfoot><tr><td colspan="4">Total · ${t.shifts} shifts</td><td>${t.sleepIns}</td><td class="num">${hrs(t.dayHours)}</td><td class="num">${hrs(t.breaks)}</td><td class="num">${hrs(t.net)}</td><td class="num">${gbp(t.hourly)}</td><td class="num">${gbp(t.sleep)}</td><td class="num">${gbp(t.gross)}</td><td></td></tr>${holDays ? `<tr class="holtot"><td colspan="4">Holiday · ${holDays} day${holDays === 1 ? "" : "s"} (not in the total above)</td><td></td><td></td><td></td><td class="num">${hrs(holH)}</td><td></td><td></td><td class="num">${holPay != null ? `about ${gbp(holPay)}` : ""}</td><td></td></tr>` : ""}</tfoot>`;
@@ -559,15 +559,18 @@ import "./scene.js";
     // a day shift that runs straight into a sleep-in is one record (paid hours plus the sleep-in), so the person can tick it
     $("#fSleepAddRow").hidden = sleepOnly || state.form.type === "Waking night";
     $("#fSleepAdd").checked = !!state.form.sleep && !sleepOnly;
-    $("#fSleepNote").hidden = !state.form.sleep;
-    $("#fSleepNote").textContent = sleepOnly ? `Paid your sleep-in rate, ${gbp(Number(state.cfg.sleepInRate) || 0)}, not by the hour.` : `Paid by the hour, then your sleep-in rate, ${gbp(Number(state.cfg.sleepInRate) || 0)}.`;
+    // the same for a waking night straight after: all of it is paid by the hour, so the hours just run on
+    $("#fWakeAddRow").hidden = sleepOnly || state.form.type === "Waking night";
+    $("#fWakeAdd").checked = !!state.form.wake;
+    $("#fSleepNote").hidden = !state.form.sleep && !state.form.wake;
+    $("#fSleepNote").textContent = state.form.wake ? `Paid by the hour all the way through, including the waking night: ${hrs(Number($("#fHours").value) || 0)} hours.` : sleepOnly ? `Paid your sleep-in rate, ${gbp(Number(state.cfg.sleepInRate) || 0)}, not by the hour.` : `Paid by the hour, then your sleep-in rate, ${gbp(Number(state.cfg.sleepInRate) || 0)}.`;
   }
   function renderPresets() {
     $("#fPreset").innerHTML = logTypes().map((t, i) => `<button type="button" data-pre="${i}" aria-pressed="${state.form.type === t.name}">${esc(t.name)} · ${esc(t.start)}–${esc(t.end)}</button>`).join("");
     $("#fRateHint").textContent = `blank = your usual ${gbp(Number(state.cfg.hourlyRate) || 0)}`;
   }
   function applyType(t) {
-    state.form.type = t.name;
+    state.form.type = t.name; state.form.wake = false;
     $("#fStart").value = t.start || ""; $("#fEnd").value = t.end || "";
     const h = typeHours(t);
     $("#fHours").value = h == null ? "" : h; $("#fBreak").value = h == null ? "" : (t.breakHrs ?? "");
@@ -603,9 +606,25 @@ import "./scene.js";
     preview();
   }));
   $("#fRate").addEventListener("input", preview);
+  // tick boxes for what comes straight after the shift: a sleep-in, or a waking night (only one of them)
+  function wakeOff() {
+    if (!state.form.wake) return;
+    state.form.wake = false;
+    $("#fEnd").value = state.form.dayEnd || $("#fEnd").value; $("#fEnd").dispatchEvent(new Event("change"));
+  }
+  $("#fWakeAdd").addEventListener("change", () => {
+    if ($("#fWakeAdd").checked) {
+      if (state.form.sleep) { $("#fSleepAdd").checked = false; $("#fSleepAdd").dispatchEvent(new Event("change")); }
+      state.form.dayEnd = $("#fEnd").value; state.form.wake = true;
+      const wn = logTypes().find(t => t.name === "Waking night"); if ($("#fStart").value) $("#fEnd").value = (wn && wn.end) || "08:00";
+      $("#fEnd").dispatchEvent(new Event("change"));
+    } else wakeOff();
+    sleepUI();
+  });
   $("#fSleepAdd").addEventListener("change", () => {
     const on = $("#fSleepAdd").checked;
     if (on) {
+      wakeOff();
       state.form.dayEnd = $("#fEnd").value;
       if ($("#fHours").value === "" && $("#fStart").value && $("#fEnd").value) $("#fHours").value = spanHrs($("#fStart").value, $("#fEnd").value);
       const sl = logTypes().find(t => t.paid === "sleep"); if ($("#fStart").value) $("#fEnd").value = (sl && sl.end) || "08:00";
@@ -618,6 +637,7 @@ import "./scene.js";
   });
   // sleep-in comes from the shift picked (Sleep-in, or an old "hours + sleep-in" type); we don't ask
   function setSleep(v) { state.form.sleep = v; sleepUI(); preview(); }
+  $("#fEnd").addEventListener("change", () => { if (state.form.wake) sleepUI(); });
   document.querySelectorAll("[data-h]").forEach(b => b.onclick = () => { $("#fHours").value = b.dataset.h; if (b.dataset.h === "12" && $("#fBreak").value === "") $("#fBreak").value = 2; preview(); });
   document.querySelectorAll("[data-b]").forEach(b => b.onclick = () => { $("#fBreak").value = b.dataset.b; preview(); });
   ["#fHours", "#fBreak", "#fFare"].forEach(s => $(s).addEventListener("input", preview));
@@ -638,7 +658,7 @@ import "./scene.js";
   function formShift() {
     const h = $("#fHours").value, b = $("#fBreak").value;
     const st = $("#fStart").value, en = $("#fEnd").value, rt = $("#fRate").value;
-    return { date: $("#fDate").value, type: state.form.type || null, start: st || null, end: en || null, users: [...state.form.users], sleepIn: state.form.sleep, dayHours: h === "" ? null : Number(h), breakHrs: b === "" ? null : Number(b), rate: rt === "" || !(Number(rt) > 0) ? null : Math.round(Number(rt) * 100) / 100, fare: $("#fFare").value === "" ? null : Math.round(Number($("#fFare").value) * 100) / 100, notes: $("#fNotes").value.trim() };
+    return { date: $("#fDate").value, type: state.form.type || null, start: st || null, end: en || null, users: [...state.form.users], sleepIn: state.form.sleep, ...(state.form.wake ? { wakingNight: true } : {}), dayHours: h === "" ? null : Number(h), breakHrs: b === "" ? null : Number(b), rate: rt === "" || !(Number(rt) > 0) ? null : Math.round(Number(rt) * 100) / 100, fare: $("#fFare").value === "" ? null : Math.round(Number($("#fFare").value) * 100) / 100, notes: $("#fNotes").value.trim() };
   }
   function preview() {
     const f = formShift();
@@ -674,7 +694,7 @@ import "./scene.js";
     state.form.users = new Set(s?.users || []);
     $("#fHours").value = s?.dayHours ?? "";
     $("#fBreak").value = s?.breakHrs ?? "";
-    state.form.type = s?.type || null;
+    state.form.type = s?.type || null; state.form.wake = !!s?.wakingNight; state.form.dayEnd = null;
     $("#fStart").value = s?.start || ""; $("#fEnd").value = s?.end || "";
     $("#fRate").value = s?.rate ?? "";
     $("#fNotes").value = s?.notes || "";
@@ -863,7 +883,7 @@ import "./scene.js";
     const holD = holidayDays(); let holH = 0;
     sm.rows.forEach(r => { const s = r.s, c = r.c, hd = holD.get(r.key); if (hd) holH += hd.hours;
       if (hd && !s) { lines.push([r.key, fmt(r.date, { weekday: "short" }), "Holiday", "", "", hd.status === "pending" ? "Holiday (waiting for approval)" : "Holiday", "", "", "", hd.hours ? Math.round(hd.hours * 100) / 100 : "", "", "", "", hd.note ? q(hd.note) : ""].join(",")); return; }
-      lines.push([r.key, fmt(r.date, { weekday: "short" }), s?.type ? q(s.type) : "", s?.start || "", s?.end || "", s ? q((s.users || []).join(", ")) : "Day off", s ? (s.sleepIn ? "Y" : "N") : "", s?.dayHours ?? "", s?.breakHrs ?? "", c ? c.net : "", c ? c.hourly.toFixed(2) : "", c ? c.sleep.toFixed(2) : "", c ? c.total.toFixed(2) : "", s?.notes ? q(s.notes) : ""].join(",")); });
+      lines.push([r.key, fmt(r.date, { weekday: "short" }), s?.type ? q(s.type + (s.wakingNight ? " + waking night" : "")) : "", s?.start || "", s?.end || "", s ? q((s.users || []).join(", ")) : "Day off", s ? (s.sleepIn ? "Y" : "N") : "", s?.dayHours ?? "", s?.breakHrs ?? "", c ? c.net : "", c ? c.hourly.toFixed(2) : "", c ? c.sleep.toFixed(2) : "", c ? c.total.toFixed(2) : "", s?.notes ? q(s.notes) : ""].join(",")); });
     lines.push(["TOTAL", "", "", "", "", "", sm.t.sleepIns, sm.t.dayHours, sm.t.breaks, sm.t.net, sm.t.hourly.toFixed(2), sm.t.sleep.toFixed(2), sm.t.gross.toFixed(2), ""].join(","));
     if (holH) lines.push(["HOLIDAY HOURS", "", "", "", "", "", "", "", "", Math.round(holH * 100) / 100, "", "", "", "Not in the total above"].join(","));
     return { text: lines.join("\n"), name: `Timesheet_${(name || "worker").replace(/[^A-Za-z0-9]+/g, "_").replace(/^_|_$/g, "")}_${ymd(p.start)}_to_${ymd(p.end)}.csv` };
