@@ -1,6 +1,8 @@
-/* Time picker: every <input type="time"> becomes a tappable time that opens a sheet with spinning hour and
-   minute wheels (the way iPhone clocks work). The real input stays in the page, hidden, as the value holder,
-   so the code that reads and writes it doesn't change. Mouse, touch and keyboard all work. */
+/* Time picker: every <input type="time"> becomes a box you can type a time into ("8", "2030", "8pm", "20:30"),
+   with a clock button beside it that opens a sheet with spinning hour and minute wheels (the way iPhone clocks
+   work). The real input stays in the page, hidden, as the value holder, so the code that reads and writes it
+   doesn't change. Mouse, touch and keyboard all work. */
+import { parseTimeText } from "./core/timeText.js";
 const ITEM = 44, pad = n => String(n).padStart(2, "0");
 const QUICK = ["06:00", "07:00", "08:00", "14:00", "20:00", "22:00"];
 const reduce = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -119,25 +121,56 @@ function openSheet(inp, trigger) {
 }
 
 function sync(inp) {
-  const b = inp._tp; if (!b) return;
-  const v = inp.value;
-  b.querySelector(".tv").textContent = v || "--:--";
-  b.setAttribute("aria-label", `${labelOf(inp)}: ${v || "not set"}. Change time`);
+  const t = inp._tp; if (!t) return;
+  const v = inp.value, name = labelOf(inp);
+  if (document.activeElement !== t.text) t.text.value = v;
+  t.text.setAttribute("aria-label", `${name}, type a time like 8:00 or 20:30`);
+  t.clock.setAttribute("aria-label", `Choose ${name.toLowerCase()} on a clock. Now ${v || "not set"}`);
+  clearBad(t);
+}
+function clearBad(t) { t.box.classList.remove("bad"); t.text.removeAttribute("aria-invalid"); if (t.err) t.err.hidden = true; }
+
+const nativeSet = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set;
+function commitText(inp) {
+  const t = inp._tp, v = parseTimeText(t.text.value);
+  if (v === null) {
+    if (!t.err) {
+      t.err = document.createElement("span"); t.err.className = "terr"; t.err.id = t.text.id + "-err"; t.err.setAttribute("role", "alert");
+      t.box.after(t.err); t.text.setAttribute("aria-describedby", t.err.id);
+    }
+    t.err.textContent = "Can't read that time. Try 8:00, 20:30 or 8pm."; t.err.hidden = false;
+    t.box.classList.add("bad"); t.text.setAttribute("aria-invalid", "true"); return false;
+  }
+  if (v !== inp.value) { nativeSet.call(inp, v); inp.dispatchEvent(new Event("input", { bubbles: true })); inp.dispatchEvent(new Event("change", { bubbles: true })); }
+  t.text.value = v; sync(inp); return true;
 }
 
 function enhance(inp) {
   if (inp._tp || inp.type !== "time") return;
-  const btn = document.createElement("button");
-  btn.type = "button"; btn.className = "tbtn"; btn.id = (inp.id || "tp" + ++uid) + "-tp";
-  btn.setAttribute("aria-haspopup", "dialog");
-  btn.innerHTML = `${CLOCK}<span class="tv"></span>`;
-  inp._tp = btn;
-  // programmatic writes to input.value (form fills, resets) keep the button in step
+  const id = inp.id || "tp" + ++uid;
+  const box = document.createElement("span"); box.className = "tbox";
+  const text = document.createElement("input");
+  Object.assign(text, { type: "text", id: id + "-tp", className: "tvin", placeholder: "--:--", autocomplete: "off", maxLength: 8, spellcheck: false });
+  text.setAttribute("inputmode", "numeric"); text.setAttribute("enterkeyhint", "done");
+  const clock = document.createElement("button");
+  clock.type = "button"; clock.className = "tclock"; clock.setAttribute("aria-haspopup", "dialog"); clock.innerHTML = CLOCK;
+  box.append(text, clock);
+  inp._tp = { box, text, clock };
+  // programmatic writes to input.value (form fills, resets) keep the box in step
   const d = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value");
   Object.defineProperty(inp, "value", { configurable: true, get() { return d.get.call(this); }, set(v) { d.set.call(this, v); sync(this); } });
-  inp.before(btn); inp.hidden = true;
-  const lab = inp.id && document.querySelector(`label[for="${inp.id}"]`); if (lab) lab.htmlFor = btn.id;
-  btn.addEventListener("click", () => openSheet(inp, btn));
+  inp.before(box); inp.hidden = true;
+  const lab = inp.id && document.querySelector(`label[for="${inp.id}"]`); if (lab) lab.htmlFor = text.id;
+  // the text box has no name, so it isn't sent with the form and its own events stay out of the app's way
+  ["input", "change"].forEach(ev => text.addEventListener(ev, e => e.stopPropagation()));
+  text.addEventListener("input", () => clearBad(inp._tp));
+  text.addEventListener("blur", () => commitText(inp));
+  text.addEventListener("keydown", e => {
+    if (e.key !== "Enter") return;
+    e.preventDefault(); e.stopPropagation();   // don't let Enter submit the form or jump to the next step
+    if (commitText(inp)) text.select();
+  });
+  clock.addEventListener("click", () => { commitText(inp); openSheet(inp, clock); });
   if (inp.form) inp.form.addEventListener("reset", () => setTimeout(() => sync(inp)));
   sync(inp);
 }
