@@ -556,6 +556,9 @@ import "./scene.js";
   function sleepUI() {
     const t = logTypes().find(x => x.name === state.form.type), sleepOnly = !!state.form.sleep && (t ? t.paid === "sleep" : !hasDayHrs({ dayHours: $("#fHours").value === "" ? null : Number($("#fHours").value) }));
     $("#fHoursRow").hidden = sleepOnly;
+    // a day shift that runs straight into a sleep-in is one record (paid hours plus the sleep-in), so the person can tick it
+    $("#fSleepAddRow").hidden = sleepOnly || state.form.type === "Waking night";
+    $("#fSleepAdd").checked = !!state.form.sleep && !sleepOnly;
     $("#fSleepNote").hidden = !state.form.sleep;
     $("#fSleepNote").textContent = sleepOnly ? `Paid your sleep-in rate, ${gbp(Number(state.cfg.sleepInRate) || 0)}, not by the hour.` : `Paid by the hour, then your sleep-in rate, ${gbp(Number(state.cfg.sleepInRate) || 0)}.`;
   }
@@ -600,6 +603,19 @@ import "./scene.js";
     preview();
   }));
   $("#fRate").addEventListener("input", preview);
+  $("#fSleepAdd").addEventListener("change", () => {
+    const on = $("#fSleepAdd").checked;
+    if (on) {
+      state.form.dayEnd = $("#fEnd").value;
+      if ($("#fHours").value === "" && $("#fStart").value && $("#fEnd").value) $("#fHours").value = spanHrs($("#fStart").value, $("#fEnd").value);
+      const sl = logTypes().find(t => t.paid === "sleep"); if ($("#fStart").value) $("#fEnd").value = (sl && sl.end) || "08:00";
+      setSleep(true);
+    } else {
+      const st = $("#fStart").value, h = Number($("#fHours").value) || 0;
+      $("#fEnd").value = state.form.dayEnd || (st && h ? addHrs(st, h) : $("#fEnd").value);
+      setSleep(false);
+    }
+  });
   // sleep-in comes from the shift picked (Sleep-in, or an old "hours + sleep-in" type); we don't ask
   function setSleep(v) { state.form.sleep = v; sleepUI(); preview(); }
   document.querySelectorAll("[data-h]").forEach(b => b.onclick = () => { $("#fHours").value = b.dataset.h; if (b.dataset.h === "12" && $("#fBreak").value === "") $("#fBreak").value = 2; preview(); });
