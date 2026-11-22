@@ -375,6 +375,24 @@ body::before{background:var(--brand)!important}
 .obtypes button{flex:1 1 140px;text-align:left;line-height:1.3}
 .obtypes button small{display:block;font-weight:500;opacity:.75}
 .obpreview{margin:0;padding:12px 14px;border-radius:12px;background:var(--day-soft);font-size:14px}
+/* sign-up: shifts people type themselves */
+.obadd{display:flex;gap:8px}
+.obadd input{flex:1 1 auto;min-width:0}
+.obadd .btn{min-height:48px;padding:0 20px}
+.oberr{margin:0;font-size:13px;font-weight:600;color:var(--bad)}
+.obchip{display:inline-flex;align-items:center;gap:4px;min-height:44px;padding:0 4px 0 16px;border:1.5px solid var(--c4);border-radius:12px;background:var(--day-soft);font-weight:700;color:var(--ink)}
+.obchips .obchip button{width:36px;height:36px;min-height:0;padding:0;border:0;border-radius:9px;background:transparent;color:var(--ink);font-size:20px;font-weight:600;line-height:1;cursor:pointer}
+.obchips .obchip button:hover{background:var(--surface)}
+.obrow .obpaid{grid-column:1/-1}
+.obchip.fixed{padding:0 16px;border-style:dashed;background:var(--surface)}
+.obchip.fixed small{font-size:11px;font-weight:600;color:var(--muted)}
+.obhint{margin:0 0 4px}
+.obrowhead{grid-column:1/-1;display:flex;align-items:flex-end;gap:8px}
+.obrowhead label{flex:1 1 auto;min-width:0}
+.obrowdel{min-height:40px;padding:0 14px}
+.obrowsum{grid-column:1/-1;margin:0;padding:8px 10px;border-radius:10px;background:var(--sunk);font-size:13px;color:var(--ink)}
+.obaddrow{width:100%;min-height:48px;border:1.5px dashed var(--c4);border-radius:12px;background:var(--surface);color:var(--ink);font-weight:700;cursor:pointer}
+.obnote{margin:0}
 .obpay{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:16px;border-radius:14px;background:linear-gradient(135deg,var(--hero-bg),var(--hero-2));color:var(--hero-fg)}
 .obpay b{font-size:30px;color:var(--hero-accent)}
 .obpay[hidden]{display:none!important}

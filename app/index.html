@@ -165,13 +165,18 @@
           </div>
           <div class="obstep" data-step="5" hidden>
           <h2 class="obh">What shifts do you work?</h2>
-          <p class="obsub">Tap every shift you do, then set your own start and finish times. They become one-tap buttons when you log a shift. You can change them or add more later in Settings.</p>
-          <div class="field"><span class="lbl">Your kind of work</span>
-            <div class="obchips" id="obWork" role="group" aria-label="Your kind of work">
-              <button type="button" data-w="care" aria-pressed="true">Care or support work</button><button type="button" data-w="other" aria-pressed="false">Factory, warehouse or other</button>
-            </div></div>
+          <p class="obsub">Tell us in your own words. Your shifts become one-tap buttons when you log work, and you can change them any time in Settings.</p>
+          <div class="field"><label for="obWorkText">What kind of work do you do?</label>
+            <input type="text" id="obWorkText" maxlength="60" autocomplete="off" placeholder="e.g. Support worker in supported living">
+            <span class="hint">Write it the way you'd tell a friend. For example: care assistant in a care home, home carer, warehouse picker, factory line operator.</span></div>
+          <div class="field"><label for="obNewShift">Your shifts</label>
+            <span class="hint">Type each shift the way your rota names it, then tap Add. For example: Early, Late, Long day, Twilight, Night. Waking night and Sleep-in are always in your list. Don't include anyone's name or address.</span>
+            <div class="obadd"><input type="text" id="obNewShift" maxlength="30" autocomplete="off" placeholder="Type a shift, e.g. Twilight"><button type="button" class="btn secondary" id="obAddShift">Add</button></div>
+            <p class="oberr" id="obShiftErr" role="alert" hidden></p>
+            <div class="obchips obmine" id="obShiftChips" role="list" aria-label="Your shifts"></div></div>
           <div id="obTypeLib"></div>
           <p class="obpreview" id="obPatPrev"></p>
+          <p class="hint obnote">We look at the shift names people type, never who typed them, to make Shiftbuck's suggestions better for everyone.</p>
         </div>
         <div class="obstep" data-step="6" hidden>
             <h2 class="obh">Where do you work?</h2>
