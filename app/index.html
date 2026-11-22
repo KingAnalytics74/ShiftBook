@@ -850,22 +850,23 @@
           </div>
           <div class="field shiftonly">
             <span class="lbl">Shift type</span>          <div class="quick shiftpre" id="fPreset"></div>
-          <span class="hint">Change these or add your own in Settings on the Timesheet tab.</span>
+          <button type="button" class="obaddrow logaddtype" id="fAddType">+ Add a shift to your list</button>
+          <div class="obadd" id="fAddTypeRow" hidden>
+            <input type="text" id="fNewType" maxlength="30" autocomplete="off" placeholder="e.g. Twilight" aria-label="New shift name" aria-describedby="fTypeErr">
+            <button type="button" class="btn secondary" id="fAddTypeBtn">Add</button>
+          </div>
+          <p class="oberr" id="fTypeErr" role="alert" hidden></p>
+          <span class="hint">Your shifts are paid by the hour. Sleep-in is paid your sleep-in rate. Going straight into a sleep-in after your shift? Pick your shift, then tick "Sleep-in straight after this shift". Change times in Settings.</span>
         </div>
         <div class="row2 shiftonly">
           <div class="field shiftonly"><label for="fStart">Starts</label><input type="time" id="fStart"></div>
           <div class="field"><label for="fEnd">Finishes <span class="hint">next morning is fine</span></label><input type="time" id="fEnd"></div>
         </div>
-          <div class="field shiftonly">
-            <span class="lbl">Sleep-in?</span>
-            <div class="seg" id="fSleep">
-              <button type="button" data-v="yes" aria-pressed="false">Yes</button>
-              <button type="button" data-v="no" aria-pressed="true">No</button>
-            </div>
-          </div>
-          <div class="row2 shiftonly">
+          <label class="check shiftonly" id="fSleepAddRow" hidden><input type="checkbox" id="fSleepAdd"> <span>Sleep-in straight after this shift</span></label>
+          <p class="banner info shiftonly" id="fSleepNote" hidden></p>
+          <div class="row2 shiftonly" id="fHoursRow">
             <div class="field shiftonly">
-              <label for="fHours">Paid hours <span class="hint">worked out from the times · blank if sleep-in only</span></label>
+              <label for="fHours">Paid hours <span class="hint">worked out from the times</span></label>
               <input type="number" id="fHours" min="0" max="24" step="0.25" inputmode="decimal"></div>
             <div class="field">
               <label for="fBreak">Unpaid break (hrs) <span class="hint">blank if none</span></label>

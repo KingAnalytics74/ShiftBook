@@ -51,6 +51,16 @@ export function restDay(key, m) {
     }
     return { level, run, hrs7: hrs, reasons };
 }
+// Does shift s clash with the shift the day before or the day after? Shifts are keyed by start date, so only the
+// neighbouring days can run into it. Returns { key, mins } for the first clash, or null.
+export function overlapOf(s, m) {
+    const a = spanOf(s); if (!a) return null;
+    for (const d of [-1, 1]) {
+        const key = ymd(addDays(parse(s.date), d)), b = spanOf(m.get(key));
+        if (b && a.st < b.en && b.st < a.en) return { key, mins: Math.round((Math.min(a.en, b.en) - Math.max(a.st, b.st)) / 6e4) };
+    }
+    return null;
+}
 // How rested someone is right now. Looks only at the most recent `n` days up to and including `key`
 // (days off count as rested): the worst of those days is the status, so after n clear days the
 // person is back on green. Older red and amber days stay on the record but no longer set the status.
