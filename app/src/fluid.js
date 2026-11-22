@@ -43,6 +43,7 @@ export function dragSheet(sheet, handles, { dismiss, scrim, enabled = () => matc
     h.style.touchAction = "none";
     h.addEventListener("pointerdown", e => {
       if (!enabled() || (e.pointerType === "mouse" && e.button !== 0) || e.target.closest("button, input, select, textarea, a")) return;
+      if (d) return;                                  // a second finger never takes over a drag
       if (sp) { sp.stop(); sp = null; }
       let live = 0; try { live = new DOMMatrix(getComputedStyle(sheet).transform).m42 || 0; } catch (err) { }
       sheet.style.transition = "none"; sheet.style.animation = "none"; set(sp ? sp.value : live);
@@ -56,7 +57,7 @@ export function dragSheet(sheet, handles, { dismiss, scrim, enabled = () => matc
     });
     const up = e => {
       if (!d || e.pointerId !== d.id) return;
-      const v = speed(d.s), h2 = sheet.offsetHeight, end = project(y, v), go = end > h2 * 0.5 || (v > 900 && y > 24);
+      const v = speed(d.s), h2 = sheet.offsetHeight, end = project(y, v), go = end > h2 * 0.5 || (v > 500 && y > 16);
       d = null;
       if (go) {
         dismiss();
@@ -65,7 +66,8 @@ export function dragSheet(sheet, handles, { dismiss, scrim, enabled = () => matc
         sp = spring({ from: y, to: 0, velocity: v, response: 0.42, damping: v > 300 ? 0.78 : 1, onUpdate: set, onDone: () => { sp = null; clean(); } });
       }
     };
-    h.addEventListener("pointerup", up); h.addEventListener("pointercancel", up);
+    h.addEventListener("pointerup", up); h.addEventListener("pointercancel", up); h.addEventListener("lostpointercapture", up);
+    addEventListener("blur", () => d && up({ pointerId: d.id }));
   });
 }
 
@@ -74,14 +76,14 @@ export function swipeTabs(bar, tabs, current) {
   let d = null, n = tabs.length;
   bar.style.touchAction = "none";
   bar.addEventListener("pointerdown", e => {
-    if (e.pointerType === "mouse" && e.button !== 0) return;
+    if (d || (e.pointerType === "mouse" && e.button !== 0)) return;
     const r = bar.getBoundingClientRect(), pad = 6, col = (r.width - pad * 2) / n;
     d = { id: e.pointerId, x0: e.clientX, i0: current(), col, on: false, s: [{ t: e.timeStamp, p: e.clientX }], i: current() };
   });
   bar.addEventListener("pointermove", e => {
     if (!d || e.pointerId !== d.id) return;
     const dx = e.clientX - d.x0;
-    if (!d.on) { if (Math.abs(dx) < 8) return; d.on = true; bar.setPointerCapture(e.pointerId); bar.classList.add("swiping"); }
+    if (!d.on) { if (Math.abs(dx) < 10) return; d.on = true; bar.setPointerCapture(e.pointerId); bar.classList.add("swiping"); }
     let i = d.i0 + dx / d.col; i = i < 0 ? -band(-i * d.col, 40) / d.col : i > n - 1 ? n - 1 + band((i - (n - 1)) * d.col, 40) / d.col : i;
     d.i = i; bar.style.setProperty("--ti", i.toFixed(3));
     d.s.push({ t: e.timeStamp, p: e.clientX }); if (d.s.length > 12) d.s.shift();
@@ -95,5 +97,6 @@ export function swipeTabs(bar, tabs, current) {
     bar.dataset.swiped = "1"; setTimeout(() => delete bar.dataset.swiped, 50);
     if (to !== was.i0) tabs[to].click(); else bar.style.setProperty("--ti", String(was.i0)), requestAnimationFrame(() => bar.style.removeProperty("--ti"));
   };
-  bar.addEventListener("pointerup", up); bar.addEventListener("pointercancel", up);
+  bar.addEventListener("pointerup", up); bar.addEventListener("pointercancel", up); bar.addEventListener("lostpointercapture", up);
+  addEventListener("blur", () => d && up({ pointerId: d.id }));
 }
