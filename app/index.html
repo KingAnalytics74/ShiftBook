@@ -850,13 +850,14 @@
           </div>
           <div class="field shiftonly">
             <span class="lbl">Shift type</span>          <div class="quick shiftpre" id="fPreset"></div>
+          <button type="button" class="linkbtn undotype" id="fTypeUndo" hidden>Undo shift type</button>
           <button type="button" class="obaddrow logaddtype" id="fAddType">+ Add a shift to your list</button>
           <div class="obadd" id="fAddTypeRow" hidden>
             <input type="text" id="fNewType" maxlength="30" autocomplete="off" placeholder="e.g. Twilight" aria-label="New shift name" aria-describedby="fTypeErr">
             <button type="button" class="btn secondary" id="fAddTypeBtn">Add</button>
           </div>
           <p class="oberr" id="fTypeErr" role="alert" hidden></p>
-          <span class="hint">Your shifts are paid by the hour. Sleep-in is paid your sleep-in rate. Going straight into a sleep-in or a waking night after your shift? Pick your shift, then tick the box for it. Change times in Settings.</span>
+          <span class="hint">Tap a shift to use its times. Tap it again, or Undo shift type, to clear it. Your shifts are paid by the hour. Sleep-in is paid your sleep-in rate. Going straight into a sleep-in or a waking night after your shift? Pick your shift, then tick the box for it. Change times in Settings.</span>
         </div>
         <div class="row2 shiftonly">
           <div class="field shiftonly"><label for="fStart">Starts</label><input type="time" id="fStart"></div>
@@ -864,7 +865,11 @@
         </div>
           <label class="check shiftonly" id="fSleepAddRow" hidden><input type="checkbox" id="fSleepAdd"> <span>Sleep-in straight after this shift</span></label>
           <label class="check shiftonly" id="fWakeAddRow" hidden><input type="checkbox" id="fWakeAdd"> <span>Waking night straight after this shift</span></label>
-          <p class="banner info shiftonly" id="fSleepNote" hidden></p>
+          <div class="banner info shiftonly sleepnote" id="fSleepNote" hidden><span id="fSleepNoteTxt"></span></div>
+          <div class="field shiftonly" id="fSleepRateField" hidden>
+            <label for="fSleepRate">Sleep-in pay for this shift (£) <span class="hint" id="fSleepRateHint">blank = your usual</span></label>
+            <input type="number" id="fSleepRate" min="0" max="500" step="0.01" inputmode="decimal" placeholder="Usual sleep-in pay">
+          </div>
           <div class="row2 shiftonly" id="fHoursRow">
             <div class="field shiftonly">
               <label for="fHours">Paid hours <span class="hint">worked out from the times</span></label>
@@ -873,7 +878,7 @@
               <label for="fBreak">Unpaid break (hrs) <span class="hint">blank if none</span></label>
               <input type="number" id="fBreak" min="0" max="24" step="0.25" inputmode="decimal"></div>
           </div>        <div class="field shiftonly">
-          <label for="fRate">Hourly rate for this shift (£) <span class="hint" id="fRateHint">blank = your usual rate</span></label>
+          <label for="fRate"><span id="fRateLbl">Hourly rate for this shift (£)</span> <span class="hint" id="fRateHint">blank = your usual rate</span></label>
           <input type="number" id="fRate" min="0" max="200" step="0.01" inputmode="decimal" placeholder="Usual rate">
         </div>
         <div class="field shiftonly">

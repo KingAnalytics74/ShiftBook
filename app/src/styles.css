@@ -391,6 +391,7 @@ body::before{background:var(--brand)!important}
 .obrowdel{min-height:40px;padding:0 14px}
 .obrowsum{grid-column:1/-1;margin:0;padding:8px 10px;border-radius:10px;background:var(--sunk);font-size:13px;color:var(--ink)}
 .logaddtype{margin-top:8px}
+.undotype{display:inline-block;margin-top:8px;min-height:32px}
 #fAddTypeRow{margin-top:8px}
 .obaddrow{width:100%;min-height:48px;border:1.5px dashed var(--c4);border-radius:12px;background:var(--surface);color:var(--ink);font-weight:700;cursor:pointer}
 .obnote{margin:0}

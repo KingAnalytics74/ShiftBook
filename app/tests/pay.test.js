@@ -45,3 +45,10 @@ test("summarise totals a period", () => {
     assert.equal(t.wakingNights, 2);
     assert.equal(t.sleepIns, 1);
 });
+
+test("a sleep-in can have its own pay for that shift", () => {
+    assert.equal(calc({ date: "2026-11-01", sleepIn: true, sleepRate: 55 }, cfg, "2026-11-30").total, 55);
+    assert.equal(calc({ date: "2026-11-01", sleepIn: true }, cfg, "2026-11-30").total, 40);
+    assert.equal(calc({ date: "2026-11-01", sleepIn: true, sleepRate: "" }, cfg, "2026-11-30").total, 40);
+    assert.equal(calc({ date: "2026-11-01", sleepIn: false, sleepRate: 55, dayHours: 2 }, cfg, "2026-11-30").total, 26);
+});
