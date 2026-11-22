@@ -557,14 +557,16 @@ import "./scene.js";
     const t = logTypes().find(x => x.name === state.form.type), sleepOnly = !!state.form.sleep && (t ? t.paid === "sleep" : !hasDayHrs({ dayHours: $("#fHours").value === "" ? null : Number($("#fHours").value) }));
     $("#fHoursRow").hidden = sleepOnly;
     // a day shift that runs straight into a sleep-in is one record (paid hours plus the sleep-in), so the person can tick it
-    $("#fSleepAddRow").hidden = sleepOnly || state.form.type === "Waking night";
+    // the tick boxes only make sense once there's a shift with times to follow on from (or one is already ticked, so it can be unticked)
+    const hasTimes = !!($("#fStart").value && $("#fEnd").value), canTick = hasTimes && !sleepOnly && state.form.type !== "Waking night";
+    $("#fSleepAddRow").hidden = !canTick && !(state.form.sleep && !sleepOnly);
     $("#fSleepAdd").checked = !!state.form.sleep && !sleepOnly;
     // the same for a waking night straight after: all of it is paid by the hour, so the hours just run on
-    $("#fWakeAddRow").hidden = sleepOnly || state.form.type === "Waking night";
+    $("#fWakeAddRow").hidden = !canTick && !state.form.wake;
     $("#fWakeAdd").checked = !!state.form.wake;
     $("#fSleepNote").hidden = !state.form.sleep && !state.form.wake;
-    $("#fTypeUndo").hidden = !state.form.type;
-    $("#fTypeUndo").setAttribute("aria-label", `Undo ${state.form.type || "shift"}: clear the shift type and times`);
+    $("#fTypeUndo").hidden = !state.form.type && !state.form.sleep && !state.form.wake;
+    $("#fTypeUndo").setAttribute("aria-label", `Undo ${state.form.type || (state.form.sleep ? "sleep-in" : state.form.wake ? "waking night" : "shift")}: clear the shift type and times`);
     // a sleep-in shows a box for its pay (blank = the usual); a waking night uses the hourly rate box, labelled for it
     $("#fSleepRateField").hidden = !state.form.sleep;
     $("#fSleepRateHint").textContent = `blank = your usual ${gbp(Number(state.cfg.sleepInRate) || 0)}`;
@@ -572,7 +574,7 @@ import "./scene.js";
     $("#fRateLbl").textContent = waking ? "Hourly rate for the waking night (£)" : "Hourly rate for this shift (£)";
     $("#fRate").closest(".field").hidden = sleepOnly;
     const usualSleep = gbp(Number($("#fSleepRate").value) > 0 ? Number($("#fSleepRate").value) : Number(state.cfg.sleepInRate) || 0);
-    $("#fSleepNoteTxt").textContent = state.form.wake ? `Paid by the hour all the way through, including the waking night: ${hrs(Number($("#fHours").value) || 0)} hours.` : sleepOnly ? `Sleep-in: paid ${usualSleep}, not by the hour.` : `Paid by the hour, then the sleep-in, ${usualSleep}.`;
+    $("#fSleepNoteTxt").textContent = state.form.wake ? (Number($("#fHours").value) > 0 ? `Paid by the hour all the way through, including the waking night: ${hrs(Number($("#fHours").value))} hours.` : "Paid by the hour, including the waking night. Set the start and finish.") : sleepOnly ? `Sleep-in: paid ${usualSleep}, not by the hour.` : `Paid by the hour, then the sleep-in, ${usualSleep}.`;
   }
   function renderPresets() {
     $("#fPreset").innerHTML = logTypes().map((t, i) => `<button type="button" data-pre="${i}" aria-pressed="${state.form.type === t.name}">${esc(t.name)} · ${esc(t.start)}–${esc(t.end)}</button>`).join("");
@@ -632,7 +634,10 @@ import "./scene.js";
     state.form.wake = false;
     $("#fEnd").value = state.form.dayEnd || $("#fEnd").value; $("#fEnd").dispatchEvent(new Event("change"));
   }
+  // a tick box needs the shift's times first; say so rather than leave a 0-hour shift
+  const needTimes = box => { if ($("#fStart").value && $("#fEnd").value) return false; box.checked = false; toast("Pick your shift, or set its start and finish, first"); sleepUI(); return true; };
   $("#fWakeAdd").addEventListener("change", () => {
+    if ($("#fWakeAdd").checked && needTimes($("#fWakeAdd"))) return;
     if ($("#fWakeAdd").checked) {
       if (state.form.sleep) { $("#fSleepAdd").checked = false; $("#fSleepAdd").dispatchEvent(new Event("change")); }
       state.form.dayEnd = $("#fEnd").value; state.form.wake = true;
@@ -642,6 +647,7 @@ import "./scene.js";
     sleepUI();
   });
   $("#fSleepAdd").addEventListener("change", () => {
+    if ($("#fSleepAdd").checked && needTimes($("#fSleepAdd"))) return;
     const on = $("#fSleepAdd").checked;
     if (on) {
       wakeOff();
@@ -657,7 +663,7 @@ import "./scene.js";
   });
   // sleep-in comes from the shift picked (Sleep-in, or an old "hours + sleep-in" type); we don't ask
   function setSleep(v) { state.form.sleep = v; sleepUI(); preview(); }
-  $("#fEnd").addEventListener("change", () => { if (state.form.wake) sleepUI(); });
+  ["#fStart", "#fEnd"].forEach(id => $(id).addEventListener("change", sleepUI));
   document.querySelectorAll("[data-h]").forEach(b => b.onclick = () => { $("#fHours").value = b.dataset.h; if (b.dataset.h === "12" && $("#fBreak").value === "") $("#fBreak").value = 2; preview(); });
   document.querySelectorAll("[data-b]").forEach(b => b.onclick = () => { $("#fBreak").value = b.dataset.b; preview(); });
   ["#fHours", "#fBreak", "#fFare"].forEach(s => $(s).addEventListener("input", preview));
