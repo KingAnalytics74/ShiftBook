@@ -20,12 +20,11 @@ export function checkShiftName(raw, existing = []) {
   return { name };
 }
 
-// How a shift is paid: Sleep-in and Waking night are set; for their own shifts people choose
-// "hours" (by the hour) or "both" (paid hours, then a sleep-in).
-export function paidFor(name, chosen) {
-  if (name === "Sleep-in") return "sleep";
-  if (name === "Waking night") return "hours";
-  return chosen === "both" ? "both" : "hours";
+// How a shift is paid: a Sleep-in is paid at the flat sleep-in rate; every other shift, including
+// Waking night and the shifts people type, is paid by the hour. We don't ask: if someone also does a
+// sleep-in or a waking night, they add it as its own shift.
+export function paidFor(name) {
+  return name === "Sleep-in" ? "sleep" : "hours";
 }
 
 // Care or other work, from what people type about their job. Blank counts as care (most users).

@@ -1278,16 +1278,15 @@ import "./scene.js";
   const OB_LAST = 7, OB_FIRST = window.SBAuth ? 1 : 0, OB_SKIP = 2, OB_TOTAL = OB_LAST - 1, obPos = s => s > OB_SKIP ? s - 1 : s; // step 2 (community) is no longer part of setup
   // Sign-up shifts: people type their own shift names (obNames); Waking night and Sleep-in are always there.
   // Each times row picks one of those names and sets its own start, finish and break. No fixed combinations:
-  // someone who does a long day then a sleep-in can type that as their own shift and choose how it's paid.
+  // shifts people type are paid by the hour; someone who does a long day then a sleep-in adds times for both.
   let obStep = 0, obDay = null, obType = 0, obNames = [], obRows = [], obRowNext = 1;
-  const obNewRow = (name = "") => ({ id: obRowNext++, name, start: "", end: "", breakHrs: "", paid: "hours", hours: "" });
+  const obNewRow = (name = "") => ({ id: obRowNext++, name, start: "", end: "", breakHrs: "" });
   obRows.push(obNewRow());
   const obWork = () => workKind($("#obWorkText").value);
   const obVal = id => $("#" + id).value.trim();
   const obTypesChosen = () => obRows.filter(r => r.name).map(r => {
-    const paid = paidFor(r.name, r.paid), t = { name: r.name, paid, start: r.start, end: r.end, breakHrs: paid === "sleep" ? 0 : Number(r.breakHrs) || 0 };
-    if (paid === "both") t.hours = Number(r.hours) || 0;
-    return t;
+    const paid = paidFor(r.name);
+    return { name: r.name, paid, start: r.start, end: r.end, breakHrs: paid === "sleep" ? 0 : Number(r.breakHrs) || 0 };
   });
   const obPat = () => obTypesChosen();
   function obShiftPay() {
@@ -1335,25 +1334,22 @@ import "./scene.js";
   function obRowSummary(r) {
     if (!r.name) return "Choose a shift from your list.";
     if (!r.start || !r.end) return "Set the start and finish times.";
-    const paid = paidFor(r.name, r.paid), span = spanHrs(r.start, r.end), late = toMin(r.end) <= toMin(r.start) ? ", finishing next morning" : "";
-    if (paid === "sleep") return `Sleep-in, ${obNum(span)} hours${late}. Paid as a sleep-in, not by the hour.`;
-    const brk = Number(r.breakHrs) || 0, hrs = paid === "both" ? Number(r.hours) || 0 : span;
-    if (paid === "both" && !hrs) return "Add the paid hours before the sleep-in starts.";
-    return `${obNum(Math.max(0, hrs - brk))} paid hours${brk ? ` after a ${obNum(brk)} hour break` : ""}${paid === "both" ? ", then a sleep-in" : ""}${late}.`;
+    const span = spanHrs(r.start, r.end), late = toMin(r.end) <= toMin(r.start) ? ", finishing next morning" : "";
+    if (paidFor(r.name) === "sleep") return `Sleep-in, ${obNum(span)} hours${late}. Paid your sleep-in rate, not by the hour.`;
+    const brk = Number(r.breakHrs) || 0;
+    return `${obNum(Math.max(0, span - brk))} paid hours${brk ? ` after a ${obNum(brk)} hour break` : ""}${late}.`;
   }
   function obLibRender() {
     $("#obShiftChips").innerHTML = obNames.map(n => `<span class="obchip" role="listitem">${esc(n)}<button type="button" data-rm="${esc(n)}" aria-label="Remove ${esc(n)}">×</button></span>`).join("") +
       FIXED_SHIFTS.map(n => `<span class="obchip fixed" role="listitem">${esc(n)} <small>always there</small></span>`).join("");
     const all = [...obNames, ...FIXED_SHIFTS];
-    $("#obTypeLib").innerHTML = `<div class="obgroup">Your times</div><p class="hint obhint">Pick a shift from your list, then set when it usually starts and finishes. Do two shifts back to back, like a long day then a sleep-in? Type it as one shift and choose how it's paid, or add times for each: you choose.</p><div class="stlist">` +
+    $("#obTypeLib").innerHTML = `<div class="obgroup">Your times</div><p class="hint obhint">Pick a shift from your list, then set when it usually starts and finishes. Your shifts are paid by the hour. Doing a sleep-in or a waking night after a shift? Add times for Sleep-in or Waking night as well.</p><div class="stlist">` +
       obRows.map(r => {
-        const used = new Set(obRows.filter(x => x.id !== r.id && x.name).map(x => x.name)), paid = paidFor(r.name, r.paid), own = r.name && !FIXED_SHIFTS.includes(r.name);
+        const used = new Set(obRows.filter(x => x.id !== r.id && x.name).map(x => x.name)), paid = paidFor(r.name);
         return `<div class="strow obrow" data-row="${r.id}">
         <div class="obrowhead"><label>Shift<select data-k="name"><option value="">Choose a shift</option>${all.filter(n => !used.has(n)).map(n => `<option value="${esc(n)}"${n === r.name ? " selected" : ""}>${esc(n)}</option>`).join("")}</select></label>
           <button type="button" class="btn secondary obrowdel" data-del="${r.id}" aria-label="Remove these times">Remove</button></div>
         <label>Starts<input type="time" data-k="start" value="${esc(r.start)}"></label><label>Finishes<input type="time" data-k="end" value="${esc(r.end)}"></label>
-        ${own ? `<label class="obpaid">How it's paid<select data-k="paid"><option value="hours"${paid === "hours" ? " selected" : ""}>By the hour</option><option value="both"${paid === "both" ? " selected" : ""}>Hours, then a sleep-in</option></select></label>` : ""}
-        ${paid === "both" ? `<label>Paid hours<input type="number" data-k="hours" min="0" max="24" step="0.25" inputmode="decimal" value="${esc(r.hours)}"></label>` : ""}
         ${paid !== "sleep" ? `<label>Unpaid break (hrs)<input type="number" data-k="breakHrs" min="0" max="8" step="0.25" inputmode="decimal" placeholder="0" value="${esc(r.breakHrs)}"></label>` : ""}
         <p class="obrowsum" data-sum>${esc(obRowSummary(r))}</p></div>`;
       }).join("") + `</div><button type="button" class="obaddrow" id="obAddRow">+ Add times for another shift</button>`;
