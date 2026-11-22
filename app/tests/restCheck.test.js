@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { restDay, worked, hasDayHrs } from "../src/core/restCheck.js";
+import { restDay, worked, hasDayHrs, overlapOf } from "../src/core/restCheck.js";
 import { ymd, parse, addDays } from "../src/core/dates.js";
 
 const run = (start, n, extra = {}) => {
@@ -37,4 +37,15 @@ test("restNow: three clear days put someone back on green, older red days no lon
   assert.equal(restNow("2026-11-09", m).level, "red");
   assert.equal(restNow("2026-11-10", m).level, "red");   // day off, but the 8th/9th still count
   assert.equal(restNow("2026-11-12", m).level, "ok");    // three days since: back on green
+});
+
+test("shifts that run into each other are caught", () => {
+    const sleep = { date: "2026-11-21", start: "20:00", end: "08:00", sleepIn: true };
+    const day = { date: "2026-11-22", start: "07:30", end: "19:30", dayHours: 12 };
+    const m = new Map([[sleep.date, sleep], [day.date, day]]);
+    assert.deepEqual(overlapOf(day, m), { key: "2026-11-21", mins: 30 });
+    assert.deepEqual(overlapOf(sleep, m), { key: "2026-11-22", mins: 30 });
+    const later = { ...day, start: "08:00" };
+    assert.equal(overlapOf(later, new Map([[sleep.date, sleep], [later.date, later]])), null);
+    assert.equal(overlapOf({ date: "2026-11-22", dayHours: 8 }, m), null);
 });
