@@ -852,7 +852,6 @@
             <span class="lbl lblrow">Shift type <button type="button" class="infobtn" id="fTypeInfoBtn" aria-expanded="false" aria-controls="fTypeInfo" aria-label="How shift types work"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8.25" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="10" cy="6.2" r="1.15" fill="currentColor"/><path d="M10 9.2v5.1" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></button></span>
           <div class="infodrop" id="fTypeInfo" inert><div class="infoin"><p class="hint">Tap a shift to use its times. Tap it again, or Undo shift type, to clear it. Your shifts are paid by the hour. Sleep-in is paid your sleep-in rate. Going straight into a sleep-in or a waking night after your shift? Pick your shift, then tick the box for it. Change times in Settings.</p></div></div>
           <div class="quick shiftpre" id="fPreset"></div>
-          <button type="button" class="linkbtn undotype" id="fTypeUndo" hidden>Undo shift type</button>
           <button type="button" class="obaddrow logaddtype" id="fAddType">+ Add a shift to your list</button>
           <div class="obadd" id="fAddTypeRow" hidden>
             <input type="text" id="fNewType" maxlength="30" autocomplete="off" placeholder="e.g. Twilight" aria-label="New shift name" aria-describedby="fTypeErr">
@@ -862,7 +861,7 @@
         </div>
         <div class="row2 shiftonly">
           <div class="field shiftonly"><label for="fStart">Starts</label><input type="time" id="fStart"></div>
-          <div class="field"><label for="fEnd">Finishes <span class="hint">next morning is fine</span></label><input type="time" id="fEnd"></div>
+          <div class="field"><label for="fEnd">Finishes</label><input type="time" id="fEnd"></div>
         </div>
           <label class="check shiftonly" id="fSleepAddRow" hidden><input type="checkbox" id="fSleepAdd"> <span>Sleep-in straight after this shift</span></label>
           <label class="check shiftonly" id="fWakeAddRow" hidden><input type="checkbox" id="fWakeAdd"> <span>Waking night straight after this shift</span></label>
@@ -881,13 +880,13 @@
             </div>
             <div class="row2">
               <div class="field"><label for="fWakeHours">Waking night hours <span class="hint">worked out from the times</span></label><input type="number" id="fWakeHours" min="0" max="24" step="0.25" inputmode="decimal"></div>
-              <div class="field"><label for="fWakeRate">Waking night pay (£ an hour) <span class="hint" id="fWakeRateHint">blank = this shift's rate</span></label><input type="number" id="fWakeRate" min="0" max="200" step="0.01" inputmode="decimal" placeholder="Same rate"></div>
+              <div class="field"><label for="fWakeRate">Waking night pay (£ an hour)</label><input type="number" id="fWakeRate" min="0" max="200" step="0.01" inputmode="decimal"></div>
             </div>
           </fieldset>
           <div class="banner info shiftonly sleepnote" id="fSleepNote" hidden><span id="fSleepNoteTxt"></span></div>
           <div class="field shiftonly" id="fSleepRateField" hidden>
-            <label for="fSleepRate">Sleep-in pay for this shift (£) <span class="hint" id="fSleepRateHint">blank = your usual</span></label>
-            <input type="number" id="fSleepRate" min="0" max="500" step="0.01" inputmode="decimal" placeholder="Usual sleep-in pay">
+            <label for="fSleepRate">Sleep-in pay for this shift (£)</label>
+            <input type="number" id="fSleepRate" min="0" max="500" step="0.01" inputmode="decimal">
           </div>
           <div class="row2 shiftonly" id="fHoursRow">
             <div class="field shiftonly">
@@ -902,9 +901,9 @@
         </div>
         <div class="field shiftonly">
           <label for="fFare">Bus fare for this shift (£) <span class="hint">there and back · optional</span></label>
-            <input type="number" id="fFare" min="0" max="200" step="0.05" inputmode="decimal" placeholder="0.00">
+            <input type="number" id="fFare" min="0" max="200" step="0.05" inputmode="decimal">
             <div class="quick" id="fFareQuick"><button type="button" data-fare="usual" id="fFareUsual"
-                hidden>Usual</button><button type="button" data-fare="0">No bus</button></div>
+                hidden>Usual</button></div>
           </div>
           <div class="field">
             <label for="fNotes">Notes <span class="hint">optional</span></label>
