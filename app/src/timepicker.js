@@ -6,6 +6,7 @@ import { parseTimeText } from "./core/timeText.js";
 const ITEM = 44, pad = n => String(n).padStart(2, "0");
 const QUICK = ["06:00", "07:00", "08:00", "14:00", "20:00", "22:00"];
 const reduce = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+import { dragSheet } from "./fluid.js";
 const CLOCK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
 let open = null, uid = 0;
 
@@ -114,6 +115,7 @@ function openSheet(inp, trigger) {
     }
   };
   document.addEventListener("keydown", onKey, true);
+  dragSheet(ov.querySelector(".tpsheet"), [ov.querySelector(".tpgrab"), ov.querySelector(".tphead")], { dismiss: () => close(false), scrim: null });
   ov.addEventListener("pointerdown", e => { if (e.target === ov) close(false); });
   ov.querySelector(".tpcancel").onclick = () => close(false);
   done.onclick = () => close(true);

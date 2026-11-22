@@ -165,12 +165,12 @@
           </div>
           <div class="obstep" data-step="5" hidden>
           <h2 class="obh">What shifts do you work?</h2>
-          <p class="obsub">Tell us in your own words. Your shifts become one-tap buttons when you log work, and you can change them any time in Settings.</p>
+          <p class="obsub">Your shifts become one-tap buttons when you log work. You can change them in Settings.</p>
           <div class="field"><label for="obWorkText">What kind of work do you do?</label>
             <input type="text" id="obWorkText" maxlength="60" autocomplete="off" placeholder="e.g. Support worker in supported living">
-            <span class="hint">Write it the way you'd tell a friend. For example: care assistant in a care home, home carer, warehouse picker, factory line operator.</span></div>
+            <span class="hint">Say it the way you'd tell a friend, e.g. home carer or warehouse picker.</span></div>
           <div class="field"><label for="obNewShift">Your shifts</label>
-            <span class="hint">Type each shift the way your rota names it, then tap Add. For example: Early, Late, Long day, Twilight, Night. Waking night and Sleep-in are always in your list. Don't include anyone's name or address.</span>
+            <span class="hint">Type each shift as your rota names it, then tap Add (Early, Late, Night…). Waking night and Sleep-in are always included. Leave out names and addresses.</span>
             <div class="obadd"><input type="text" id="obNewShift" maxlength="30" autocomplete="off" placeholder="Type a shift, e.g. Twilight"><button type="button" class="btn secondary" id="obAddShift">Add</button></div>
             <p class="oberr" id="obShiftErr" role="alert" hidden></p>
             <div class="obchips obmine" id="obShiftChips" role="list" aria-label="Your shifts"></div></div>
@@ -996,6 +996,7 @@
           <div id="cmAnnList"></div>
         </div>
         <div class="card cmcomposer" id="cmComposer" role="dialog" aria-label="New post">
+          <div class="tpgrab cmgrab" aria-hidden="true"></div>
           <form id="cmForm" novalidate>
             <div class="cmreplying" id="cmReplying" hidden><span id="cmReplyTxt"></span><button type="button"
                 class="linkinline" id="cmReplyCancel">Cancel</button></div>

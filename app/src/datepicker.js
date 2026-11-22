@@ -1,5 +1,6 @@
 /* Date picker: every <input type="date"> becomes a tappable date that opens a calendar sheet, in the same style
    as the time picker. The real input stays in the page, hidden, as the value holder. Mouse, touch and keyboard work. */
+import { dragSheet } from "./fluid.js";
 const pad = n => String(n).padStart(2, "0");
 const iso = (y, m, d) => `${y}-${pad(m + 1)}-${pad(d)}`;
 const parse = v => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v || ""); return m ? { y: +m[1], m: +m[2] - 1, d: +m[3] } : null; };
@@ -85,6 +86,7 @@ function openSheet(inp, trigger) {
     if (e.key === "End") { e.preventDefault(); focusD = days; goMonth(0, 0); focusDay(); }
   };
   document.addEventListener("keydown", onKey, true);
+  dragSheet(ov.querySelector(".tpsheet"), [ov.querySelector(".tpgrab"), ov.querySelector(".tphead")], { dismiss: () => close(), scrim: null });
   ov.addEventListener("pointerdown", e => { if (e.target === ov) close(); });
   ov.querySelector(".tpcancel").onclick = close;
   ov.querySelectorAll(".dpstep").forEach(b => b.onclick = () => { if (mode === "months") { vy += +b.dataset.step; render(+b.dataset.step); } else goMonth(+b.dataset.step); });

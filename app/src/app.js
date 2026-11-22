@@ -29,6 +29,7 @@ import { resolveArea } from "./core/areas.js";
 import { FIXED_SHIFTS, checkShiftName, paidFor, workKind } from "./core/shiftNames.js";
 import { mountAreaPicker } from "./area-picker.js";
 import "./timepicker.js";
+import { dragSheet, swipeTabs } from "./fluid.js";
 import "./datepicker.js";
 import "./scene.js";
 
@@ -2489,4 +2490,16 @@ import "./scene.js";
     try { localStorage.setItem("sb-theme", n); } catch (e) {}
     paint(); setTimeout(() => document.documentElement.classList.remove("themeswap"), 500);
   });
+})();
+
+// ---- Apple-style fluid touches: pull the post sheet down, swipe along the tab bar, instant press feedback ----
+(() => {
+  const comp = document.getElementById("cmComposer");
+  if (comp) dragSheet(comp, [comp.querySelector(".cmgrab"), comp.querySelector("#cmPostTo")], { dismiss: () => { setTimeout(() => document.getElementById("cmCancel").click(), 230); } });
+  const bar = document.querySelector(".bottombar");
+  if (bar) {
+    const tabs = [...bar.querySelectorAll("[data-view]")];
+    swipeTabs(bar, tabs, () => Math.max(0, tabs.findIndex(b => b.getAttribute("aria-selected") === "true")));
+  }
+  document.addEventListener("touchstart", () => { }, { passive: true });   // lets :active press styles fire straight away on iOS
 })();

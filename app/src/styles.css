@@ -907,7 +907,7 @@ section.view:not([hidden]) .hbar .fill{animation:wfill .8s .25s var(--m-out) bac
 .tpsheet{width:100%;max-width:440px;padding:8px 20px calc(20px + env(safe-area-inset-bottom,0px));border-radius:28px 28px 0 0;background:var(--surface);color:var(--ink);box-shadow:0 -12px 40px rgba(20,22,60,.28);transform:translateY(105%);transition:transform .5s var(--m-spring)}
 .tpov.in .tpsheet{transform:none}
 .tpov.out .tpsheet{transform:translateY(105%);transition:transform .22s cubic-bezier(.4,0,1,1)}
-.tpgrab{width:40px;height:5px;margin:0 auto 6px;border-radius:3px;background:var(--line)}
+.tpgrab{position:relative;width:100%;height:26px;margin:-6px 0 0;background:none;cursor:grab;touch-action:none}.tpgrab::before{content:"";position:absolute;left:50%;top:11px;width:40px;height:5px;margin-left:-20px;border-radius:3px;background:var(--line)}.tphead{touch-action:none}
 .tphead{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;min-height:44px}
 .tphead b{font:700 16px/1 var(--f-head)}
 .tpcancel{justify-self:start;border:0;background:transparent;color:var(--muted);font:600 16px/1 inherit;padding:10px 6px;cursor:pointer;min-height:44px}
@@ -1341,3 +1341,25 @@ label.check input{width:20px;height:20px;margin-top:1px;flex:none;accent-color:v
   #cmMsgs .cmbubbles{flex:1;min-height:0;max-height:none}
 }
 @media (min-width:760px){#cmPaneMsgs{min-height:calc(100dvh - 300px)}#cmMsgs{flex:1;display:flex;flex-direction:column}#cmMsgs .cmbubbles{flex:1;max-height:none;min-height:360px}#cmMsgs #cmThread:not([hidden]){flex:1;display:flex;flex-direction:column}}
+
+/* ================= Apple fluid-interface touches ================= */
+/* The press answers on touch-down, not on release: a quick squeeze in, a springy release. */
+:where(button,.btn,[role="tab"],.cmrow,.pot,summary,.chip):active{transform:scale(.96)}
+:where(button,.btn,[role="tab"],.cmrow,summary){transition:transform .45s var(--m-spring,cubic-bezier(.22,1,.36,1))}
+.bottombar button:active{transform:scale(.94)}
+.bottombar.swiping::before{transition:none!important}
+.bottombar{cursor:grab}
+.bottombar.swiping{cursor:grabbing}
+/* Type is set tighter as it gets bigger, and a touch looser when it is small */
+h1{letter-spacing:-.032em}h2{letter-spacing:-.022em}h3{letter-spacing:-.012em}
+.hint,.lbl,small,.fine{letter-spacing:.004em}
+@media (prefers-reduced-motion:reduce){:where(button,.btn,[role="tab"],.cmrow,summary){transition:none}:where(button,.btn,[role="tab"],.cmrow,summary):active{transform:none}}
+@media (prefers-reduced-transparency:reduce){.tpov.in{-webkit-backdrop-filter:none;backdrop-filter:none}}
+
+/* Impeccable pass: keep dense form text clear of decoration on phones; clearer focus; steadier numbers */
+@media (max-width:639px){body.authing .deco .sh,body.onboarding .deco .sh{display:none}}
+.num,[class*="amt"],.pot b{font-variant-numeric:tabular-nums}
+.obsub,.hint{text-wrap:pretty}h1,h2,h3,.obh{text-wrap:balance}
+/* Impeccable: one numeral voice on the hero, visible legend swatches on indigo */
+.hero b,.hero .num{font-family:var(--f-display);font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:0}
+.hero .legend .sw{box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.55)}
