@@ -25,14 +25,14 @@ test("no more than 12 typed shifts", () => {
 
 test("Waking night and Sleep-in are always there, and their pay is set", () => {
     assert.deepEqual(FIXED_SHIFTS, ["Waking night", "Sleep-in"]);
-    assert.equal(paidFor("Sleep-in", "hours"), "sleep");
-    assert.equal(paidFor("Waking night", "both"), "hours");
+    assert.equal(paidFor("Sleep-in"), "sleep");
+    assert.equal(paidFor("Waking night"), "hours");
 });
 
-test("people choose how their own shifts are paid", () => {
-    assert.equal(paidFor("Long day + sleep-in", "both"), "both");
-    assert.equal(paidFor("Twilight", "hours"), "hours");
-    assert.equal(paidFor("Twilight", undefined), "hours");
+test("shifts people type are paid by the hour, without asking", () => {
+    assert.equal(paidFor("Twilight"), "hours");
+    assert.equal(paidFor("Long day"), "hours");
+    assert.equal(paidFor("Long day + sleep-in"), "hours");
 });
 
 test("kind of work is read from what people type", () => {

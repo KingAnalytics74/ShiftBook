@@ -383,7 +383,6 @@ body::before{background:var(--brand)!important}
 .obchip{display:inline-flex;align-items:center;gap:4px;min-height:44px;padding:0 4px 0 16px;border:1.5px solid var(--c4);border-radius:12px;background:var(--day-soft);font-weight:700;color:var(--ink)}
 .obchips .obchip button{width:36px;height:36px;min-height:0;padding:0;border:0;border-radius:9px;background:transparent;color:var(--ink);font-size:20px;font-weight:600;line-height:1;cursor:pointer}
 .obchips .obchip button:hover{background:var(--surface)}
-.obrow .obpaid{grid-column:1/-1}
 .obchip.fixed{padding:0 16px;border-style:dashed;background:var(--surface)}
 .obchip.fixed small{font-size:11px;font-weight:600;color:var(--muted)}
 .obhint{margin:0 0 4px}
