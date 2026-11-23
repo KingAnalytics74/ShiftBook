@@ -441,7 +441,7 @@ import "./scene.js";
 
   function renderSheet(p, sm) {
     const t = sm.t;
-    let h = `<thead><tr><th>Date</th><th>Day</th><th>Time</th><th>Workplace</th><th>Sleep-in</th><th>Paid hrs</th><th>Break</th><th>Net hrs</th><th>Hourly £</th><th>Sleep-in £</th><th>Total £</th><th>Status</th></tr></thead><tbody>`;
+    let h = `<thead><tr><th>Date</th><th>Day</th><th>Time</th><th>Workplace</th><th>Sleep-in</th><th>On shift</th><th>Unpaid break</th><th>Paid hrs</th><th>Hourly £</th><th>Sleep-in £</th><th>Total £</th><th>Status</th></tr></thead><tbody>`;
     const holD = holidayDays(); let holH = 0, holDays = 0;
     const est = (() => { try { const sm2 = holSummary(); return n => sm2.mode === "rolledup" || !sm2.pay.weeks ? null : payEstimate(n, sm2.pay, state.cfg.hourlyRate).likely; } catch (e) { return () => null; } })();
     sm.rows.forEach(r => {
@@ -464,6 +464,7 @@ import "./scene.js";
     const heads = [...document.querySelectorAll("#sheet thead th")].map(x => x.textContent);
     document.querySelectorAll("#sheet tbody tr").forEach(tr => {
       [...tr.children].forEach((td, i) => { td.dataset.l = heads[i] || ""; if (td.textContent === "No") td.dataset.no = "1"; });
+      if (!tr.classList.contains("off") && !tr.classList.contains("hol")) [5, 6, 7].forEach(i => { const td = tr.children[i]; if (td && !td.textContent) td.innerHTML = '<i class="mz" aria-hidden="true">0</i>'; });
       if (tr.dataset.date && new Date(tr.dataset.date + "T12:00:00").getDay() === 1) tr.classList.add("wkstart");
     });
     document.querySelectorAll("#sheet tfoot tr").forEach(tr => [...tr.children].forEach((td, i) => { if (i) td.dataset.l = heads[i + 3] || ""; }));
