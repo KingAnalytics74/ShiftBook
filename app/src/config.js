@@ -16,5 +16,10 @@ window.SHIFTBOOK_CONFIG = {
     google: true,           // "Continue with Google": the button appears by itself once Google is on in Supabase → Authentication → Providers
     apple: false            // turn on after adding Apple in Supabase → Authentication → Providers
   },
+  // Google's "Web client" ID (Google Cloud → Google Auth Platform → Clients), the same one pasted into Supabase →
+  // Authentication → Providers → Google. With it filled in, Google's own button signs people in on shiftbuck.com,
+  // so Google shows "shiftbuck.com" instead of the Supabase address. Leave it empty to use the old redirect.
+  // shiftbuck.com must be listed under that client's "Authorised JavaScript origins". The ID is safe to publish.
+  googleClientId: "428650943675-h477jnm09rcueeernr4uekgp4057cq0t.apps.googleusercontent.com",
   defaultCountryCode: "+44" // used when someone types a UK number like 07700 900123
 };

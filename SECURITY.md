@@ -25,7 +25,8 @@ If you think you've found a security problem, **don't open a public GitHub issue
 - **Third-party code**: fonts and the Supabase library are served from this site. The only outside scripts are Google Analytics and Microsoft Clarity, both loaded only after cookie consent (`app/src/analytics.js`). Analytics gets page visits only, with ad features off and private codes stripped from addresses. Clarity records taps and scrolling with all on-screen text masked (`data-clarity-mask` on `<body>`), so recordings never show pay, payslips, messages or anything typed; its ad use is off. In the Clarity dashboard, keep **Settings → Masking** on **Strict**. No ads or other trackers.
 - **Clickjacking guard** (`app/src/guard.js`): the app stays hidden if another site puts it inside a frame.
 - **On Vercel** (`vercel.json`): the same Content Security Policy is also sent as a header, with `frame-ancestors 'none'`, plus HTTPS-only (HSTS), `X-Frame-Options: DENY`, `nosniff`, and a Permissions-Policy that turns off camera, microphone and location. If the policy in `app/index.html` changes, change it in `vercel.json` too.
-- **Referrer policy**: other sites aren't told which Shiftbuck page someone came from.
+- **Referrer policy**: other sites are only told the site (shiftbuck.com), never which page someone came from. In the app this is `strict-origin-when-cross-origin`, because Google's sign-in button checks the site it's on.
+- **Google sign-in** (when `googleClientId` is set in `app/src/config.js`): Google's button loads from `accounts.google.com/gsi/`, the only outside frame the policy allows. Google hands back a signed token with a one-time nonce, and Supabase checks both before signing the person in.
 - Everything people type is escaped before it's shown on a page. Timesheet CSVs neutralise cells starting with `=`, `+`, `-` or `@`, so they can't run as formulas in Excel.
 
 ## What the owner must switch on

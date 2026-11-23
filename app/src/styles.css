@@ -287,6 +287,8 @@ body::before{background:var(--brand)!important}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .gbtn{display:flex;align-items:center;justify-content:center;gap:10px}
 .gbtn svg{flex:none}
+.gisslot{display:flex;flex-direction:column;align-items:center;min-height:44px}
+.gisslot #gisMount:empty{display:none}
 .paytable{min-width:0!important}
 .paytable td.okc{color:var(--good);font-weight:700} .paytable td.badc{color:var(--bad);font-weight:700}
 .card:has(#payBody){--accent:var(--good)}
