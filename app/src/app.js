@@ -1082,7 +1082,13 @@ import "./scene.js";
   state.money = { ...MONEY_DEFAULTS }; state.spend = new Map(); state.planDraft = null; state.builtKey = "";
   let spendTimer;
 
-  const pots = () => state.planDraft || state.money.pots || [];
+  // a first-time person sees one box, Rent & bills; it is only saved once they use it
+  const STARTER = [{ id: "rent", name: "Rent & bills", mode: "fixed", value: 0, kind: "need" }];
+  const pots = () => { if (state.planDraft) return state.planDraft; const mp = state.money.pots || []; return mp.length ? mp : (state.loaded ? STARTER : []); };
+  const PALETTE = ["#3E4095", "#0098DA", "#A17BB6", "#12A594", "#F2A93B", "#E0679A", "#6B7FD6", "#8A8FA3"];
+  const CATALOG = [{ n: "Rent & bills", k: "need" }, { n: "Food & groceries", k: "need" }, { n: "Transport", k: "need" }, { n: "Phone & subscriptions", k: "need" }, { n: "Health", k: "need" }, { n: "Family & kids", k: "need" }, { n: "Eating out & fun", k: "want" }, { n: "Clothes & shopping", k: "want" }, { n: "Savings", k: "save" }, { n: "Something else", k: "want", custom: true }];
+  const EXAMPLE = [["Rent & bills", 42], ["Food & groceries", 22], ["Savings", 18], ["Transport", 12], ["Phone & subscriptions", 6]];
+  state.potOpen = new Set(); state.potInit = false; state.anUser = null;
   const planned = (pot, net) => pot.mode === "fixed" ? Number(pot.value) || 0 : (Number(pot.value) || 0) / 100 * net;
   // a pot is compared in whole pennies, so spending exactly the amount shown (15% of £2,296.64 shows £344.50)
   // isn't "over plan"; plan totals keep the exact amounts so % pots still add up to the take-home
@@ -1181,82 +1187,91 @@ import "./scene.js";
   });
 
   function buildPlanRows() {
-    const sp = spendFor(state.moneyKey);
     const list = pots();
-    $("#planRows").innerHTML = list.length ? list.map(pt => `
-      <div class="pot kind-${pt.kind || "need"}" data-id="${esc(pt.id)}">
-        <div class="ptop"><input class="pname" type="text" id="pn-${esc(pt.id)}" value="${esc(pt.name)}" aria-label="Pot name"><button type="button" class="pdel" aria-label="Remove ${esc(pt.name)}">×</button></div>
-        <span class="pplanned num" id="pp-${esc(pt.id)}"></span>
-        <div class="pplan">
-          <input type="number" id="pv-${esc(pt.id)}" value="${esc(pt.value)}" min="0" step="0.5" inputmode="decimal" aria-label="Plan amount">
-          <select id="pm-${esc(pt.id)}" aria-label="Plan type"><option value="pct"${pt.mode !== "fixed" ? " selected" : ""}>% of pay</option><option value="fixed"${pt.mode === "fixed" ? " selected" : ""}>£ fixed</option></select>
-          <select id="pk-${esc(pt.id)}" aria-label="Pot type">${Object.entries(KIND).map(([k, l]) => `<option value="${k}"${(pt.kind || "need") === k ? " selected" : ""}>${l}</option>`).join("")}</select>
-        </div>
-        <label class="pspent"><span class="hint">Spent £</span><input type="number" id="ps-${esc(pt.id)}" value="${sp[pt.id] ?? ""}" min="0" step="0.01" inputmode="decimal"></label>
-        <div class="pbar"><i id="pb-${esc(pt.id)}"></i></div>
-        <div class="pfoot"><span id="pl-${esc(pt.id)}"></span><span id="pc-${esc(pt.id)}"></span></div>
-      </div>`).join("") : `<div class="empty">${state.loaded ? "No pots yet. Add one to start planning your take-home." : "Loading your plan…"}</div>`;
+    if (!state.potInit && list.length) { state.potInit = true; if (list.length === 1 && !(Number(list[0].value) > 0)) state.potOpen.add(list[0].id); }
+    const sp = spendFor(state.moneyKey);
+    $("#planRows").innerHTML = list.map((pt, i) => {
+      const id = esc(pt.id), open = state.potOpen.has(pt.id);
+      return `<div class="pot2" data-id="${id}" data-open="${open ? 1 : 0}" style="--pc:${PALETTE[i % PALETTE.length]}">
+        <button type="button" class="phead" aria-expanded="${open}" aria-controls="pb2-${id}"><i class="pdot" aria-hidden="true"></i><span class="pmain"><b class="pnm">${esc(pt.name || "Spending box")}</b><span class="psub" id="pp-${id}"></span></span><svg class="chev" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 7.5 10 12.5 15 7.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <div class="pbar"><i id="pb-${id}"></i></div>
+        <div class="fold${open ? " open" : ""}" id="pb2-${id}"${open ? "" : " inert"}><div class="foldin"><div class="pbody">
+          <div class="pfields">
+            <label>Planned<span class="pamt"><input type="number" id="pv-${id}" value="${esc(pt.value || "")}" min="0" step="0.5" inputmode="decimal" placeholder="0"><select id="pm-${id}" aria-label="Plan type"><option value="fixed"${pt.mode === "fixed" ? " selected" : ""}>£</option><option value="pct"${pt.mode !== "fixed" ? " selected" : ""}>% of pay</option></select></span></label>
+            <label>Spent so far (£)<input type="number" id="ps-${id}" value="${sp[pt.id] ?? ""}" min="0" step="0.01" inputmode="decimal" placeholder="0"></label>
+          </div>
+          <details class="pmore"><summary>Rename or change type</summary><div class="pfields">
+            <label>Name<input type="text" id="pn-${id}" value="${esc(pt.name)}" maxlength="40"></label>
+            <label>Counts as<select id="pk-${id}">${Object.entries(KIND).map(([k, l]) => `<option value="${k}"${(pt.kind || "need") === k ? " selected" : ""}>${l}</option>`).join("")}</select></label>
+          </div></details>
+          <div class="pfoot"><span id="pl-${id}"></span><button type="button" class="pdel" aria-label="Remove ${esc(pt.name)}">Remove</button></div>
+        </div></div></div>
+      </div>`; }).join("");
   }
 
   const reduceMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
-  // The headline for the spending plan: what the person plans to spend, what they have spent, and how far through that budget they are
-  let bgShown = 0;
+  // The headline for the budget: a donut of how the plan is split, with what has been spent in the middle
+  function renderDonut(segs, example) {
+    const g = $("#dsegs"), tot = segs.reduce((a, s) => a + s.v, 0) || 1, gap = segs.length > 1 ? 1.2 : 0;
+    const sig = segs.map(s => s.k).join("|") + (example ? "|ex" : "");
+    if (g.dataset.sig !== sig) { g.innerHTML = segs.map(s => `<circle cx="60" cy="60" r="46" pathLength="100" fill="none" stroke="${s.c}" stroke-width="14" stroke-dasharray="0 100"/>`).join(""); g.dataset.sig = sig; void g.getBoundingClientRect(); }
+    let off = 0;
+    segs.forEach((s, i) => { const el = g.children[i], share = (s.v / tot) * 100, len = Math.max(0, share - gap); el.setAttribute("stroke", s.c); el.style.strokeDasharray = `${len} ${100 - len}`; el.style.strokeDashoffset = String(-(off + gap / 2)); off += share; });
+    $("#donut").classList.toggle("example", !!example);
+  }
   function renderBudget(net, list, sp) {
     const spendPots = list.filter(x => (x.kind || "need") !== "save"), savePots = list.filter(x => x.kind === "save");
     const budget = spendPots.reduce((a, x) => a + planned(x, net), 0), spent = spendPots.reduce((a, x) => a + (Number(sp[x.id]) || 0), 0);
     const saveGoal = savePots.reduce((a, x) => a + planned(x, net), 0), saved = savePots.reduce((a, x) => a + (Number(sp[x.id]) || 0), 0);
     const card = $("#bgCard"); if (!card) return;
-    card.hidden = !list.length;
-    const pct = budget ? (spent / budget) * 100 : spent ? 100 : 0, left = budget - spent;
-    const p = curPeriod(), total = daysIn(p).length, today = parse(todayStr);
-    const elapsed = today < p.start ? 0 : today > p.end ? total : Math.round((today - p.start) / 864e5) + 1;
-    const timePct = total ? Math.round((elapsed / total) * 100) : 0;
-    const state_ = !budget ? "none" : pct > 100 ? "over" : pct >= 85 ? "near" : "ok";
-    card.dataset.state = state_;
-    const C = 2 * Math.PI * 52, ring = $("#bgRing");
-    ring.style.setProperty("--circ", C.toFixed(1));
-    ring.style.strokeDasharray = C.toFixed(1); ring.style.strokeDashoffset = (C * (1 - Math.min(1, pct / 100))).toFixed(1);
-    const from = bgShown, to = Math.round(pct); bgShown = to;
-    const el = $("#bgPct");
-    if (reduceMotion() || from === to) el.textContent = to + "%";
-    else { const t0 = performance.now(); const step = now => { const k = Math.min(1, (now - t0) / 700); el.textContent = Math.round(from + (to - from) * (1 - Math.pow(1 - k, 3))) + "%"; if (k < 1) requestAnimationFrame(step); }; requestAnimationFrame(step); }
-    $("#bgPlanned").textContent = gbp(budget); $("#bgSpent").textContent = gbp(spent);
-    $("#bgLeft").textContent = left >= 0 ? gbp(left) : gbp(-left) + " over";
-    $("#bgLeftLbl").textContent = left >= 0 ? "Left to spend" : "Over budget by";
-    $("#bgState").textContent = { none: "Set up your pots", ok: "On track", near: "Nearly at your budget", over: "Over budget" }[state_];
-    $("#bgNote").textContent = budget ? `${timePct}% of the pay period has gone (day ${Math.min(elapsed, total)} of ${total}) and ${Math.round(pct)}% of the budget.` : "Add a % or £ amount to your pots to set a budget.";
-    $("#bgTick").style.left = timePct + "%"; $("#bgFill").style.width = Math.min(100, pct) + "%";
-    $("#bgUse").textContent = net ? `Plan uses ${Math.round(((budget + saveGoal) / net) * 100)}% of your ${gbp(net)} take-home` : "";
-    $("#bgSave").textContent = saveGoal ? `Saving: ${gbp(saved)} of ${gbp(saveGoal)} planned (${Math.round((saved / saveGoal) * 100)}%)` : "";
+    const segs = list.map((x, i) => ({ k: x.id, v: planned(x, net), c: PALETTE[i % PALETTE.length], n: x.name })).filter(s => s.v > 0.004);
+    const example = !segs.length, total = segs.reduce((a, s) => a + s.v, 0);
+    const pct = budget ? (spent / budget) * 100 : spent ? 100 : 0;
+    const p = curPeriod(), days = daysIn(p).length, today = parse(todayStr);
+    const elapsed = today < p.start ? 0 : today > p.end ? days : Math.round((today - p.start) / 864e5) + 1;
+    const timePct = days ? Math.round((elapsed / days) * 100) : 0;
+    const st = !budget ? "none" : pct > 100 ? "over" : pct >= 85 ? "near" : "ok";
+    card.dataset.state = st;
+    renderDonut(example ? EXAMPLE.map(([n, v], i) => ({ k: "x" + i, v, c: PALETTE[i], n })) : segs, example);
+    $("#dBig").textContent = example ? "Example" : gbp(spent);
+    $("#dSub").textContent = example ? "your budget will look like this" : budget ? `spent of ${gbp(budget)}` : "spent so far";
+    $("#dLegend").innerHTML = example ? EXAMPLE.map(([n, v], i) => `<li><i style="background:${PALETTE[i]}"></i><span class="nm">${n}</span><span class="vl">${v}%</span></li>`).join("")
+      : segs.map(s => `<li><i style="background:${s.c}"></i><span class="nm">${esc(s.n || "Spending box")}</span><span class="vl">${gbp(s.v)}</span></li>`).join("");
+    $("#bgTag").hidden = !example;
+    const chip = $("#bgState"); chip.hidden = st === "none"; chip.textContent = { ok: "On track", near: "Nearly at your budget", over: "Over budget" }[st] || "";
+    $("#bgNote").textContent = budget ? `${Math.round(pct)}% of your budget is spent and ${timePct}% of the pay period has gone.${net ? ` The plan uses ${Math.round(((budget + saveGoal) / net) * 100)}% of your ${gbp(net)} take-home.` : ""}` : "";
+    $("#bgSave").textContent = saveGoal ? `Saving: ${gbp(saved)} of ${gbp(saveGoal)} planned.` : "";
   }
   function updatePlanNumbers() {
     const net = state.moneyNet || 0, sp = spendFor(state.moneyKey), list = pots();
-    const byKind = { need: 0, want: 0, save: 0 }; let total = 0, spentTotal = 0;
+    const byKind = { need: 0, want: 0, save: 0 }; let total = 0;
     list.forEach(pt => {
       const pl = planned(pt, net), s = Number(sp[pt.id]) || 0;
-      total += pl; spentTotal += s; byKind[pt.kind || "need"] += pl;
+      total += pl; byKind[pt.kind || "need"] += pl;
       const el = id => document.getElementById(id + "-" + pt.id);
       if (!el("pp")) return;
-      el("pp").textContent = gbp(pl);
       const plp = pennies(pl), r = plp ? s / plp : s ? 1.01 : 0;
+      el("pp").textContent = pt.kind === "save" ? `${gbp(s)} put away of ${gbp(pl)}` : `${gbp(s)} spent of ${gbp(pl)}`;
       el("pb").style.width = Math.min(100, r * 100) + "%"; el("pb").className = r > 1 ? "over" : "";
-      el("pl").textContent = s ? (s <= plp ? `${gbp(plp - s)} left · ${Math.round(r * 100)}% used` : `${gbp(s - plp)} over plan · ${plp ? Math.round(r * 100) + "%" : "no plan"} used`) : "Nothing spent yet · 0% used";
-      el("pc").textContent = pt.kind === "save" ? (s ? `${gbp(s)} put away` : "") : (pl && sm_hours(pl) ? `≈ ${sm_hours(pl)} hrs of work` : "");
+      const hrs = pt.kind !== "save" && pl && sm_hours(pl) ? ` · about ${sm_hours(pl)} hrs of work` : "";
+      el("pl").textContent = s ? (s <= plp ? `${gbp(plp - s)} left · ${Math.round(r * 100)}% used` : `${gbp(s - plp)} over plan`) + hrs : (pl ? "Nothing spent yet" : "Set an amount to plan this box");
     });
     const left = net - total;
-    $("#mAlloc").textContent = list.length ? `${gbp(total)} planned of ${gbp(net)} · ${left >= 0 ? gbp(left) + " not yet assigned" : gbp(-left) + " over your take-home"}` : "";
-    const base = Math.max(net, total) || 1;
-    const segs = [["need", "var(--day)"], ["want", "var(--night)"], ["save", "var(--c4)"]];
-    $("#mPlanBar").innerHTML = segs.map(([k, c]) => `<i style="width:${(byKind[k] / base) * 100}%;background:${c}"></i>`).join("") + (left > 0 ? `<i style="width:${(left / base) * 100}%;background:var(--sunk)"></i>` : "");
-    $("#mPlanLegend").innerHTML = segs.map(([k, c]) => `<span><span class="sw" style="background:${c}"></span>${KIND[k]} <b>${gbp(byKind[k])}</b> <span class="num">${net ? Math.round((byKind[k] / net) * 100) : 0}%</span></span>`).join("") + `<span>Spent so far <b>${gbp(spentTotal)}</b></span>`;
     renderBudget(net, list, sp);
     renderWaterfall(state.moneyG || 0, state.moneyD, byKind, net);
     renderSpendAnalytics(net, list, sp);
     const pctSum = list.filter(x => x.mode !== "fixed").reduce((a, x) => a + (Number(x.value) || 0), 0);
     $("#fitPlan").hidden = !(net > 0 && pctSum > 0 && Math.abs(left) > 0.5);
-    $("#savePlan").disabled = !state.planDraft;
-    $("#savePlan").textContent = state.planDraft ? "Save plan" : "Plan saved";
+    renderAnFold(list.filter(x => planned(x, net) > 0 || (Number(sp[x.id]) || 0) > 0).length);
   }
+  // spending analytics start folded away; with two budgeted boxes they open by default (until the person chooses)
+  function setFold(open) { $("#anBtn").setAttribute("aria-expanded", String(open)); $("#anBody").classList.toggle("open", open); $("#anBody").inert = !open; }
+  function renderAnFold(n) {
+    $("#anEmpty").hidden = n > 0; $("#anInner").hidden = n === 0;
+    $("#anHint").textContent = n ? "" : "Fills in as you budget";
+    setFold(state.anUser != null ? state.anUser : n >= 2);
+  }
+  $("#anBtn").addEventListener("click", () => { state.anUser = $("#anBtn").getAttribute("aria-expanded") !== "true"; setFold(state.anUser); });
   function renderSpendAnalytics(net, list, sp) {
     const p = curPeriod(), total = daysIn(p).length, today = parse(todayStr);
     const elapsed = today < p.start ? 0 : today > p.end ? total : Math.round((today - p.start) / 864e5) + 1;
@@ -1268,8 +1283,6 @@ import "./scene.js";
     $("#sEmpty").hidden = spent > 0;
     renderBurn(spent, net, elapsed, total);
     $("#sKpis").innerHTML = [
-      ["Spent so far", gbp(spent), `${net ? Math.round((spent / net) * 100) : 0}% of take-home`],
-      ["Left to spend", gbp(left), left >= 0 ? "of this period's take-home" : "more than you take home"],
       ["Per day left", daysLeft ? gbp(Math.max(0, left) / daysLeft) : "–", daysLeft ? `for the ${daysLeft} day${daysLeft === 1 ? "" : "s"} left` : "period has ended"],
       ["On pace for", pace ? gbp(pace) : "–", pace ? "by the end of this period" : "needs some spending first"]
     ].map(([l, v, s]) => `<div class="kpi"><div class="eyebrow">${l}</div><div class="v">${v}</div><div class="s">${s}</div></div>`).join("");
@@ -1328,7 +1341,16 @@ import "./scene.js";
     return perHr ? Math.round((amount / perHr) * 10) / 10 : 0;
   }
 
-  function draft() { if (!state.planDraft) state.planDraft = (state.money.pots || []).map(x => ({ ...x })); return state.planDraft; }
+  function draft() { if (!state.planDraft) state.planDraft = pots().map(x => ({ ...x })); return state.planDraft; }
+  // the plan saves itself shortly after any change; spent amounts already did
+  let planTimer;
+  function queueSave() { clearTimeout(planTimer); planTimer = setTimeout(savePlanNow, 900); }
+  async function savePlanNow() {
+    if (!state.planDraft || !state.db) return;
+    const clean = state.planDraft.map(x => ({ id: x.id, name: String(x.name || "Spending box").trim() || "Spending box", mode: x.mode === "fixed" ? "fixed" : "pct", value: Number(x.value) || 0, kind: x.kind || "need" }));
+    try { await S.money().set({ ...state.money, pots: clean }); state.money = { ...state.money, pots: clean }; state.planDraft = null; state.builtKey = ""; }
+    catch (e) { toast("Your plan didn't save. Try again."); }
+  }
   $("#planRows").addEventListener("input", e => {
     const t = e.target, m = t.id.match(/^(pn|pv|pm|pk|ps)-(.+)$/); if (!m) return;
     const [, f, id] = m;
@@ -1340,42 +1362,54 @@ import "./scene.js";
       return;
     }
     const pt = draft().find(x => x.id === id); if (!pt) return;
-    if (f === "pn") pt.name = t.value; if (f === "pv") pt.value = t.value === "" ? 0 : Number(t.value);
-    if (f === "pm") pt.mode = t.value; if (f === "pk") { pt.kind = t.value; t.closest(".pot").className = "pot kind-" + t.value; }
-    updatePlanNumbers();
+    if (f === "pn") { pt.name = t.value; const nm = t.closest(".pot2")?.querySelector(".pnm"); if (nm) nm.textContent = t.value || "Spending box"; }
+    if (f === "pv") pt.value = t.value === "" ? 0 : Number(t.value);
+    if (f === "pm") pt.mode = t.value; if (f === "pk") pt.kind = t.value;
+    updatePlanNumbers(); queueSave();
   });
   $("#planRows").addEventListener("change", e => { if (/^p[mk]-/.test(e.target.id)) e.target.dispatchEvent(new Event("input", { bubbles: true })); });
   $("#planRows").addEventListener("click", e => {
+    const head = e.target.closest(".phead");
+    if (head) {
+      const box = head.closest(".pot2"), id = box.dataset.id, open = !state.potOpen.has(id), body = box.querySelector(".fold");
+      open ? state.potOpen.add(id) : state.potOpen.delete(id);
+      box.dataset.open = open ? 1 : 0; head.setAttribute("aria-expanded", String(open)); body.classList.toggle("open", open); body.inert = !open;
+      return;
+    }
     const b = e.target.closest(".pdel"); if (!b) return;
-    const id = b.closest(".pot").dataset.id; state.planDraft = draft().filter(x => x.id !== id);
-    buildPlanRows(); updatePlanNumbers();
+    const id = b.closest(".pot2").dataset.id; state.planDraft = draft().filter(x => x.id !== id); state.potOpen.delete(id);
+    buildPlanRows(); updatePlanNumbers(); queueSave();
   });
-  $("#addPot").onclick = () => {
+  // "+" opens the list of everyday boxes, so nobody starts from a blank form
+  function renderChoices() {
+    const used = new Set(pots().map(x => String(x.name || "").trim().toLowerCase()));
+    $("#potChoices").innerHTML = CATALOG.filter(c => c.custom || !used.has(c.n.toLowerCase())).map(c => `<button type="button" data-n="${esc(c.n)}" data-k="${c.k}"${c.custom ? ' data-custom="1"' : ""}>${esc(c.n)}</button>`).join("");
+  }
+  function setMenu(open) { $("#addPot").setAttribute("aria-expanded", String(open)); $("#potMenu").classList.toggle("open", open); $("#potMenu").inert = !open; if (open) renderChoices(); }
+  $("#addPot").onclick = () => setMenu($("#addPot").getAttribute("aria-expanded") !== "true");
+  $("#potChoices").addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
     const id = "p" + Date.now().toString(36);
-    draft().push({ id, name: "New pot", mode: "fixed", value: 0, kind: "want" });
-    buildPlanRows(); updatePlanNumbers(); document.getElementById("pn-" + id)?.select();
-  };
-  // Scale the % pots so % pots + fixed pots = take-home exactly; fixed pots are left alone
+    draft().push({ id, name: b.dataset.custom ? "New box" : b.dataset.n, mode: "fixed", value: 0, kind: b.dataset.k });
+    state.potOpen.add(id); setMenu(false); buildPlanRows(); updatePlanNumbers(); queueSave();
+    const inp = document.getElementById(b.dataset.custom ? "pn-" + id : "pv-" + id);
+    if (b.dataset.custom) document.getElementById("pn-" + id)?.closest("details")?.setAttribute("open", "");
+    setTimeout(() => { inp?.focus({ preventScroll: false }); if (b.dataset.custom) inp?.select(); }, 260);
+  });
+  // Scale the % boxes so % boxes + fixed boxes = take-home exactly; fixed boxes are left alone
   $("#fitPlan").onclick = () => {
     const net = state.moneyNet || 0, d = draft();
     const fixed = d.filter(x => x.mode === "fixed").reduce((a, x) => a + (Number(x.value) || 0), 0);
     const pct = d.filter(x => x.mode !== "fixed");
     const sum = pct.reduce((a, x) => a + (Number(x.value) || 0), 0);
     if (!net || !sum) return;
-    if (fixed > net) { toast("Your fixed pots alone are more than your take-home"); return; }
+    if (fixed > net) { toast("Your fixed boxes alone are more than your take-home"); return; }
     const target = ((net - fixed) / net) * 100;
     pct.forEach(x => { x.value = Math.round(((Number(x.value) || 0) * target / sum) * 10) / 10; });
     const biggest = pct.reduce((a, x) => (x.value > a.value ? x : a), pct[0]);
     biggest.value = Math.round((biggest.value + target - pct.reduce((a, x) => a + x.value, 0)) * 10) / 10;
-    buildPlanRows(); updatePlanNumbers();
-    toast("Plan fitted to your take-home. Check it, then tap Save plan");
-  };
-  $("#savePlan").onclick = async () => {
-    if (!state.planDraft) return;
-    if (!state.db) { toast("Your plan can't be saved in this view"); return; }
-    const clean = state.planDraft.map(x => ({ id: x.id, name: String(x.name || "Pot").trim() || "Pot", mode: x.mode === "fixed" ? "fixed" : "pct", value: Number(x.value) || 0, kind: x.kind || "need" }));
-    try { await S.money().set({ ...state.money, pots: clean }); state.planDraft = null; state.builtKey = ""; toast("Spending plan saved"); }
-    catch (e) { toast("Your plan didn't save. Try again."); }
+    buildPlanRows(); updatePlanNumbers(); queueSave();
+    toast("Plan fitted to your take-home");
   };
   $("#taxForm").addEventListener("change", async () => {
     const next = { ...state.money, employment: $("#tEmp").value, taxCode: ($("#tCode").value || "1257L").toUpperCase().replace(/\s+/g, " ").trim(), pensionPct: Math.max(0, Number($("#tPension").value) || 0), studentLoan: $("#tLoan").value };
@@ -1385,11 +1419,6 @@ import "./scene.js";
 
   // ---------- first-time setup ----------
   let S = null;
-  const STARTER_POTS = [
-    { id: "rent", name: "Rent & bills", mode: "pct", value: 35, kind: "need" }, { id: "food", name: "Food & groceries", mode: "pct", value: 12, kind: "need" },
-    { id: "transport", name: "Transport", mode: "pct", value: 8, kind: "need" }, { id: "phone", name: "Phone & subscriptions", mode: "pct", value: 3, kind: "need" },
-    { id: "family", name: "Family & giving", mode: "pct", value: 10, kind: "need" }, { id: "savings", name: "Savings", mode: "pct", value: 15, kind: "save" },
-    { id: "fun", name: "Personal & fun", mode: "pct", value: 10, kind: "want" }, { id: "buffer", name: "Buffer", mode: "pct", value: 7, kind: "want" }];
   function setupMode(on) {
     if (on && typeof obGo === "function" && !document.querySelector("#view-setup:not([hidden])")) obGo(OB_FIRST);
     document.querySelectorAll("section.view").forEach(v => { v.hidden = on ? v.id !== "view-setup" : v.id !== "view-" + state.view; });
@@ -1575,7 +1604,7 @@ import "./scene.js";
     const types = obTypesChosen().map(t => ({ ...t })), t0 = types[obType], users = obVal("uUsers").split(",").map(x => x.trim()).filter(Boolean), pay = obShiftPay();
     $("#setupBtn").disabled = true; $("#setupErr").hidden = true;
     try {
-      await S.money().set({ ...MONEY_DEFAULTS, pots: STARTER_POTS });
+      await S.money().set({ ...MONEY_DEFAULTS, pots: [] });
       await S.profile().set(profileData());
       const date = $("#obDate").value;
       if (obType !== "none" && t0 && date) {

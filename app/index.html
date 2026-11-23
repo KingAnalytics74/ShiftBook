@@ -431,45 +431,30 @@
       </div>
       </div>
       <div class="pane" id="pane-spending" role="tabpanel" aria-labelledby="pill-spending" hidden>
-<div class="card budget" id="bgCard" data-state="none" hidden>
-        <div class="bgrow">
-          <div class="bgring"><svg viewBox="0 0 120 120" aria-hidden="true"><circle class="bgtrack" cx="60" cy="60" r="52"/><circle class="bgfg" id="bgRing" cx="60" cy="60" r="52"/></svg><div class="bgmid"><b id="bgPct">0%</b><span>of budget</span></div></div>
-          <div class="bgtxt">
-            <span class="bgstate" id="bgState"></span>
-            <div class="bgnums">
-              <div><span>Planned to spend</span><b class="num" id="bgPlanned">£0.00</b></div>
-              <div><span>Spent so far</span><b class="num" id="bgSpent">£0.00</b></div>
-              <div><span id="bgLeftLbl">Left to spend</span><b class="num" id="bgLeft">£0.00</b></div>
-            </div>
-          </div>
+<div class="card bdcard" id="bgCard" data-state="none">
+        <div class="bdtop"><h2>Budget</h2><span class="bdchip" id="bgState" hidden></span></div>
+        <p class="hint bdtag" id="bgTag">Budget and keep track of your spending and savings.</p>
+        <div class="bdrow">
+          <div class="donut" id="donut"><svg viewBox="0 0 120 120" aria-hidden="true"><circle class="dtrack" cx="60" cy="60" r="46"/><g id="dsegs"></g></svg><div class="dmid"><b class="num" id="dBig">£0</b><span id="dSub"></span></div></div>
+          <ul class="dlegend" id="dLegend"></ul>
         </div>
-        <div class="bgbar" aria-hidden="true"><i id="bgFill"></i><u id="bgTick" title="How far through the pay period you are"></u></div>
-        <p class="hint" id="bgNote" style="margin:8px 0 0"></p>
-        <p class="hint" id="bgUse" style="margin:2px 0 0"></p>
-        <p class="hint" id="bgSave" style="margin:2px 0 0"></p>
+        <p class="hint bdnote" id="bgNote"></p>
+        <p class="hint bdnote" id="bgSave"></p>
+        <button type="button" class="linkbtn2" id="fitPlan" hidden>Fit plan to take-home</button>
       </div>
-<div class="card">
-        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap">
-          <h2 style="margin:0">Spending plan</h2>
-          <span class="hint" id="mAlloc"></span>
-        </div>
-        <div class="split" id="mPlanBar" style="margin:12px 0 4px;height:16px" aria-hidden="true"></div>
-        <div class="legend" id="mPlanLegend" style="margin-bottom:12px"></div>
-        <div id="planRows" class="planrows"></div>
-        <div class="actions" style="margin-top:14px">
-          <button class="btn secondary" type="button" id="addPot">+ Add a pot</button>
-          <button class="btn secondary" type="button" id="fitPlan" hidden>Fit plan to take-home</button>
-          <button class="btn" type="button" id="savePlan">Save plan</button>
-        </div>
-        <p class="hint" style="margin:10px 0 0">Plan each pot as a % of take-home or a fixed £ amount. Type what you
-          actually spent in each pot as the period goes. That saves on its own for this pay period.</p>
+      <div class="potlist" id="planRows"></div>
+      <div class="potaddwrap">
+        <button type="button" class="potadd" id="addPot" aria-expanded="false" aria-controls="potMenu"><span class="plus" aria-hidden="true">+</span>Add a spending box</button>
+        <div class="fold" id="potMenu" inert><div class="foldin"><div class="chipgrid" id="potChoices"></div></div></div>
       </div>
-      <div class="card">
-        <h2>Spending analytics</h2>
+      <div class="card" id="anCard">
+        <button type="button" class="anhead" id="anBtn" aria-expanded="false" aria-controls="anBody"><h2>Spending analytics</h2><span class="anhint" id="anHint"></span><svg class="chev" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 7.5 10 12.5 15 7.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <div class="fold" id="anBody" inert><div class="foldin">
+        <p class="hint" id="anEmpty" style="margin:12px 0 0">Your spending analytics will show up here, so you can catch what you didn't see.</p>
+        <div id="anInner">
         <div class="burn" id="burn"></div>
         <div class="kpis" id="sKpis"></div>
-        <div class="banner info" id="sEmpty" style="margin-top:12px" hidden>Type what you've spent into the "Spent £"
-          boxes in your spending plan. The charts below fill in as you go.</div>
+        <div class="banner info" id="sEmpty" style="margin-top:12px" hidden>Add what you've spent to a box above. The charts fill in as you go.</div>
         <div class="grid2" style="margin-top:16px">
           <div>
             <div class="eyebrow" style="margin-bottom:10px">Plan vs spent, by pot</div>
@@ -491,6 +476,8 @@
           <div class="eyebrow" style="margin-bottom:10px">Spent vs take-home, by pay period</div>
           <div class="hbars" id="sTrend"></div>
         </div>
+        </div>
+        </div></div>
       </div>
     
       </div>

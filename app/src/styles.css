@@ -1414,3 +1414,73 @@ button.hlbadge{min-height:44px}
 .logkind:has(button:last-child[aria-pressed="true"])::before{transform:translateX(calc(100% + 4px))}
 .logkind button{position:relative;z-index:1;transition:color .2s ease-out,transform .16s cubic-bezier(.23,1,.32,1)}
 .logkind button[aria-pressed="true"]{background:transparent;box-shadow:none}
+
+/* ---------- Spending: budget donut, tappable boxes, collapsible analytics ---------- */
+.fold{display:grid;grid-template-rows:0fr;opacity:0;transition:grid-template-rows .24s cubic-bezier(.23,1,.32,1),opacity .16s ease-out}
+.fold.open{grid-template-rows:1fr;opacity:1;transition-duration:.34s,.26s}
+.fold>.foldin{overflow:hidden;min-height:0}
+.fold:not(.open)>.foldin{visibility:hidden;transition:visibility 0s .24s}
+.bdcard{padding-bottom:16px}
+.bdtop{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.bdtop h2{margin:0}
+.bdchip{font-size:12px;font-weight:700;padding:5px 11px;border-radius:99px;background:var(--day-soft);color:var(--day)}
+.bdcard[data-state="near"] .bdchip{background:#FFF1D6;color:#8A5A00}.bdcard[data-state="over"] .bdchip{background:#FBE1E1;color:#A32525}
+.bdtag{margin:4px 0 0;font-size:14px}
+.bdrow{display:grid;grid-template-columns:150px 1fr;gap:18px;align-items:center;margin-top:14px}
+.donut{position:relative;width:150px;height:150px}
+.donut svg{width:100%;height:100%;transform:rotate(-90deg)}
+.donut .dtrack{fill:none;stroke:var(--sunk);stroke-width:14}
+.donut #dsegs circle{transition:stroke-dasharray .7s cubic-bezier(.23,1,.32,1),stroke-dashoffset .7s cubic-bezier(.23,1,.32,1),stroke .3s}
+.donut.example #dsegs{opacity:.5}
+.dmid{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;line-height:1.15;padding:0 26px}
+.dmid b{font-size:21px;font-family:var(--f-head);font-weight:600}
+.dmid span{font-size:11.5px;color:var(--muted);margin-top:2px}
+.dlegend{list-style:none;margin:0;padding:0;display:grid;gap:7px}
+.dlegend li{display:flex;align-items:center;gap:9px;font-size:13.5px;min-width:0}
+.dlegend i{width:10px;height:10px;border-radius:50%;flex:none}
+.dlegend .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dlegend .vl{color:var(--muted);font-variant-numeric:tabular-nums}
+.bdnote{margin:12px 0 0}.bdnote:empty{display:none}
+#fitPlan{margin-top:6px}
+@media (max-width:459px){.bdrow{grid-template-columns:1fr;justify-items:center}.dlegend{width:100%}}
+.potlist{display:grid;gap:10px}
+.pot2{--pc:var(--day);background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden;animation:potIn .4s cubic-bezier(.23,1,.32,1) backwards}
+@keyframes potIn{from{opacity:0;transform:translateY(8px)}}
+.phead{all:unset;box-sizing:border-box;display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;width:100%;min-height:60px;padding:12px 14px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background-color .2s}
+.phead:focus-visible{outline:2px solid var(--day);outline-offset:-2px}
+.phead:active{background:var(--sunk)}
+.pdot{width:14px;height:14px;border-radius:50%;background:var(--pc)}
+.pmain{display:grid;gap:2px;min-width:0}
+.pnm{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.psub{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.chev{width:20px;height:20px;color:var(--muted);transition:transform .3s cubic-bezier(.23,1,.32,1)}
+.pot2[data-open="1"] .chev,#anBtn[aria-expanded="true"] .chev{transform:rotate(180deg)}
+.pbar{height:4px;background:var(--sunk);margin:0 14px 12px;border-radius:9px;overflow:hidden}
+.pbar i{display:block;height:100%;width:0;background:var(--pc);border-radius:9px;transition:width .6s cubic-bezier(.23,1,.32,1)}
+.pbar i.over{background:var(--amber)}
+.pbody{padding:2px 14px 14px;display:grid;gap:12px}
+.pfields{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pfields label{display:grid;gap:5px;font-size:13px;font-weight:600;color:var(--muted)}
+.pfields .pamt{display:grid;grid-template-columns:1fr auto;gap:6px}
+.pfields input,.pfields select{min-height:44px;width:100%}
+.pmore summary{min-height:44px;display:flex;align-items:center;font-size:13.5px;font-weight:600;color:var(--day);cursor:pointer}
+.pmore .pfields{margin-top:4px}
+.pfoot{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:13px;color:var(--muted)}
+.pdel{border:0;background:transparent;color:var(--bad,#B42318);font-weight:700;font-size:13.5px;min-height:44px;padding:0 6px;cursor:pointer}
+.pdel:active{transform:scale(.96)}
+.potadd{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:56px;margin-top:10px;border:1.5px dashed color-mix(in srgb,var(--day) 55%,var(--line));border-radius:16px;background:transparent;color:var(--day);font:inherit;font-weight:700;cursor:pointer;transition:background-color .2s,transform .16s cubic-bezier(.23,1,.32,1)}
+.potadd .plus{display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--day);color:#fff;font-size:18px;line-height:1;transition:transform .3s cubic-bezier(.23,1,.32,1)}
+.potadd[aria-expanded="true"] .plus{transform:rotate(45deg)}
+.potadd:active{transform:scale(.98);background:var(--day-soft)}
+.chipgrid{display:flex;flex-wrap:wrap;gap:8px;padding:12px 2px 2px}
+.chipgrid button{min-height:44px;padding:0 16px;border-radius:99px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;font-weight:600;font-size:14px;cursor:pointer;transition:transform .16s cubic-bezier(.23,1,.32,1),background-color .2s}
+.chipgrid button:active{transform:scale(.95);background:var(--day-soft)}
+.anhead{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:10px;width:100%;min-height:44px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.anhead:focus-visible{outline:2px solid var(--day);outline-offset:4px;border-radius:8px}
+.anhead h2{margin:0;flex:1}
+.anhint{font-size:12.5px;color:var(--muted)}
+@media (hover:hover) and (pointer:fine){.phead:hover{background:var(--sunk)}.potadd:hover{background:var(--day-soft)}.chipgrid button:hover{background:var(--day-soft)}}
+/* Spending box fields: the amount gets the room, the £/% picker stays compact */
+.pfields>label{min-width:0}
+.pfields .pamt{grid-template-columns:minmax(0,1fr) 68px}
+.pfields .pamt select{width:68px;padding-inline:10px}
