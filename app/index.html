@@ -431,17 +431,25 @@
       </div>
       </div>
       <div class="pane" id="pane-spending" role="tabpanel" aria-labelledby="pill-spending" hidden>
-<div class="card bdcard" id="bgCard" data-state="none">
-        <div class="bdtop"><h2>Budget</h2><span class="bdchip" id="bgState" hidden></span></div>
-        <p class="hint bdtag" id="bgTag">Budget and keep track of your spending and savings.</p>
-        <div class="bdrow">
-          <div class="donut" id="donut"><svg viewBox="0 0 120 120" aria-hidden="true"><circle class="dtrack" cx="60" cy="60" r="46"/><g id="dsegs"></g></svg><div class="dmid"><b class="num" id="dBig">£0</b><span id="dSub"></span></div></div>
-          <ul class="dlegend" id="dLegend"></ul>
+<div class="bdintro"><h2>Budget</h2><p class="hint">Budget and keep track of your spending and savings.</p></div>
+<div class="card budget" id="bgCard" data-state="none" hidden>
+        <div class="bgrow">
+          <div class="bgring"><svg viewBox="0 0 120 120" aria-hidden="true"><circle class="bgtrack" cx="60" cy="60" r="52"/><circle class="bgfg" id="bgRing" cx="60" cy="60" r="52"/></svg><div class="bgmid"><b id="bgPct">0%</b><span>of budget</span></div></div>
+          <div class="bgtxt">
+            <span class="bgstate" id="bgState"></span>
+            <div class="bgnums">
+              <div><span>Planned to spend</span><b class="num" id="bgPlanned">£0.00</b></div>
+              <div><span>Spent so far</span><b class="num" id="bgSpent">£0.00</b></div>
+              <div><span id="bgLeftLbl">Left to spend</span><b class="num" id="bgLeft">£0.00</b></div>
+            </div>
+          </div>
         </div>
-        <p class="hint bdnote" id="bgNote"></p>
-        <p class="hint bdnote" id="bgSave"></p>
-        <button type="button" class="linkbtn2" id="fitPlan" hidden>Fit plan to take-home</button>
+        <div class="bgbar" aria-hidden="true"><i id="bgFill"></i><u id="bgTick" title="How far through the pay period you are"></u></div>
+        <p class="hint" id="bgNote" style="margin:8px 0 0"></p>
+        <p class="hint" id="bgUse" style="margin:2px 0 0"></p>
+        <p class="hint" id="bgSave" style="margin:2px 0 0"></p>
       </div>
+      <button type="button" class="linkbtn2" id="fitPlan" hidden>Fit plan to take-home</button>
       <div class="potlist" id="planRows"></div>
       <div class="potaddwrap">
         <button type="button" class="potadd" id="addPot" aria-expanded="false" aria-controls="potMenu"><span class="plus" aria-hidden="true">+</span>Add a spending box</button>
@@ -477,6 +485,15 @@
           <div class="hbars" id="sTrend"></div>
         </div>
         </div>
+        </div></div>
+      </div>
+      <div class="resetwrap">
+        <button type="button" class="resetbtn" id="spReset" aria-expanded="false" aria-controls="spResetAsk">Reset spending</button>
+        <div class="fold" id="spResetAsk" inert><div class="foldin">
+          <div class="resetask" role="group" aria-label="Confirm reset">
+            <p>This clears all your spending boxes, planned amounts and what you've spent, in every pay period. Your shifts and pay are not touched.</p>
+            <div class="resetbtns"><button type="button" class="btn secondary" id="spResetNo">Keep it</button><button type="button" class="btn resetgo" id="spResetYes">Reset spending</button></div>
+          </div>
         </div></div>
       </div>
     

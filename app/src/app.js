@@ -460,6 +460,13 @@ import "./scene.js";
     const holPay = holH ? est(holH) : null;
     h += `</tbody><tfoot><tr><td colspan="4">Total · ${t.shifts} shifts</td><td>${t.sleepIns}</td><td class="num">${hrs(t.dayHours)}</td><td class="num">${hrs(t.breaks)}</td><td class="num">${hrs(t.net)}</td><td class="num">${gbp(t.hourly)}</td><td class="num">${gbp(t.sleep)}</td><td class="num">${gbp(t.gross)}</td><td></td></tr>${holDays ? `<tr class="holtot"><td colspan="4">Holiday · ${holDays} day${holDays === 1 ? "" : "s"} (not in the total above)</td><td></td><td></td><td></td><td class="num">${hrs(holH)}</td><td></td><td></td><td class="num">${holPay != null ? `about ${gbp(holPay)}` : ""}</td><td></td></tr>` : ""}</tfoot>`;
     $("#sheet").innerHTML = h;
+    // label every cell (the phone layout shows them) and mark where each week starts
+    const heads = [...document.querySelectorAll("#sheet thead th")].map(x => x.textContent);
+    document.querySelectorAll("#sheet tbody tr").forEach(tr => {
+      [...tr.children].forEach((td, i) => { td.dataset.l = heads[i] || ""; if (td.textContent === "No") td.dataset.no = "1"; });
+      if (tr.dataset.date && new Date(tr.dataset.date + "T12:00:00").getDay() === 1) tr.classList.add("wkstart");
+    });
+    document.querySelectorAll("#sheet tfoot tr").forEach(tr => [...tr.children].forEach((td, i) => { if (i) td.dataset.l = heads[i + 3] || ""; }));
     $("#calc").innerHTML = `<div class="hbars">
       <div class="preview"><span>${hrs(t.net)} net hrs × ${gbp(state.cfg.hourlyRate)}</span><span class="num">${gbp(t.hourly)}</span></div>
       <div class="preview"><span>${t.sleepIns} sleep-ins × ${gbp(state.cfg.sleepInRate)}</span><span class="num">${gbp(t.sleep)}</span></div>
@@ -1087,7 +1094,6 @@ import "./scene.js";
   const pots = () => { if (state.planDraft) return state.planDraft; const mp = state.money.pots || []; return mp.length ? mp : (state.loaded ? STARTER : []); };
   const PALETTE = ["#3E4095", "#0098DA", "#A17BB6", "#12A594", "#F2A93B", "#E0679A", "#6B7FD6", "#8A8FA3"];
   const CATALOG = [{ n: "Rent & bills", k: "need" }, { n: "Food & groceries", k: "need" }, { n: "Transport", k: "need" }, { n: "Phone & subscriptions", k: "need" }, { n: "Health", k: "need" }, { n: "Family & kids", k: "need" }, { n: "Eating out & fun", k: "want" }, { n: "Clothes & shopping", k: "want" }, { n: "Savings", k: "save" }, { n: "Something else", k: "want", custom: true }];
-  const EXAMPLE = [["Rent & bills", 42], ["Food & groceries", 22], ["Savings", 18], ["Transport", 12], ["Phone & subscriptions", 6]];
   state.potOpen = new Set(); state.potInit = false; state.anUser = null;
   const planned = (pot, net) => pot.mode === "fixed" ? Number(pot.value) || 0 : (Number(pot.value) || 0) / 100 * net;
   // a pot is compared in whole pennies, so spending exactly the amount shown (15% of £2,296.64 shows £344.50)
@@ -1211,36 +1217,34 @@ import "./scene.js";
 
   const reduceMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
   // The headline for the budget: a donut of how the plan is split, with what has been spent in the middle
-  function renderDonut(segs, example) {
-    const g = $("#dsegs"), tot = segs.reduce((a, s) => a + s.v, 0) || 1, gap = segs.length > 1 ? 1.2 : 0;
-    const sig = segs.map(s => s.k).join("|") + (example ? "|ex" : "");
-    if (g.dataset.sig !== sig) { g.innerHTML = segs.map(s => `<circle cx="60" cy="60" r="46" pathLength="100" fill="none" stroke="${s.c}" stroke-width="14" stroke-dasharray="0 100"/>`).join(""); g.dataset.sig = sig; void g.getBoundingClientRect(); }
-    let off = 0;
-    segs.forEach((s, i) => { const el = g.children[i], share = (s.v / tot) * 100, len = Math.max(0, share - gap); el.setAttribute("stroke", s.c); el.style.strokeDasharray = `${len} ${100 - len}`; el.style.strokeDashoffset = String(-(off + gap / 2)); off += share; });
-    $("#donut").classList.toggle("example", !!example);
-  }
+  let bgShown = 0;
   function renderBudget(net, list, sp) {
     const spendPots = list.filter(x => (x.kind || "need") !== "save"), savePots = list.filter(x => x.kind === "save");
     const budget = spendPots.reduce((a, x) => a + planned(x, net), 0), spent = spendPots.reduce((a, x) => a + (Number(sp[x.id]) || 0), 0);
     const saveGoal = savePots.reduce((a, x) => a + planned(x, net), 0), saved = savePots.reduce((a, x) => a + (Number(sp[x.id]) || 0), 0);
     const card = $("#bgCard"); if (!card) return;
-    const segs = list.map((x, i) => ({ k: x.id, v: planned(x, net), c: PALETTE[i % PALETTE.length], n: x.name })).filter(s => s.v > 0.004);
-    const example = !segs.length, total = segs.reduce((a, s) => a + s.v, 0);
-    const pct = budget ? (spent / budget) * 100 : spent ? 100 : 0;
-    const p = curPeriod(), days = daysIn(p).length, today = parse(todayStr);
-    const elapsed = today < p.start ? 0 : today > p.end ? days : Math.round((today - p.start) / 864e5) + 1;
-    const timePct = days ? Math.round((elapsed / days) * 100) : 0;
-    const st = !budget ? "none" : pct > 100 ? "over" : pct >= 85 ? "near" : "ok";
-    card.dataset.state = st;
-    renderDonut(example ? EXAMPLE.map(([n, v], i) => ({ k: "x" + i, v, c: PALETTE[i], n })) : segs, example);
-    $("#dBig").textContent = example ? "Example" : gbp(spent);
-    $("#dSub").textContent = example ? "your budget will look like this" : budget ? `spent of ${gbp(budget)}` : "spent so far";
-    $("#dLegend").innerHTML = example ? EXAMPLE.map(([n, v], i) => `<li><i style="background:${PALETTE[i]}"></i><span class="nm">${n}</span><span class="vl">${v}%</span></li>`).join("")
-      : segs.map(s => `<li><i style="background:${s.c}"></i><span class="nm">${esc(s.n || "Spending box")}</span><span class="vl">${gbp(s.v)}</span></li>`).join("");
-    $("#bgTag").hidden = !example;
-    const chip = $("#bgState"); chip.hidden = st === "none"; chip.textContent = { ok: "On track", near: "Nearly at your budget", over: "Over budget" }[st] || "";
-    $("#bgNote").textContent = budget ? `${Math.round(pct)}% of your budget is spent and ${timePct}% of the pay period has gone.${net ? ` The plan uses ${Math.round(((budget + saveGoal) / net) * 100)}% of your ${gbp(net)} take-home.` : ""}` : "";
-    $("#bgSave").textContent = saveGoal ? `Saving: ${gbp(saved)} of ${gbp(saveGoal)} planned.` : "";
+    card.hidden = !(budget > 0 || spent > 0 || saveGoal > 0);
+    const pct = budget ? (spent / budget) * 100 : spent ? 100 : 0, left = budget - spent;
+    const p = curPeriod(), total = daysIn(p).length, today = parse(todayStr);
+    const elapsed = today < p.start ? 0 : today > p.end ? total : Math.round((today - p.start) / 864e5) + 1;
+    const timePct = total ? Math.round((elapsed / total) * 100) : 0;
+    const state_ = !budget ? "none" : pct > 100 ? "over" : pct >= 85 ? "near" : "ok";
+    card.dataset.state = state_;
+    const C = 2 * Math.PI * 52, ring = $("#bgRing");
+    ring.style.setProperty("--circ", C.toFixed(1));
+    ring.style.strokeDasharray = C.toFixed(1); ring.style.strokeDashoffset = (C * (1 - Math.min(1, pct / 100))).toFixed(1);
+    const from = bgShown, to = Math.round(pct); bgShown = to;
+    const el = $("#bgPct");
+    if (reduceMotion() || from === to) el.textContent = to + "%";
+    else { const t0 = performance.now(); const step = now => { const k = Math.min(1, (now - t0) / 700); el.textContent = Math.round(from + (to - from) * (1 - Math.pow(1 - k, 3))) + "%"; if (k < 1) requestAnimationFrame(step); }; requestAnimationFrame(step); }
+    $("#bgPlanned").textContent = gbp(budget); $("#bgSpent").textContent = gbp(spent);
+    $("#bgLeft").textContent = left >= 0 ? gbp(left) : gbp(-left) + " over";
+    $("#bgLeftLbl").textContent = left >= 0 ? "Left to spend" : "Over budget by";
+    $("#bgState").textContent = { none: "Set up your pots", ok: "On track", near: "Nearly at your budget", over: "Over budget" }[state_];
+    $("#bgNote").textContent = budget ? `${timePct}% of the pay period has gone (day ${Math.min(elapsed, total)} of ${total}) and ${Math.round(pct)}% of the budget.` : "Add a % or £ amount to your pots to set a budget.";
+    $("#bgTick").style.left = timePct + "%"; $("#bgFill").style.width = Math.min(100, pct) + "%";
+    $("#bgUse").textContent = net ? `Plan uses ${Math.round(((budget + saveGoal) / net) * 100)}% of your ${gbp(net)} take-home` : "";
+    $("#bgSave").textContent = saveGoal ? `Saving: ${gbp(saved)} of ${gbp(saveGoal)} planned (${Math.round((saved / saveGoal) * 100)}%)` : "";
   }
   function updatePlanNumbers() {
     const net = state.moneyNet || 0, sp = spendFor(state.moneyKey), list = pots();
@@ -1264,12 +1268,12 @@ import "./scene.js";
     $("#fitPlan").hidden = !(net > 0 && pctSum > 0 && Math.abs(left) > 0.5);
     renderAnFold(list.filter(x => planned(x, net) > 0 || (Number(sp[x.id]) || 0) > 0).length);
   }
-  // spending analytics start folded away; with two budgeted boxes they open by default (until the person chooses)
+  // spending analytics stay folded away until the person opens them
   function setFold(open) { $("#anBtn").setAttribute("aria-expanded", String(open)); $("#anBody").classList.toggle("open", open); $("#anBody").inert = !open; }
   function renderAnFold(n) {
     $("#anEmpty").hidden = n > 0; $("#anInner").hidden = n === 0;
     $("#anHint").textContent = n ? "" : "Fills in as you budget";
-    setFold(state.anUser != null ? state.anUser : n >= 2);
+    setFold(!!state.anUser);
   }
   $("#anBtn").addEventListener("click", () => { state.anUser = $("#anBtn").getAttribute("aria-expanded") !== "true"; setFold(state.anUser); });
   function renderSpendAnalytics(net, list, sp) {
@@ -1387,6 +1391,32 @@ import "./scene.js";
   }
   function setMenu(open) { $("#addPot").setAttribute("aria-expanded", String(open)); $("#potMenu").classList.toggle("open", open); $("#potMenu").inert = !open; if (open) renderChoices(); }
   $("#addPot").onclick = () => setMenu($("#addPot").getAttribute("aria-expanded") !== "true");
+  // reset: asks first, then clears the boxes and every spent amount (shifts and pay are never touched)
+  function setReset(open) { $("#spReset").setAttribute("aria-expanded", String(open)); $("#spResetAsk").classList.toggle("open", open); $("#spResetAsk").inert = !open; }
+  $("#spReset").onclick = () => setReset($("#spReset").getAttribute("aria-expanded") !== "true");
+  $("#spResetNo").onclick = () => { setReset(false); $("#spReset").focus(); };
+  $("#spResetYes").onclick = async () => {
+    const b = $("#spResetYes"); b.disabled = true;
+    clearTimeout(planTimer); state.planDraft = null; state.potOpen = new Set(); state.potInit = false; state.anUser = null;
+    const keys = [...state.spend.keys()];
+    try {
+      if (state.db) { await S.money().set({ ...state.money, pots: [] }); await Promise.all(keys.map(k => S.spend().doc(k).delete())); }
+      state.money = { ...state.money, pots: [] }; state.spend = new Map(); state.builtKey = "";
+      setReset(false); render(); toast("Spending reset");
+    } catch (e) { toast("Couldn't reset. Try again."); }
+    b.disabled = false;
+  };
+  // the old starter plan put a "Buffer" and a "Personal & fun" box in everyone's account; drop them if they were never changed or used
+  async function cleanSeeds() {
+    if (state.seedDone || !state.loaded || !state.db) return;
+    const list = state.money.pots || [];
+    const used = id => [...state.spend.values()].some(s => Number(s && s[id]) > 0);
+    const seed = (x, id, nm, v) => x.id === id && x.name === nm && x.mode === "pct" && Number(x.value) === v && !used(id);
+    const keep = list.filter(x => !(seed(x, "buffer", "Buffer", 7) || seed(x, "fun", "Personal & fun", 10)));
+    state.seedDone = true;
+    if (keep.length === list.length) return;
+    try { await S.money().set({ ...state.money, pots: keep }); state.money = { ...state.money, pots: keep }; state.builtKey = ""; render(); } catch (e) { state.seedDone = false; }
+  }
   $("#potChoices").addEventListener("click", e => {
     const b = e.target.closest("button"); if (!b) return;
     const id = "p" + Date.now().toString(36);
@@ -2505,7 +2535,7 @@ import "./scene.js";
     }, () => { });
     S.shifts().limit(1000).onSnapshot(snap => {
       state.shifts = new Map(snap.docs.map(d => [d.id, d.data()]).filter(([, v]) => v && v.date)); // skip a row caught mid-delete
-      state.loaded = true; render();
+      state.loaded = true; render(); cleanSeeds();
     }, e => { setSync("bad", e?.code === "revoked" ? "Access to this Shiftbuck changed" : "Live updates stopped. Reload to reconnect"); });
   })();
 })();
