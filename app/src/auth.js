@@ -22,12 +22,15 @@
   // read before the Supabase client tidies the URL: a password-reset link lands here with type=recovery
   let recovering = /(^|[#&?])type=recovery(&|$)/.test(location.hash + location.search);
   const mode = CFG.supabaseUrl && CFG.supabaseAnonKey && window.supabase ? "supabase" : "demo";
-  const client = mode === "supabase" ? window.supabase.createClient(CFG.supabaseUrl, CFG.supabaseAnonKey, { auth: { storage: window.sessionStorage, persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } }) : null;
+  // People stay signed in on their own phone for 7 days, then sign in again. "Sign out" ends it straight away.
+  const KEEP_MS = 7 * 24 * 3600 * 1000, SINCE = "shiftbook:since";
+  try {
+    const t = Number(localStorage.getItem(SINCE));
+    if (t && Date.now() - t > KEEP_MS) { localStorage.removeItem(SINCE); localStorage.removeItem("shiftbook:auth"); Object.keys(localStorage).filter(k => /^sb-.+-auth-token$/.test(k)).forEach(k => localStorage.removeItem(k)); }
+  } catch (e) {}
+  const client = mode === "supabase" ? window.supabase.createClient(CFG.supabaseUrl, CFG.supabaseAnonKey, { auth: { storage: window.localStorage, persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } }) : null;
   const DEMO_KEY = "shiftbook:auth";
-  // The sign-in lives only as long as the browser tab: close the tab and you are signed out. Your data stays saved.
-  const sess = { get: k => { try { return JSON.parse(sessionStorage.getItem(k)); } catch (e) { return null; } }, set: (k, v) => { try { sessionStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }, del: k => { try { sessionStorage.removeItem(k); } catch (e) {} } };
-  // clear any sign-in saved by older versions, which kept people signed in for good
-  try { localStorage.removeItem(DEMO_KEY); Object.keys(localStorage).filter(k => /^sb-.+-auth-token$/.test(k)).forEach(k => localStorage.removeItem(k)); } catch (e) {}
+  const sess = { get: k => { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } }, set: (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }, del: k => { try { localStorage.removeItem(k); } catch (e) {} } };
   const $ = s => document.querySelector(s);
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
@@ -450,6 +453,7 @@
   }
   async function signedIn(u) {
     current = u; clearInterval(timer);
+    try { if (!localStorage.getItem(SINCE)) localStorage.setItem(SINCE, String(Date.now())); } catch (e) {}
     let acct = null; try { acct = await readAcct(u.id); } catch (e) {}
     if (acct && acct.status === "paused") { screenPaused(acct); if (window.SBReveal) SBReveal(); return; }
     document.body.classList.remove("authing");
@@ -489,7 +493,7 @@
   }
   async function signOut() {
     if (mode === "supabase") { try { await client.auth.signOut(); } catch (e) {} } else sess.del(DEMO_KEY);
-    try { sessionStorage.setItem("shiftbook:signedout", "1"); } catch (e) {}
+    try { localStorage.removeItem(SINCE); sessionStorage.setItem("shiftbook:signedout", "1"); } catch (e) {}
     location.reload();
   }
   async function deleteAccount() {
@@ -499,6 +503,7 @@
 
   // ---- start ----
   function needSignIn() {
+    try { localStorage.removeItem(SINCE); } catch (e) {}
     document.body.classList.add("authing");
     watchScreens();
     const tc = document.querySelector('meta[name="theme-color"]'); if (tc) tc.content = "#FFFFFF";
