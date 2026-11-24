@@ -499,6 +499,17 @@
     const box = $("#view-auth"); if (box) box.hidden = true;
     fillAccount();
     resolveSession(u);
+    welcome(u);
+  }
+  // A new account gets one welcome email. The server (supabase/functions/welcome-email) decides: only accounts
+  // under 2 days old, only once ever. This device asks once; nothing here waits for it or shows an error.
+  function welcome(u) {
+    if (mode !== "supabase" || !u || !u.email) return;
+    const k = "shiftbook:welcome:" + u.id;
+    try { if (localStorage.getItem(k)) return; } catch (e) {}
+    client.functions.invoke("welcome-email", { body: {} }).then(({ data, error }) => {
+      if (!error && data && (data.sent || data.reason === "already" || data.reason === "not-new" || data.reason === "no-email")) { try { localStorage.setItem(k, "1"); } catch (e) {} }
+    }).catch(() => {});
   }
   function screenPaused(acct) {
     document.body.classList.add("authing");

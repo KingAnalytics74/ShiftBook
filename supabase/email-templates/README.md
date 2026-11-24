@@ -29,3 +29,18 @@ In Supabase → Authentication → URL Configuration:
 - Redirect URLs: `https://shiftbuck.com/**` (and `http://localhost:8000/**` for testing)
 
 Paste all three templates again after pulling this change.
+
+## Welcome email (sent by Shiftbuck, not Supabase)
+
+New accounts get one "Welcome to Shiftbuck" email. Supabase has no welcome template, so this is the
+`welcome-email` Edge Function (`supabase/functions/welcome-email/`), sent through Resend. The app asks for it
+after sign-in; the function only sends to accounts under 2 days old, and only once (`app_metadata.welcome_sent_at`).
+
+To switch it on:
+1. resend.com → add the domain `shiftbuck.com` and add the DNS records it shows (at the domain's DNS provider).
+2. resend.com → API Keys → create a key with "Sending access".
+3. Supabase → Edge Functions → Secrets: add `RESEND_API_KEY`. Optional: `WELCOME_FROM` (default `Shiftbuck <hello@shiftbuck.com>`).
+4. Deploy the function (`supabase functions deploy welcome-email`, "Verify JWT" on).
+
+Until the key is added the function does nothing, and the app carries on as normal.
+The same Resend account can be Supabase's SMTP (Authentication → Emails → SMTP Settings), which lifts the built-in limit of 2 emails an hour.
