@@ -377,6 +377,13 @@ body::before{background:var(--brand)!important}
 .obchips button[aria-pressed="true"],.obtypes button[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
 .obtypes button{flex:1 1 140px;text-align:left;line-height:1.3}
 .obtypes button small{display:block;font-weight:500;opacity:.75}
+.obtypes button{position:relative}
+.obord{position:absolute;top:8px;right:8px;min-width:22px;height:22px;padding:0 6px;border-radius:11px;background:var(--ink);color:var(--surface);font-style:normal;font-size:12px;font-weight:800;line-height:22px;text-align:center}
+.obrun{margin:12px 0 0}
+.obrunhint{margin:0 0 8px;font-size:14px;opacity:.8}
+.obrunlist{margin:0 0 10px;padding-left:22px;display:grid;gap:4px;font-size:15px}
+.obrunbtns{display:flex;flex-wrap:wrap;gap:8px}
+.obrunbtns button{min-height:44px;padding:0 16px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-weight:700;cursor:pointer}
 .obpreview{margin:0;padding:12px 14px;border-radius:12px;background:var(--day-soft);font-size:14px}
 /* sign-up: shifts people type themselves */
 .obadd{display:flex;gap:8px}

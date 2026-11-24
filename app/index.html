@@ -188,7 +188,7 @@
           </div>
           <div class="obstep" data-step="7" hidden>
             <h2 class="obh">Log your first shift</h2>
-            <p class="obsub">Your last or next shift. You can skip this.</p>
+            <p class="obsub">Your last or next shift, or a run of up to 4 in a row. You can skip this.</p>
             <div class="field"><label for="obDate">Date</label><input type="date" id="obDate"></div>
             <div class="field"><span class="lbl">Shift type</span>
               <div class="obtypes" id="obTypes" role="group" aria-label="Shift type">
@@ -198,7 +198,8 @@
                   now</button>
               </div>
             </div>
-            <div class="obpay" id="obPay"><span>This shift pays</span><b class="num" id="obPayV">£0.00</b></div>
+            <div class="obrun" id="obRun" aria-live="polite" hidden></div>
+            <div class="obpay" id="obPay"><span id="obPayL">This shift pays</span><b class="num" id="obPayV">£0.00</b></div>
           </div>
           <div class="banner bad" id="setupErr" hidden></div>
           <div class="obnav">

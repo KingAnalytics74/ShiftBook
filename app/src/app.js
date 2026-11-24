@@ -28,6 +28,7 @@ import { holidaySummary, rolledUp, bankHolidaysIn, leaveYear, isAnnual, normalWe
 import { resolveArea } from "./core/areas.js";
 import { FIXED_SHIFTS, checkShiftName, paidFor, workKind } from "./core/shiftNames.js";
 import { mountAreaPicker } from "./area-picker.js";
+import { buildRun, runPay, RUN_MAX } from "./core/run.js";
 import "./timepicker.js";
 import { dragSheet, swipeTabs, swipePages } from "./fluid.js";
 import "./datepicker.js";
@@ -1472,7 +1473,10 @@ import "./scene.js";
   // Sign-up shifts: people type their own shift names (obNames); Waking night and Sleep-in are always there.
   // Each times row picks one of those names and sets its own start, finish and break. No fixed combinations:
   // shifts people type are paid by the hour; someone who does a long day then a sleep-in adds times for both.
-  let obStep = 0, obDay = null, obType = 0, obNames = [], obRows = [], obRowNext = 1;
+  // obSeq: the shifts picked for "Log your first shift", in the order worked (a run of up to RUN_MAX).
+  // obSeqFresh: the first pick is only the default, so the next tap replaces it instead of adding to it.
+  let obStep = 0, obDay = null, obSeq = [0], obSeqFresh = true, obNames = [], obRows = [], obRowNext = 1;
+  const obSeqReset = () => { obSeq = [0]; obSeqFresh = true; };
   const obNewRow = (name = "") => ({ id: obRowNext++, name, start: "", end: "", breakHrs: "" });
   obRows.push(obNewRow());
   const obWork = () => workKind($("#obWorkText").value);
@@ -1483,9 +1487,8 @@ import "./scene.js";
   });
   const obPat = () => obTypesChosen();
   function obShiftPay() {
-    const t = obTypesChosen()[obType]; if (obType === "none" || !t) return 0;
-    const rate = Number(t.rate) > 0 ? Number(t.rate) : Number($("#uRate").value) || 0, sleep = Number($("#uSleep").value) || 0, h = typeHours(t);
-    return (h == null ? 0 : Math.max(0, h - (Number(t.breakHrs) || 0)) * rate) + (t.paid === "hours" ? 0 : sleep);
+    const chosen = obTypesChosen(), picks = obSeq.map(i => chosen[i]).filter(Boolean);
+    return runPay(picks, Number($("#uRate").value) || 0, Number($("#uSleep").value) || 0);
   }
   // ---- setup motion: steps slide in from the direction you're moving; the shift pay rolls to its new value ----
   const calmMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -1553,14 +1556,14 @@ import "./scene.js";
     if (r.error) { errEl.textContent = r.error; errEl.hidden = false; return; }
     obNames.push(r.name);
     const empty = obRows.find(x => !x.name); if (empty) empty.name = r.name; else obRows.push(obNewRow(r.name));
-    $("#obNewShift").value = ""; errEl.hidden = true; obType = 0; obRender(); $("#obNewShift").focus();
+    $("#obNewShift").value = ""; errEl.hidden = true; obSeqReset(); obRender(); $("#obNewShift").focus();
   }
   $("#obAddShift").addEventListener("click", obAddShift);
   $("#obNewShift").addEventListener("input", () => { $("#obShiftErr").hidden = true; });
   $("#obShiftChips").addEventListener("click", e => {
     const b = e.target.closest("[data-rm]"); if (!b) return; const n = b.dataset.rm;
     obNames = obNames.filter(x => x !== n); obRows = obRows.filter(x => x.name !== n); if (!obRows.length) obRows.push(obNewRow());
-    obType = 0; obRender(); $("#obNewShift").focus();
+    obSeqReset(); obRender(); $("#obNewShift").focus();
   });
   // Typing in a times card updates that card only (no redraw, so the cursor stays put); changing a dropdown redraws.
   $("#obTypeLib").addEventListener("input", e => {
@@ -1572,14 +1575,14 @@ import "./scene.js";
   $("#obTypeLib").addEventListener("change", e => {
     if (e.target.tagName !== "SELECT") return;
     const el = e.target.closest("[data-row]"), k = e.target.dataset.k, r = el && obRows.find(x => x.id === Number(el.dataset.row)); if (!r) return;
-    r[k] = e.target.value; obType = 0; obRender();
+    r[k] = e.target.value; obSeqReset(); obRender();
     const again = $("#obTypeLib").querySelector(`[data-row="${r.id}"] select[data-k="${k}"]`); if (again) again.focus();
   });
   $("#obTypeLib").addEventListener("click", e => {
     if (e.target.closest("#obAddRow")) { obRows.push(obNewRow()); obRender(); const s = $("#obTypeLib").querySelectorAll('select[data-k="name"]'); s[s.length - 1]?.focus(); return; }
     const d = e.target.closest("[data-del]"); if (!d) return;
     obRows = obRows.filter(x => x.id !== Number(d.dataset.del)); if (!obRows.length) obRows.push(obNewRow());
-    obType = 0; obRender();
+    obSeqReset(); obRender();
   });
   function obPrevText() {
     const timed = obTypesChosen().filter(t => t.start && t.end), n = obNames.length + FIXED_SHIFTS.length;
@@ -1600,9 +1603,16 @@ import "./scene.js";
     obLibRender();
     const chosen = obTypesChosen();
     $("#obPatPrev").innerHTML = obPrevText();
-    $("#obTypes").innerHTML = chosen.map((t, i) => `<button type="button" data-t="${i}" aria-pressed="${obType === i}">${esc(t.name)}<small>${t.start}–${t.end}</small></button>`).join("") + `<button type="button" data-t="none" aria-pressed="${obType === "none"}">Not now</button>`;
-    $("#obPay").hidden = obType === "none"; obPayTo(obShiftPay());
-    $("#setupBtn").textContent = obType === "none" || !chosen.length ? "Start my Shiftbook" : "Save and start";
+    obSeq = obSeq.filter(i => i < chosen.length);
+    const order = i => obSeq.map((x, n) => x === i ? n + 1 : 0).filter(Boolean);
+    $("#obTypes").innerHTML = chosen.map((t, i) => { const o = order(i); return `<button type="button" data-t="${i}" aria-pressed="${o.length > 0}">${o.length && obSeq.length > 1 ? `<em class="obord" aria-label="Shift ${o.join(" and ")} in the run">${o.join(" · ")}</em>` : ""}${esc(t.name)}<small>${t.start}–${t.end}</small></button>`; }).join("") + `<button type="button" data-t="none" aria-pressed="${!obSeq.length}">Not now</button>`;
+    const run = obSeq.length ? buildRun($("#obDate").value || todayStr, obSeq.map(i => chosen[i])) : { records: [] };
+    $("#obRun").hidden = !obSeq.length;
+    $("#obRun").innerHTML = obSeq.length ? `<p class="obrunhint">${obSeq.length > 1 ? "Your run, in order:" : "Working more than one shift in a row? Tap them in the order you work them, up to " + RUN_MAX + "."}</p>`
+      + (obSeq.length > 1 ? `<ol class="obrunlist">${(run.records || []).map(r => `<li><b>${esc(fmt(parse(r.date), { weekday: "short", day: "numeric", month: "short" }))}</b> ${esc(r.type)} <span class="num">${r.start}–${r.end}</span></li>`).join("")}</ol><div class="obrunbtns"><button type="button" data-run="undo">Undo last</button><button type="button" data-run="clear">Start again</button></div>` : "") : "";
+    $("#obPayL").textContent = obSeq.length > 1 ? "These shifts pay" : "This shift pays";
+    $("#obPay").hidden = !obSeq.length; obPayTo(obShiftPay());
+    $("#setupBtn").textContent = !obSeq.length || !chosen.length ? "Start my Shiftbook" : "Save and start";
     if (!$("#obDate").value) $("#obDate").value = todayStr;
     $("#setupErr").hidden = true;
   }
@@ -1625,26 +1635,43 @@ import "./scene.js";
     if (e.key !== "Enter" || e.target.tagName !== "INPUT" || obStep >= OB_LAST) return;
     e.preventDefault(); if (e.target.id === "obNewShift") obAddShift(); else $("#obNext").click();
   });
-  $("#obTypes").addEventListener("click", e => { const b = e.target.closest("[data-t]"); if (!b) return; obType = b.dataset.t === "none" ? "none" : Number(b.dataset.t); obRender(); });
+  $("#obTypes").addEventListener("click", e => {
+    const b = e.target.closest("[data-t]"); if (!b) return;
+    if (b.dataset.t === "none") { obSeq = []; obSeqFresh = true; obRender(); return; }
+    const i = Number(b.dataset.t);
+    if (obSeqFresh || !obSeq.length) { obSeq = [i]; obSeqFresh = false; obRender(); return; }
+    if (obSeq.length >= RUN_MAX) { toast(`Up to ${RUN_MAX} shifts in a row. Tap Start again to change them.`); return; }
+    const chosen = obTypesChosen(), next = [...obSeq, i], run = buildRun($("#obDate").value || todayStr, next.map(n => chosen[n]));
+    if (run.error) { toast(run.error); return; }
+    obSeq = next; obRender();
+  });
+  $("#obRun").addEventListener("click", e => {
+    const b = e.target.closest("[data-run]"); if (!b) return;
+    if (b.dataset.run === "undo") { obSeq.pop(); if (!obSeq.length) obSeqFresh = true; }
+    else { obSeq = []; obSeqFresh = true; }
+    obRender();
+  });
+  $("#obDate").addEventListener("change", obRender);
   ["uName", "uRole", "uRate", "uSleep", "uDay", "uUsers"].forEach(id => $("#" + id).addEventListener("input", obRender));
   $("#setupForm").addEventListener("submit", async e => {
     e.preventDefault();
     if (obStep !== OB_LAST) { $("#obNext").click(); return; }
     const name = obVal("uName"), rate = Number($("#uRate").value), sleep = Number($("#uSleep").value) || 0, day = Number($("#uDay").value);
     if (!name || !(rate > 0) || !(day >= 1 && day <= 31)) { obGo(!name ? 1 : !(rate > 0) ? 3 : 4); obCheck(); return; }
-    const types = obTypesChosen().map(t => ({ ...t })), t0 = types[obType], users = obVal("uUsers").split(",").map(x => x.trim()).filter(Boolean), pay = obShiftPay();
+    const types = obTypesChosen().map(t => ({ ...t })), picks = obSeq.map(i => types[i]).filter(Boolean), users = obVal("uUsers").split(",").map(x => x.trim()).filter(Boolean), pay = obShiftPay();
     $("#setupBtn").disabled = true; $("#setupErr").hidden = true;
     try {
       await S.money().set({ ...MONEY_DEFAULTS, pots: [] });
       await S.profile().set(profileData());
       const date = $("#obDate").value;
-      if (obType !== "none" && t0 && date) {
-        const h = typeHours(t0);
-        await S.shifts().doc(date).set({ date, type: t0.name, start: t0.start, end: t0.end, users: [], sleepIn: t0.paid !== "hours", dayHours: h, breakHrs: h == null ? null : (t0.breakHrs ?? 0), rate: null, notes: "", updatedAt: new Date().toISOString() });
+      if (picks.length && date) {
+        const run = buildRun(date, picks);
+        if (run.error) throw new Error(run.error);
+        for (const r of run.records) await S.shifts().doc(r.date).set({ ...r, users: [], rate: null, notes: "", updatedAt: new Date().toISOString() });
       }
       await S.main().set({ name, role: obVal("uRole") || (obWork() === "care" ? "Support Worker" : "Shift worker"), hourlyRate: rate, sleepInRate: sleep, periodStartDay: day, serviceUsers: users, workType: obWork(), workDescription: obVal("obWorkText"), shiftTypes: types });
-      state.view = obType === "none" ? "log" : "overview";
-      toast(obType === "none" ? `Welcome, ${name}. Log your first shift when you're ready` : `Welcome, ${name}. Your first shift pays ${gbp(pay)}`);
+      state.view = !picks.length ? "log" : "overview";
+      toast(!picks.length ? `Welcome, ${name}. Log your first shift when you're ready` : `Welcome, ${name}. ${picks.length > 1 ? "Your first shifts pay" : "Your first shift pays"} ${gbp(pay)}`);
     } catch (e2) {
       $("#setupErr").textContent = e2?.code === "invalid_argument" ? "Shiftbuck couldn't save. Sign out and back in, then try again." : "That didn't save. Check your connection and try again.";
       $("#setupErr").hidden = false;
