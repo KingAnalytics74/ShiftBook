@@ -140,7 +140,11 @@
   // checks. Google then names shiftbuck.com, not the Supabase address. Our button stays as a fallback until Google's
   // has drawn, and stays for good if Google's script can't load.
   const GCID = String(CFG.googleClientId || "").trim();
-  const useGis = () => mode === "supabase" && !!GCID && !!(window.crypto && crypto.subtle);
+  // Google only accepts its button on the addresses listed under the client's "Authorised JavaScript origins".
+  // Anywhere else (Vercel previews, shiftbook-two.vercel.app, localhost) Google shows "Error 400: origin_mismatch",
+  // so there we keep the old redirect button, which works on any address Supabase allows.
+  const GIS_HOSTS = ["shiftbuck.com", "www.shiftbuck.com"];
+  const useGis = () => mode === "supabase" && !!GCID && !!(window.crypto && crypto.subtle) && GIS_HOSTS.includes(location.hostname);
   let gisP = null;
   function loadGis() {
     return gisP ||= new Promise((ok, no) => {
